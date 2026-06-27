@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -45,7 +45,6 @@ const STEPS = [
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function Scan() {
-  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("choose");
   const [photo, setPhoto] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -315,8 +314,6 @@ function Scan() {
       {sharing && result && (
         <ShareModal monomon={result} onClose={() => setSharing(false)} />
       )}
-      {/* router 参照を保持（将来の遷移用） */}
-      <span className="hidden">{router.state.location.pathname}</span>
     </div>
   );
 }
