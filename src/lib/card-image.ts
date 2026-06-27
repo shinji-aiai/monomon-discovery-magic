@@ -135,7 +135,8 @@ export async function renderCardImage(
   ctx.fill();
 
   const svg = renderMonomonSVG(monomon.seed, monomon.category);
-  const art = await loadImage(svgToDataUrl(svg));
+  const sizedSvg = svg.replace(/width="100%" height="100%"/, 'width="340" height="340"');
+  const art = await loadImage(svgToDataUrl(sizedSvg));
   const artSize = 340;
   ctx.drawImage(art, cx - artSize / 2, discCy - artSize / 2, artSize, artSize);
 
