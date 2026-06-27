@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZukanRouteImport } from './routes/zukan'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ZukanRoute = ZukanRouteImport.update({
   id: '/zukan',
   path: '/zukan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScanRoute = ScanRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/zukan': typeof ZukanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/zukan': typeof ZukanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/zukan': typeof ZukanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/scan' | '/zukan'
+  fullPaths: '/' | '/scan' | '/settings' | '/zukan'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/scan' | '/zukan'
-  id: '__root__' | '/' | '/scan' | '/zukan'
+  to: '/' | '/scan' | '/settings' | '/zukan'
+  id: '__root__' | '/' | '/scan' | '/settings' | '/zukan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ScanRoute: typeof ScanRoute
+  SettingsRoute: typeof SettingsRoute
   ZukanRoute: typeof ZukanRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/zukan'
       fullPath: '/zukan'
       preLoaderRoute: typeof ZukanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scan': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ScanRoute: ScanRoute,
+  SettingsRoute: SettingsRoute,
   ZukanRoute: ZukanRoute,
 }
 export const routeTree = rootRouteImport
