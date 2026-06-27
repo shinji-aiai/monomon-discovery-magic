@@ -123,7 +123,7 @@ export function renderMonomonSVG(seed: number, category: Category): string {
 
   const gid = `g${seed % 100000}`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">
 <defs>
 <radialGradient id="${gid}" cx="38%" cy="30%" r="80%">
 <stop offset="0%" stop-color="${c1}"/>
