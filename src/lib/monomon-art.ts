@@ -215,7 +215,7 @@ export function renderMonomonSVG(spec: MonomonSpec): string {
   // ===== しっぽ（ホース・花など）=====
   let tail = "";
   if (spec.tail === "hose") {
-    tail = `<path d="M ${rightEdge - 8} ${bottom - 14} q 30 6 30 -16 q 0 -16 -16 -16" fill="none" stroke="${c2}" stroke-width="8" stroke-linecap="round"/><circle cx="${rightEdge + 6} ${"" + (bottom - 46)}" r="0"/>`;
+    tail = `<path d="M ${rightEdge - 8} ${bottom - 14} q 32 8 30 -18 q -2 -18 -18 -14" fill="none" stroke="${c2}" stroke-width="8" stroke-linecap="round"/><circle cx="${rightEdge + 4}" cy="${bottom - 36}" r="6" fill="${c2}"/>`;
   } else if (spec.tail === "flower") {
     const fx = rightEdge - 2;
     const fy = bottom - 20;
