@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Camera, Sparkles, ChevronRight } from "lucide-react";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { MonomonArt } from "@/components/MonomonArt";
 import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, countToday } from "@/lib/dex";
-import { CATEGORIES, CATEGORY_STYLES } from "@/lib/monomon-data";
+import { FAMILY_STYLES } from "@/lib/monomon-data";
+import { SPECIES, SPECIES_COUNT, getSpecies } from "@/lib/species";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,13 +41,13 @@ function Home() {
   const dex = useDex();
   const last = dex[0];
   const today = countToday(dex);
-  const kinds = new Set(dex.map((m) => m.category)).size;
+  const kinds = useMemo(() => new Set(dex.map((m) => m.speciesId)).size, [dex]);
 
   const [heroSeed, setHeroSeed] = useState(123456);
-  const [heroCat, setHeroCat] = useState(CATEGORIES[5]);
+  const [heroSpecies, setHeroSpecies] = useState(SPECIES[0].id);
   useEffect(() => {
     setHeroSeed(Math.floor(Math.random() * 1_000_000));
-    setHeroCat(CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]);
+    setHeroSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)].id);
   }, []);
 
   return (
@@ -64,9 +65,7 @@ function Home() {
       {/* あいさつ */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-muted-foreground">
-            {greeting()}
-          </p>
+          <p className="text-sm font-bold text-muted-foreground">{greeting()}</p>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             モノモン
           </h1>
@@ -84,7 +83,7 @@ function Home() {
             {last ? (
               <MonomonArt monomon={last} />
             ) : (
-              <MonomonArt seed={heroSeed} category={heroCat} />
+              <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
             )}
           </div>
         </div>
@@ -92,7 +91,7 @@ function Home() {
           <p className="mt-1 text-sm font-bold text-foreground">
             さいきんの相棒「{last.name}」
             <span className="ml-1 font-medium text-muted-foreground">
-              · {CATEGORY_STYLES[last.category].emoji} {last.category}
+              · {getSpecies(last.speciesId).emoji} {getSpecies(last.speciesId).name}
             </span>
           </p>
         ) : (
@@ -102,11 +101,11 @@ function Home() {
         )}
       </div>
 
-      {/* 統計 */}
+      {/* 統計：個体数・種族数 */}
       <div className="mb-5 grid grid-cols-3 gap-3">
-        <Stat label="きょう" value={today} unit="たい" accent />
-        <Stat label="ずかん" value={dex.length} unit="たい" />
-        <Stat label="しゅるい" value={`${kinds}/8`} unit="種" />
+        <Stat label="きょう" value={today} unit="匹" accent />
+        <Stat label="個体" value={dex.length} unit="匹" />
+        <Stat label="種族" value={`${kinds}/${SPECIES_COUNT}`} unit="種" />
       </div>
 
       {/* さいきん見つけた一覧 */}
@@ -121,7 +120,7 @@ function Home() {
                 key={m.id}
                 className="h-11 w-11 overflow-hidden rounded-full border-2 border-card"
                 style={{
-                  backgroundImage: `linear-gradient(160deg, ${CATEGORY_STYLES[m.category].bg[0]}, ${CATEGORY_STYLES[m.category].bg[1]})`,
+                  backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[m.family].bg[0]}, ${FAMILY_STYLES[m.family].bg[1]})`,
                 }}
               >
                 <MonomonArt monomon={m} />
