@@ -75,8 +75,11 @@ export async function renderCardImage(
     /* noop */
   }
 
-  const style = CATEGORY_STYLES[monomon.category];
-  const mat = MATERIAL_STYLES[monomon.material];
+  const fam = FAMILY_STYLES[monomon.family];
+  const species = getSpecies(monomon.speciesId);
+  const accent = monomon.palette.c3;
+  const mat = fam;
+  const style = { cheek: accent };
 
   // 背景（素材グラデ）
   const bg = ctx.createLinearGradient(0, 0, W, H);
