@@ -1,4 +1,5 @@
-import { CATEGORY_STYLES, MATERIAL_STYLES } from "./monomon-data";
+import { FAMILY_STYLES } from "./monomon-data";
+import { getSpecies } from "./species";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
 import { formatDiscoveredDate, specOf, type Monomon } from "./monomon";
 
