@@ -13,7 +13,7 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
         <div className="relative mx-auto mb-10 h-36 w-36">
           <span className="absolute inset-2 rounded-full bg-primary/20 animate-pulse-ring" />
           <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
-            <MonomonArt seed={48127} category="ぬくもり種" />
+            <MonomonArt seed={48127} speciesId="cushion" />
           </div>
         </div>
 
