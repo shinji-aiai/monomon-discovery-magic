@@ -149,7 +149,10 @@ function SettingsPage() {
       </div>
 
       {panel && <InfoPanel panel={panel} onClose={() => setPanel(null)} />}
+
+      <BottomNav />
     </div>
+
   );
 }
 
