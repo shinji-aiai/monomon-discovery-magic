@@ -1,4 +1,5 @@
-import { CATEGORY_STYLES, MATERIAL_STYLES } from "./monomon-data";
+import { FAMILY_STYLES } from "./monomon-data";
+import { getSpecies } from "./species";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
 import { formatDiscoveredDate, specOf, type Monomon } from "./monomon";
 
@@ -74,8 +75,11 @@ export async function renderCardImage(
     /* noop */
   }
 
-  const style = CATEGORY_STYLES[monomon.category];
-  const mat = MATERIAL_STYLES[monomon.material];
+  const fam = FAMILY_STYLES[monomon.family];
+  const species = getSpecies(monomon.speciesId);
+  const accent = monomon.palette.c3;
+  const mat = fam;
+  const style = { cheek: accent };
 
   // 背景（素材グラデ）
   const bg = ctx.createLinearGradient(0, 0, W, H);
@@ -181,8 +185,8 @@ export async function renderCardImage(
     ctx.fillText(text, bx + padX, panelY + 22 + 32);
     ctx.textAlign = "center";
   };
-  chip(`${mat.emoji} ${mat.label}`, 0, "left");
-  chip(`${style.emoji} ${monomon.category}`, 0, "right");
+  chip(`${species.emoji} ${species.name}`, 0, "left");
+  chip(`${fam.emoji} ${fam.label}`, 0, "right");
 
   // モノモン本体（飛び出す）
   const svg = renderMonomonSVG(specOf(monomon));

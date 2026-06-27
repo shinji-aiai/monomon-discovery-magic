@@ -126,7 +126,7 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative h-52 w-52 animate-silhouette">
               <div className="h-full w-full opacity-90 [filter:brightness(0)_drop-shadow(0_0_18px_rgba(255,245,210,0.6))]">
-                <MonomonArt seed={777} category="ふしぎ種" />
+                <MonomonArt seed={777} speciesId="clock" />
               </div>
               <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
               <span className="animate-eye-glow absolute right-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />

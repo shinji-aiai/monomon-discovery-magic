@@ -1,5 +1,6 @@
 import { MonomonArt } from "./MonomonArt";
-import { CATEGORY_STYLES, MATERIAL_STYLES } from "@/lib/monomon-data";
+import { FAMILY_STYLES } from "@/lib/monomon-data";
+import { getSpecies } from "@/lib/species";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
 import { cn } from "@/lib/utils";
 
@@ -12,8 +13,9 @@ interface MonomonCardProps {
 
 /** 保存したくなる、上質なモノモンカード（写真から精霊が飛び出す構図）。 */
 export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
-  const style = CATEGORY_STYLES[monomon.category];
-  const mat = MATERIAL_STYLES[monomon.material];
+  const fam = FAMILY_STYLES[monomon.family];
+  const species = getSpecies(monomon.speciesId);
+  const accent = monomon.palette.c3;
 
   return (
     <div
@@ -35,13 +37,13 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
           <div
             className="absolute inset-0 opacity-[0.86]"
             style={{
-              backgroundImage: `linear-gradient(165deg, ${mat.bg[0]}, ${mat.bg[1]})`,
+              backgroundImage: `linear-gradient(165deg, ${fam.bg[0]}, ${fam.bg[1]})`,
             }}
           />
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: `radial-gradient(120% 90% at 50% 18%, ${mat.tint}22, transparent 60%)`,
+              backgroundImage: `radial-gradient(120% 90% at 50% 18%, ${fam.tint}22, transparent 60%)`,
             }}
           />
           {/* 上質な光沢 */}
@@ -50,17 +52,17 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
 
         {/* チップ */}
         <span className="absolute left-4 top-4 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
-          {mat.emoji} {mat.label}
+          {species.emoji} {species.name}
         </span>
         <span className="absolute right-4 top-4 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
-          {style.emoji} {monomon.category}
+          {fam.emoji} {fam.label}
         </span>
 
         {/* 飛び出すモノモン */}
         <div className="absolute bottom-0 left-1/2 h-60 w-60 -translate-x-1/2 translate-y-7">
           <span
             className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-            style={{ backgroundColor: `${style.cheek}55` }}
+            style={{ backgroundColor: `${accent}55` }}
           />
           <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
             <MonomonArt monomon={monomon} />
@@ -74,7 +76,7 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
           <h2 className="text-3xl font-extrabold text-foreground">{monomon.name}</h2>
           <span
             className="shrink-0 rounded-full px-3 py-1 text-xs font-bold text-white"
-            style={{ backgroundColor: style.cheek }}
+            style={{ backgroundColor: accent }}
           >
             {monomon.personality}
           </span>

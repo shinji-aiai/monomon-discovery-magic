@@ -10,13 +10,15 @@ import {
   Loader2,
   Heart,
   Star,
+  Lock,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
 import { useDex, removeFromDex, toggleFavorite } from "@/lib/dex";
-import { CATEGORY_STYLES } from "@/lib/monomon-data";
+import { FAMILY_STYLES } from "@/lib/monomon-data";
+import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { downloadCardImage } from "@/lib/card-image";
 import type { Monomon } from "@/lib/monomon";
 import { tap, playSound, haptic } from "@/lib/sound";
@@ -27,103 +29,170 @@ export const Route = createFileRoute("/zukan")({
       { title: "図鑑｜モノモン" },
       {
         name: "description",
-        content: "これまでに見つけたモノモンたちの図鑑。集めて、お気に入りを見つけよう。",
+        content: "見つけた種族と、出会った個体たちの図鑑。集めて、お気に入りを見つけよう。",
       },
     ],
   }),
   component: Zukan,
 });
 
-type Tab = "all" | "fav";
+type Mode = "species" | "album";
 
 function Zukan() {
   const dex = useDex();
   const [selected, setSelected] = useState<Monomon | null>(null);
-  const [tab, setTab] = useState<Tab>("all");
+  const [mode, setMode] = useState<Mode>("species");
+  const [favOnly, setFavOnly] = useState(false);
+  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
 
-  const kinds = new Set(dex.map((m) => m.category)).size;
+  // 種族ごとに、見つけた個体をまとめる
+  const bySpecies = useMemo(() => {
+    const map = new Map<string, Monomon[]>();
+    for (const m of dex) {
+      const arr = map.get(m.speciesId) ?? [];
+      arr.push(m);
+      map.set(m.speciesId, arr);
+    }
+    return map;
+  }, [dex]);
 
-  // 古い順に番号を振る（No.001 = 最初の相棒）
+  const kinds = bySpecies.size;
+
+  // 発見順の通し番号（No.001 = 最初の相棒）
   const numbered = useMemo(() => {
     const map = new Map<string, number>();
     [...dex]
       .sort(
         (a, b) =>
-          new Date(a.discoveredAt).getTime() -
-          new Date(b.discoveredAt).getTime(),
+          new Date(a.discoveredAt).getTime() - new Date(b.discoveredAt).getTime(),
       )
       .forEach((m, i) => map.set(m.id, i + 1));
     return map;
   }, [dex]);
 
-  const list = tab === "fav" ? dex.filter((m) => m.favorite) : dex;
+  let album = dex;
+  if (speciesFilter) album = album.filter((m) => m.speciesId === speciesFilter);
+  if (favOnly) album = album.filter((m) => m.favorite);
+
+  const openSpecies = (sp: Species, found: boolean) => {
+    tap();
+    if (!found) {
+      toast(`${sp.name}はまだ見つかっていません`);
+      return;
+    }
+    setSpeciesFilter(sp.id);
+    setFavOnly(false);
+    setMode("album");
+  };
 
   return (
     <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <header className="mb-4">
         <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
         <p className="mt-0.5 text-sm font-medium text-muted-foreground">
-          見つけた精霊　{dex.length}たい・{kinds}/8 しゅるい
+          {kinds}/{SPECIES_COUNT} 種族　・　{dex.length} 匹
         </p>
       </header>
 
-      {/* 進捗バー */}
+      {/* 進捗バー（種族コンプ率） */}
       <div className="mb-4 h-3 overflow-hidden rounded-full bg-card/80 shadow-soft">
         <div
           className="h-full rounded-full gradient-primary transition-all"
-          style={{ width: `${(kinds / 8) * 100}%` }}
+          style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
         />
       </div>
 
-      {/* タブ */}
-      {dex.length > 0 && (
-        <div className="mb-5 flex gap-2">
-          <TabBtn active={tab === "all"} onClick={() => setTab("all")}>
-            すべて
-          </TabBtn>
-          <TabBtn active={tab === "fav"} onClick={() => setTab("fav")}>
-            <Star className="h-3.5 w-3.5" /> お気に入り
-          </TabBtn>
-        </div>
-      )}
+      {/* モード切替 */}
+      <div className="mb-5 flex gap-2">
+        <ModeBtn
+          active={mode === "species"}
+          onClick={() => {
+            setMode("species");
+            setSpeciesFilter(null);
+          }}
+        >
+          種族図鑑
+        </ModeBtn>
+        <ModeBtn active={mode === "album"} onClick={() => setMode("album")}>
+          発見アルバム
+        </ModeBtn>
+      </div>
 
-      {dex.length === 0 ? (
+      {mode === "species" ? (
+        <div className="grid grid-cols-3 gap-3">
+          {SPECIES.map((sp) => {
+            const found = bySpecies.get(sp.id);
+            return (
+              <SpeciesCell
+                key={sp.id}
+                species={sp}
+                sample={found?.[0]}
+                count={found?.length ?? 0}
+                onOpen={() => openSpecies(sp, !!found)}
+              />
+            );
+          })}
+        </div>
+      ) : dex.length === 0 ? (
         <Empty />
-      ) : list.length === 0 ? (
-        <div className="flex min-h-[40svh] flex-col items-center justify-center text-center">
-          <Star className="h-10 w-10 text-muted-foreground/50" />
-          <p className="mt-3 text-sm font-bold text-foreground">
-            お気に入りは まだ いません
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            カードの♡を タップして お気に入りに追加できます。
-          </p>
-        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {list.map((m) => (
-            <DexCell
-              key={m.id}
-              monomon={m}
-              no={numbered.get(m.id) ?? 0}
-              onOpen={() => {
-                tap();
-                setSelected(m);
-              }}
-            />
-          ))}
+        <>
+          {/* アルバムのサブ操作 */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <ChipBtn active={!favOnly} onClick={() => setFavOnly(false)}>
+              すべて
+            </ChipBtn>
+            <ChipBtn active={favOnly} onClick={() => setFavOnly(true)}>
+              <Star className="h-3.5 w-3.5" /> お気に入り
+            </ChipBtn>
+            {speciesFilter && (
+              <button
+                onClick={() => {
+                  tap();
+                  setSpeciesFilter(null);
+                }}
+                className="ml-auto flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary"
+              >
+                {getSpecies(speciesFilter).emoji} {getSpecies(speciesFilter).name}
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
 
-          {tab === "all" && (
-            <Link
-              to="/scan"
-              onClick={tap}
-              className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
-            >
-              <span className="text-3xl opacity-60">？</span>
-              <span className="text-xs font-bold">つぎを さがす</span>
-            </Link>
+          {album.length === 0 ? (
+            <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
+              <Star className="h-10 w-10 text-muted-foreground/50" />
+              <p className="mt-3 text-sm font-bold text-foreground">
+                ここには まだ いません
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                カードの♡で お気に入りに追加できます。
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {album.map((m) => (
+                <DexCell
+                  key={m.id}
+                  monomon={m}
+                  no={numbered.get(m.id) ?? 0}
+                  onOpen={() => {
+                    tap();
+                    setSelected(m);
+                  }}
+                />
+              ))}
+              <Link
+                to="/scan"
+                onClick={tap}
+                className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
+              >
+                <span className="text-3xl opacity-60">＋</span>
+                <span className="text-xs font-bold">つぎを さがす</span>
+              </Link>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {selected && (
@@ -139,7 +208,33 @@ function Zukan() {
   );
 }
 
-function TabBtn({
+function ModeBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={() => {
+        tap();
+        onClick();
+      }}
+      className={`flex-1 rounded-2xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+        active
+          ? "gradient-primary text-primary-foreground shadow-soft"
+          : "bg-card/80 text-muted-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ChipBtn({
   active,
   onClick,
   children,
@@ -156,11 +251,68 @@ function TabBtn({
       }}
       className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-all active:scale-95 ${
         active
-          ? "gradient-primary text-primary-foreground shadow-soft"
+          ? "bg-primary text-primary-foreground shadow-soft"
           : "bg-card/80 text-muted-foreground"
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+/** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝シルエット） */
+function SpeciesCell({
+  species,
+  sample,
+  count,
+  onOpen,
+}: {
+  species: Species;
+  sample?: Monomon;
+  count: number;
+  onOpen: () => void;
+}) {
+  const found = !!sample;
+  return (
+    <button
+      onClick={onOpen}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+    >
+      <div
+        className="relative aspect-square p-2"
+        style={{
+          backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[species.family].bg[0]}, ${FAMILY_STYLES[species.family].bg[1]})`,
+        }}
+      >
+        {found ? (
+          <>
+            <div className="h-full w-full drop-shadow-[0_6px_8px_rgba(90,60,40,0.18)]">
+              <MonomonArt monomon={sample} />
+            </div>
+            {count > 1 && (
+              <span className="absolute bottom-1 right-1.5 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.6rem] font-extrabold text-foreground/70 backdrop-blur">
+                ×{count}
+              </span>
+            )}
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="h-full w-full opacity-25 [filter:brightness(0)]">
+              <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
+            </div>
+            <Lock className="absolute h-5 w-5 text-foreground/30" />
+          </div>
+        )}
+      </div>
+      <p className="truncate px-1 py-1.5 text-center text-[0.66rem] font-extrabold text-foreground">
+        {found ? (
+          <>
+            {species.emoji} {species.name}
+          </>
+        ) : (
+          <span className="text-muted-foreground">？？？</span>
+        )}
+      </p>
     </button>
   );
 }
@@ -174,7 +326,8 @@ function DexCell({
   no: number;
   onOpen: () => void;
 }) {
-  const style = CATEGORY_STYLES[monomon.category];
+  const fam = FAMILY_STYLES[monomon.family];
+  const species = getSpecies(monomon.speciesId);
   return (
     <button
       onClick={onOpen}
@@ -199,7 +352,7 @@ function DexCell({
       <div
         className="aspect-square p-2"
         style={{
-          backgroundImage: `linear-gradient(160deg, ${style.bg[0]}, ${style.bg[1]})`,
+          backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
         }}
       >
         <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
@@ -211,7 +364,7 @@ function DexCell({
           {monomon.name}
         </p>
         <p className="truncate text-[0.66rem] font-bold text-muted-foreground">
-          {style.emoji} {monomon.personality}
+          {species.emoji} {species.name}
         </p>
       </div>
     </button>
@@ -220,7 +373,7 @@ function DexCell({
 
 function Empty() {
   return (
-    <div className="flex min-h-[55svh] flex-col items-center justify-center text-center">
+    <div className="flex min-h-[45svh] flex-col items-center justify-center text-center">
       <div className="mb-6 text-6xl opacity-80">🔍</div>
       <p className="text-lg font-bold text-foreground">まだ だれも いません</p>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -256,6 +409,7 @@ function DetailSheet({
     setSaving(true);
     try {
       await downloadCardImage(monomon);
+      playSound("save");
       toast.success("画像を保存しました");
     } catch {
       toast.error("保存に失敗しました");
