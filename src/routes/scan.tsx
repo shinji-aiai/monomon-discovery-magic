@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
+import { DiscoveryReveal } from "@/components/DiscoveryReveal";
+import { BottomNav } from "@/components/BottomNav";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
 import { addToDex } from "@/lib/dex";
 import { downloadCardImage } from "@/lib/card-image";
-import { tap, playSound, haptic } from "@/lib/sound";
+import { tap } from "@/lib/sound";
 
 export const Route = createFileRoute("/scan")({
   head: () => ({
@@ -33,21 +35,11 @@ export const Route = createFileRoute("/scan")({
   component: Scan,
 });
 
-type Phase = "choose" | "analyzing" | "result";
-
-const STEPS = [
-  "解析中…",
-  "モノの記憶を読み取り中…",
-  "反応を検知しました…",
-  "モノモンを発見しました！",
-];
-
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+type Phase = "choose" | "reveal" | "result";
 
 function Scan() {
   const [phase, setPhase] = useState<Phase>("choose");
   const [photo, setPhoto] = useState<string | null>(null);
-  const [stepIndex, setStepIndex] = useState(0);
   const [result, setResult] = useState<Monomon | null>(null);
   const [registered, setRegistered] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -55,14 +47,14 @@ function Scan() {
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
-  const cancelled = useRef(false);
 
+  // 結果が出たら自動で図鑑に登録（コレクションが途切れない体験）
   useEffect(() => {
-    cancelled.current = false;
-    return () => {
-      cancelled.current = true;
-    };
-  }, []);
+    if (phase === "result" && result && !registered) {
+      addToDex(result);
+      setRegistered(true);
+    }
+  }, [phase, result, registered]);
 
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
@@ -71,31 +63,12 @@ function Scan() {
       const raw = await fileToDataUrl(file);
       const small = await downscaleDataUrl(raw, 720);
       setPhoto(small);
-      void runAnalysis(small);
+      setResult(null);
+      setRegistered(false);
+      setPhase("reveal");
     } catch {
       toast.error("写真を読み込めませんでした");
     }
-  };
-
-  const runAnalysis = async (photoData: string) => {
-    setPhase("analyzing");
-    setStepIndex(0);
-    playSound("scan");
-    const genPromise = generateMonomon(photoData);
-
-    for (let i = 0; i < STEPS.length; i++) {
-      if (cancelled.current) return;
-      setStepIndex(i);
-      await wait(i === STEPS.length - 1 ? 750 : 1050);
-    }
-
-    const monomon = await genPromise;
-    if (cancelled.current) return;
-    setResult(monomon);
-    setRegistered(false);
-    setPhase("result");
-    playSound("discover");
-    haptic([18, 40, 24]);
   };
 
   const reset = () => {
@@ -106,22 +79,12 @@ function Scan() {
     setPhase("choose");
   };
 
-  const register = () => {
-    if (!result || registered) return;
-    addToDex(result);
-    setRegistered(true);
-    playSound("save");
-    haptic(18);
-    toast.success("図鑑に登録しました");
-  };
-
   const save = async () => {
     if (!result) return;
     tap();
     setSaving(true);
     try {
       await downloadCardImage(result);
-      playSound("save");
       toast.success("画像を保存しました");
     } catch {
       toast.error("保存に失敗しました");
@@ -131,28 +94,30 @@ function Scan() {
   };
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-10 pt-[max(1rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
       {/* ヘッダー */}
-      <header className="flex items-center">
-        {phase === "result" ? (
-          <button
-            onClick={reset}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
-            aria-label="戻る"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        ) : (
-          <Link
-            to="/"
-            onClick={tap}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
-            aria-label="ホームへ"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        )}
-      </header>
+      {phase !== "reveal" && (
+        <header className="flex items-center">
+          {phase === "result" ? (
+            <button
+              onClick={reset}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              aria-label="戻る"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          ) : (
+            <Link
+              to="/"
+              onClick={tap}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              aria-label="ホームへ"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          )}
+        </header>
+      )}
 
       {/* 隠しファイル入力 */}
       <input
@@ -210,41 +175,15 @@ function Scan() {
         </div>
       )}
 
-      {phase === "analyzing" && (
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="relative h-64 w-64 overflow-hidden rounded-3xl shadow-float">
-            {photo && (
-              <img
-                src={photo}
-                alt="解析中の写真"
-                className="h-full w-full object-cover"
-              />
-            )}
-            <div className="absolute inset-0 bg-foreground/30 backdrop-blur-[1px]" />
-            {/* スキャンライン */}
-            <div className="absolute inset-x-3 h-1 animate-scan-sweep rounded-full bg-gradient-to-r from-transparent via-card to-transparent shadow-glow" />
-            {/* リング */}
-            <span className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card/70 animate-pulse-ring" />
-            <Sparkles className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 text-card animate-spin-slow" />
-          </div>
-
-          <p
-            key={stepIndex}
-            className="mt-10 animate-rise-in text-lg font-bold text-foreground"
-          >
-            {STEPS[stepIndex]}
-          </p>
-          <div className="mt-4 flex gap-2">
-            {STEPS.map((_, i) => (
-              <span
-                key={i}
-                className={`h-2 rounded-full transition-all ${
-                  i <= stepIndex ? "w-6 bg-primary" : "w-2 bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+      {phase === "reveal" && photo && (
+        <DiscoveryReveal
+          photo={photo}
+          generate={() => generateMonomon(photo)}
+          onDone={(m) => {
+            setResult(m);
+            setPhase("result");
+          }}
+        />
       )}
 
       {phase === "result" && result && (
@@ -252,7 +191,7 @@ function Scan() {
           <div className="mb-4 mt-2 text-center">
             <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
               <Sparkles className="h-4 w-4" />
-              モノモンを発見しました！
+              図鑑に登録しました！
             </p>
           </div>
 
@@ -260,24 +199,6 @@ function Scan() {
             <MonomonCard monomon={result} animate />
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                onClick={register}
-                disabled={registered}
-                className={`flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold active:scale-95 ${
-                  registered
-                    ? "bg-secondary text-secondary-foreground"
-                    : "gradient-primary text-primary-foreground shadow-soft"
-                }`}
-              >
-                {registered ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    登録しました
-                  </>
-                ) : (
-                  "図鑑に登録"
-                )}
-              </button>
               <button
                 onClick={save}
                 disabled={saving}
@@ -300,12 +221,20 @@ function Scan() {
                 <Share2 className="h-4 w-4 text-primary" />
                 シェア
               </button>
+              <Link
+                to="/zukan"
+                onClick={tap}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
+              >
+                <Check className="h-4 w-4" />
+                図鑑を見る
+              </Link>
               <button
                 onClick={reset}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-accent/40 py-3.5 text-sm font-bold text-accent-foreground active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
               >
                 <RefreshCw className="h-4 w-4" />
-                もう一度見つける
+                もう一度
               </button>
             </div>
           </div>
@@ -315,6 +244,8 @@ function Scan() {
       {sharing && result && (
         <ShareModal monomon={result} onClose={() => setSharing(false)} />
       )}
+
+      {phase !== "reveal" && <BottomNav />}
     </div>
   );
 }

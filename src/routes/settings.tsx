@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Volume2,
   Smartphone,
   Trash2,
@@ -12,9 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, clearDex } from "@/lib/dex";
 import { tap, playSound, haptic } from "@/lib/sound";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -51,18 +52,11 @@ function SettingsPage() {
   };
 
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-12 pt-[max(1rem,env(safe-area-inset-top))]">
-      <header className="mb-6 flex items-center gap-3">
-        <Link
-          to="/"
-          onClick={tap}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
-          aria-label="ホームへ"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="text-xl font-extrabold text-foreground">設定</h1>
+    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      <header className="mb-6">
+        <h1 className="text-2xl font-extrabold text-foreground">設定</h1>
       </header>
+
 
       <div className="mx-auto w-full max-w-md space-y-6">
         {/* 一般 */}
@@ -155,7 +149,10 @@ function SettingsPage() {
       </div>
 
       {panel && <InfoPanel panel={panel} onClose={() => setPanel(null)} />}
+
+      <BottomNav />
     </div>
+
   );
 }
 
