@@ -1,3 +1,4 @@
+import { MonomonArt } from "./MonomonArt";
 import { tap } from "@/lib/sound";
 
 interface IntroOverlayProps {
@@ -9,10 +10,10 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center gradient-sky px-7">
       <div className="w-full max-w-sm text-center">
-        <div className="relative mx-auto mb-10 h-32 w-32">
-          <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-ring" />
-          <div className="relative flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-float-soft text-6xl">
-            ✨
+        <div className="relative mx-auto mb-10 h-36 w-36">
+          <span className="absolute inset-2 rounded-full bg-primary/20 animate-pulse-ring" />
+          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
+            <MonomonArt seed={48127} category="ぬくもり種" />
           </div>
         </div>
 
