@@ -283,3 +283,99 @@
 @utility animate-scan-sweep {
   animation: scan-sweep 1.6s ease-in-out infinite alternate;
 }
+
+/* ===== 発見演出 ===== */
+@keyframes converge {
+  0% {
+    transform: translate(var(--tx), var(--ty)) scale(0.4);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+}
+@utility animate-converge {
+  animation: converge 1s ease-in both;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@utility animate-flash {
+  animation: flash 0.7s ease-out both;
+}
+
+@keyframes silhouette-rise {
+  0% {
+    transform: scale(0.7) translateY(14px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+@utility animate-silhouette {
+  animation: silhouette-rise 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes eye-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+@utility animate-eye-glow {
+  animation: eye-glow 0.9s ease-in-out infinite;
+}
+
+@keyframes outline-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4),
+      0 0 26px 6px rgba(255, 245, 210, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85),
+      0 0 48px 14px rgba(255, 245, 210, 0.75);
+  }
+}
+@utility animate-outline-glow {
+  animation: outline-glow 1s ease-in-out infinite;
+}
+
+@keyframes jump-out {
+  0% {
+    transform: translateY(28px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-6px) scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+@utility animate-jump-out {
+  animation: jump-out 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+

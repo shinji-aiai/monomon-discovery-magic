@@ -1,17 +1,26 @@
 import { useMemo } from "react";
 import { renderMonomonSVG } from "@/lib/monomon-art";
-import type { Category } from "@/lib/monomon-data";
+import { specOf, type Monomon } from "@/lib/monomon";
+import { buildSpec, type Category } from "@/lib/monomon-data";
 import { cn } from "@/lib/utils";
 
 interface MonomonArtProps {
-  seed: number;
-  category: Category;
+  /** 完全なモノモン（推奨：体型・特徴・表情を反映） */
+  monomon?: Monomon;
+  /** 簡易表示用（ホームの装飾など） */
+  seed?: number;
+  category?: Category;
   className?: string;
 }
 
 /** モノモンのイラストを表示します。 */
-export function MonomonArt({ seed, category, className }: MonomonArtProps) {
-  const svg = useMemo(() => renderMonomonSVG(seed, category), [seed, category]);
+export function MonomonArt({ monomon, seed, category, className }: MonomonArtProps) {
+  const svg = useMemo(() => {
+    const spec = monomon
+      ? specOf(monomon)
+      : buildSpec(seed ?? 1, category ?? "ふしぎ種");
+    return renderMonomonSVG(spec);
+  }, [monomon, seed, category]);
   return (
     <div
       className={cn("h-full w-full select-none", className)}

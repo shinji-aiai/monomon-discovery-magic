@@ -1,6 +1,6 @@
-import { CATEGORY_STYLES } from "./monomon-data";
+import { CATEGORY_STYLES, MATERIAL_STYLES } from "./monomon-data";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
-import { formatDiscoveredDate, type Monomon } from "./monomon";
+import { formatDiscoveredDate, specOf, type Monomon } from "./monomon";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -55,7 +55,7 @@ function drawCover(
 
 /**
  * 保存・シェア用のカード画像（PNG Blob）を生成します。
- * variant: "save" = 図鑑カード, "share" = シェア用（見つけた！表記入り）
+ * 写真をうっすら背景に敷き、モノモンが飛び出す上質な構図にします。
  */
 export async function renderCardImage(
   monomon: Monomon,
@@ -75,136 +75,155 @@ export async function renderCardImage(
   }
 
   const style = CATEGORY_STYLES[monomon.category];
+  const mat = MATERIAL_STYLES[monomon.material];
 
-  // 背景グラデ
+  // 背景（素材グラデ）
   const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, style.bg[0]);
-  bg.addColorStop(1, style.bg[1]);
+  bg.addColorStop(0, mat.bg[0]);
+  bg.addColorStop(1, mat.bg[1]);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // 内側カード
-  const m = 64;
+  const m = 56;
+  const cardX = m;
+  const cardY = m;
+  const cardW = W - m * 2;
+  const cardH = H - m * 2;
   ctx.save();
   ctx.shadowColor = "rgba(90,60,40,0.18)";
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 42;
   ctx.shadowOffsetY = 18;
   ctx.fillStyle = "#fffdf8";
-  roundRect(ctx, m, m, W - m * 2, H - m * 2, 56);
+  roundRect(ctx, cardX, cardY, cardW, cardH, 56);
   ctx.fill();
   ctx.restore();
 
-  const cardX = m;
-  const cardW = W - m * 2;
   const cx = W / 2;
-  let y = m + 80;
-
   const brown = "#4a3b32";
   const muted = "#9a8472";
   ctx.textAlign = "center";
 
-  // ヘッダー
+  let y = cardY + 74;
   ctx.fillStyle = muted;
-  ctx.font = "700 34px 'M PLUS Rounded 1c', sans-serif";
+  ctx.font = "700 32px 'M PLUS Rounded 1c', sans-serif";
   ctx.fillText("モノモン", cx, y);
 
   if (variant === "share") {
-    y += 56;
+    y += 50;
     ctx.fillStyle = style.cheek;
-    ctx.font = "800 44px 'M PLUS Rounded 1c', sans-serif";
+    ctx.font = "800 42px 'M PLUS Rounded 1c', sans-serif";
     ctx.fillText("モノモンを見つけた！", cx, y);
   }
 
-  // モノモン本体（やわらかい円の上に）
-  y += 70;
-  const discR = 220;
-  const discCy = y + discR;
-  const disc = ctx.createRadialGradient(
-    cx,
-    discCy - 40,
-    20,
-    cx,
-    discCy,
-    discR,
-  );
-  disc.addColorStop(0, style.bg[0]);
-  disc.addColorStop(1, style.bg[1]);
-  ctx.fillStyle = disc;
-  ctx.beginPath();
-  ctx.arc(cx, discCy, discR, 0, Math.PI * 2);
-  ctx.fill();
+  // ===== イラストパネル（写真をうっすら背景に）=====
+  const panelX = cardX + 44;
+  const panelY = y + 36;
+  const panelW = cardW - 88;
+  const panelH = 560;
 
-  const svg = renderMonomonSVG(monomon.seed, monomon.category);
-  const sizedSvg = svg.replace(/width="100%" height="100%"/, 'width="340" height="340"');
-  const art = await loadImage(svgToDataUrl(sizedSvg));
-  const artSize = 340;
-  ctx.drawImage(art, cx - artSize / 2, discCy - artSize / 2, artSize, artSize);
+  ctx.save();
+  roundRect(ctx, panelX, panelY, panelW, panelH, 40);
+  ctx.clip();
 
-  y = discCy + discR + 70;
-
-  // 名前
-  ctx.fillStyle = brown;
-  ctx.font = "800 76px 'M PLUS Rounded 1c', sans-serif";
-  ctx.fillText(monomon.name, cx, y);
-
-  // 分類 + 性格チップ
-  y += 56;
-  ctx.font = "700 32px 'M PLUS Rounded 1c', sans-serif";
-  const chip = (text: string, color: string, bgc: string, drawX: number) => {
-    const padX = 28;
-    const tw = ctx.measureText(text).width;
-    const cw = tw + padX * 2;
-    ctx.fillStyle = bgc;
-    roundRect(ctx, drawX, y - 34, cw, 56, 28);
-    ctx.fill();
-    ctx.fillStyle = color;
-    ctx.textAlign = "left";
-    ctx.fillText(text, drawX + padX, y + 6);
-    ctx.textAlign = "center";
-    return cw;
-  };
-  const catText = style.emoji + " " + monomon.category;
-  const perText = monomon.personality;
-  ctx.font = "700 32px 'M PLUS Rounded 1c', sans-serif";
-  const w1 = ctx.measureText(catText).width + 56;
-  const w2 = ctx.measureText(perText).width + 56;
-  const gap = 20;
-  const total = w1 + w2 + gap;
-  let startX = cx - total / 2;
-  startX += chip(catText, brown, style.bg[1], startX) + gap;
-  chip(perText, "#fff", style.cheek, startX);
-
-  // 説明
-  y += 96;
-  ctx.fillStyle = brown;
-  ctx.font = "500 40px 'M PLUS Rounded 1c', sans-serif";
-  ctx.fillText("「" + monomon.description + "」", cx, y);
-
-  // 元写真サムネ
-  y += 60;
-  const thumb = 150;
+  // 元写真（ぼかして薄く）
   try {
     const photo = await loadImage(monomon.photo);
     ctx.save();
-    roundRect(ctx, cx - thumb / 2, y, thumb, thumb, 28);
-    ctx.clip();
-    drawCover(ctx, photo, cx - thumb / 2, y, thumb, thumb);
+    ctx.filter = "blur(10px)";
+    drawCover(ctx, photo, panelX - 20, panelY - 20, panelW + 40, panelH + 40);
     ctx.restore();
-    ctx.strokeStyle = "rgba(154,132,114,0.3)";
-    ctx.lineWidth = 3;
-    roundRect(ctx, cx - thumb / 2, y, thumb, thumb, 28);
-    ctx.stroke();
   } catch {
     /* 写真がなくても続行 */
   }
 
-  // 発見日 / フッター
+  // 素材グラデのティント
+  const pg = ctx.createLinearGradient(panelX, panelY, panelX, panelY + panelH);
+  pg.addColorStop(0, mat.bg[0] + "ee");
+  pg.addColorStop(1, mat.bg[1] + "ee");
+  ctx.fillStyle = pg;
+  ctx.fillRect(panelX, panelY, panelW, panelH);
+
+  // 中心グロー
+  const glow = ctx.createRadialGradient(
+    cx,
+    panelY + panelH * 0.46,
+    20,
+    cx,
+    panelY + panelH * 0.46,
+    panelW * 0.5,
+  );
+  glow.addColorStop(0, style.cheek + "44");
+  glow.addColorStop(1, "transparent");
+  ctx.fillStyle = glow;
+  ctx.fillRect(panelX, panelY, panelW, panelH);
+
+  // 上部の光沢
+  const sheen = ctx.createLinearGradient(0, panelY, 0, panelY + 120);
+  sheen.addColorStop(0, "rgba(255,255,255,0.5)");
+  sheen.addColorStop(1, "transparent");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(panelX, panelY, panelW, 120);
+  ctx.restore();
+
+  // チップ
+  ctx.font = "700 26px 'M PLUS Rounded 1c', sans-serif";
+  const chip = (text: string, dx: number, align: "left" | "right") => {
+    const padX = 22;
+    const tw = ctx.measureText(text).width;
+    const cw = tw + padX * 2;
+    const bx = align === "left" ? panelX + 22 : panelX + panelW - 22 - cw;
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    roundRect(ctx, bx, panelY + 22, cw, 46, 23);
+    ctx.fill();
+    ctx.fillStyle = brown;
+    ctx.textAlign = "left";
+    ctx.fillText(text, bx + padX, panelY + 22 + 32);
+    ctx.textAlign = "center";
+  };
+  chip(`${mat.emoji} ${mat.label}`, 0, "left");
+  chip(`${style.emoji} ${monomon.category}`, 0, "right");
+
+  // モノモン本体（飛び出す）
+  const svg = renderMonomonSVG(specOf(monomon));
+  const sizedSvg = svg.replace(
+    /width="100%" height="100%"/,
+    'width="420" height="420"',
+  );
+  const art = await loadImage(svgToDataUrl(sizedSvg));
+  const artSize = 420;
+  ctx.drawImage(art, cx - artSize / 2, panelY + panelH - artSize + 36, artSize, artSize);
+
+  // ===== テキスト =====
+  y = panelY + panelH + 78;
+  ctx.fillStyle = brown;
+  ctx.font = "800 72px 'M PLUS Rounded 1c', sans-serif";
+  ctx.fillText(monomon.name, cx, y);
+
+  // 性格チップ
+  y += 56;
+  ctx.font = "700 30px 'M PLUS Rounded 1c', sans-serif";
+  const perText = monomon.personality;
+  const pw = ctx.measureText(perText).width + 48;
+  ctx.fillStyle = style.cheek;
+  roundRect(ctx, cx - pw / 2, y - 34, pw, 52, 26);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.fillText(perText, cx, y + 2);
+
+  // 説明
+  y += 80;
+  ctx.fillStyle = brown;
+  ctx.font = "500 38px 'M PLUS Rounded 1c', sans-serif";
+  ctx.fillText("「" + monomon.description + "」", cx, y);
+
+  // 発見日
   ctx.fillStyle = muted;
   ctx.font = "500 28px 'M PLUS Rounded 1c', sans-serif";
   ctx.fillText(
     "発見日  " + formatDiscoveredDate(monomon.discoveredAt),
     cx,
-    cardX + cardW - 20 < 0 ? y : H - m - 36,
+    cardY + cardH - 44,
   );
 
   return await new Promise<Blob>((resolve) =>
