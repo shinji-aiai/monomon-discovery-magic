@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Volume2,
   Smartphone,
   Trash2,
@@ -12,9 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, clearDex } from "@/lib/dex";
 import { tap, playSound, haptic } from "@/lib/sound";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
