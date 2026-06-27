@@ -58,6 +58,7 @@ function Scan() {
   const cancelled = useRef(false);
 
   useEffect(() => {
+    cancelled.current = false;
     return () => {
       cancelled.current = true;
     };
