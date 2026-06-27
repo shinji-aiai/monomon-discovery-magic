@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BookHeart, Settings as SettingsIcon, Camera, Sparkles } from "lucide-react";
+import { Camera, Sparkles, ChevronRight } from "lucide-react";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { MonomonArt } from "@/components/MonomonArt";
+import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
-import { useDex } from "@/lib/dex";
-import { CATEGORIES } from "@/lib/monomon-data";
-import { tap } from "@/lib/sound";
+import { useDex, countToday } from "@/lib/dex";
+import { CATEGORIES, CATEGORY_STYLES } from "@/lib/monomon-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,86 +27,156 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 5) return "こんばんは";
+  if (h < 11) return "おはよう";
+  if (h < 18) return "こんにちは";
+  return "こんばんは";
+}
+
 function Home() {
   const settings = useSettings();
   const dex = useDex();
+  const last = dex[0];
+  const today = countToday(dex);
+  const kinds = new Set(dex.map((m) => m.category)).size;
+
   const [heroSeed, setHeroSeed] = useState(123456);
   const [heroCat, setHeroCat] = useState(CATEGORIES[5]);
-
   useEffect(() => {
     setHeroSeed(Math.floor(Math.random() * 1_000_000));
     setHeroCat(CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]);
   }, []);
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-10 pt-[max(2rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
 
-      {/* 装飾の星 */}
-      <Sparkles className="absolute left-8 top-24 h-5 w-5 text-accent/70 animate-twinkle" />
+      <Sparkles className="absolute left-6 top-20 h-4 w-4 text-accent/60 animate-twinkle" />
       <Sparkles
-        className="absolute right-10 top-40 h-6 w-6 text-primary/50 animate-twinkle"
+        className="absolute right-8 top-32 h-5 w-5 text-primary/40 animate-twinkle"
         style={{ animationDelay: "0.8s" }}
       />
-      <Sparkles
-        className="absolute bottom-44 left-12 h-4 w-4 text-accent/60 animate-twinkle"
-        style={{ animationDelay: "1.4s" }}
-      />
 
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        {/* ヒーロー精霊 */}
-        <div className="relative mb-2 h-56 w-56">
-          <span className="absolute inset-6 rounded-full bg-primary/15 animate-pulse-ring" />
-          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_18px_28px_rgba(120,80,50,0.18)]">
-            <MonomonArt seed={heroSeed} category={heroCat} />
+      {/* あいさつ */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-muted-foreground">
+            {greeting()}
+          </p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+            モノモン
+          </h1>
+        </div>
+        <span className="rounded-full bg-card/70 px-3 py-1 text-xs font-bold text-muted-foreground backdrop-blur">
+          モノに宿る、小さな精霊
+        </span>
+      </div>
+
+      {/* ヒーロー（さいきん見つけた子 or これから） */}
+      <div className="mt-4 flex flex-1 flex-col items-center justify-center text-center">
+        <div className="relative h-44 w-44">
+          <span className="absolute inset-5 rounded-full bg-primary/15 animate-pulse-ring" />
+          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
+            {last ? (
+              <MonomonArt monomon={last} />
+            ) : (
+              <MonomonArt seed={heroSeed} category={heroCat} />
+            )}
           </div>
         </div>
-
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-          モノモン
-        </h1>
-        <p className="mt-2 text-sm font-medium text-muted-foreground">
-          モノに宿る、小さな精霊たち
-        </p>
+        {last ? (
+          <p className="mt-1 text-sm font-bold text-foreground">
+            さいきんの相棒「{last.name}」
+            <span className="ml-1 font-medium text-muted-foreground">
+              · {CATEGORY_STYLES[last.category].emoji} {last.category}
+            </span>
+          </p>
+        ) : (
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
+            さあ、最初の精霊を見つけよう
+          </p>
+        )}
       </div>
 
-      {/* アクション */}
-      <div className="mx-auto w-full max-w-sm">
+      {/* 統計 */}
+      <div className="mb-5 grid grid-cols-3 gap-3">
+        <Stat label="きょう" value={today} unit="たい" accent />
+        <Stat label="ずかん" value={dex.length} unit="たい" />
+        <Stat label="しゅるい" value={`${kinds}/8`} unit="種" />
+      </div>
+
+      {/* さいきん見つけた一覧 */}
+      {dex.length > 0 && (
         <Link
-          to="/scan"
-          onClick={tap}
-          className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
+          to="/zukan"
+          className="mb-4 flex items-center gap-3 rounded-3xl bg-card/80 p-3 shadow-soft backdrop-blur active:scale-[0.98]"
         >
-          <Camera className="h-6 w-6" />
-          見つける
+          <div className="flex -space-x-3">
+            {dex.slice(0, 4).map((m) => (
+              <div
+                key={m.id}
+                className="h-11 w-11 overflow-hidden rounded-full border-2 border-card"
+                style={{
+                  backgroundImage: `linear-gradient(160deg, ${CATEGORY_STYLES[m.category].bg[0]}, ${CATEGORY_STYLES[m.category].bg[1]})`,
+                }}
+              >
+                <MonomonArt monomon={m} />
+              </div>
+            ))}
+          </div>
+          <span className="flex-1 text-sm font-bold text-foreground">
+            図鑑を見る
+          </span>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </Link>
+      )}
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <Link
-            to="/zukan"
-            onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-full bg-card/80 py-3.5 text-sm font-bold text-foreground shadow-soft backdrop-blur active:scale-95"
-          >
-            <BookHeart className="h-5 w-5 text-primary" />
-            図鑑
-            {dex.length > 0 && (
-              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
-                {dex.length}
-              </span>
-            )}
-          </Link>
-          <Link
-            to="/settings"
-            onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-full bg-card/80 py-3.5 text-sm font-bold text-foreground shadow-soft backdrop-blur active:scale-95"
-          >
-            <SettingsIcon className="h-5 w-5 text-muted-foreground" />
-            設定
-          </Link>
-        </div>
-      </div>
+      {/* メインアクション */}
+      <Link
+        to="/scan"
+        className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
+      >
+        <Camera className="h-6 w-6" />
+        見つける
+      </Link>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  unit,
+  accent,
+}: {
+  label: string;
+  value: number | string;
+  unit: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-3xl p-3 text-center shadow-soft ${
+        accent ? "gradient-magic text-card" : "bg-card/85 backdrop-blur"
+      }`}
+    >
+      <p
+        className={`text-[0.7rem] font-bold ${accent ? "text-card/80" : "text-muted-foreground"}`}
+      >
+        {label}
+      </p>
+      <p
+        className={`mt-0.5 text-2xl font-extrabold leading-none ${accent ? "text-card" : "text-foreground"}`}
+      >
+        {value}
+        <span className="ml-0.5 text-xs font-bold">{unit}</span>
+      </p>
     </div>
   );
 }
