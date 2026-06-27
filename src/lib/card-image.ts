@@ -185,8 +185,8 @@ export async function renderCardImage(
     ctx.fillText(text, bx + padX, panelY + 22 + 32);
     ctx.textAlign = "center";
   };
-  chip(`${mat.emoji} ${mat.label}`, 0, "left");
-  chip(`${style.emoji} ${monomon.category}`, 0, "right");
+  chip(`${species.emoji} ${species.name}`, 0, "left");
+  chip(`${fam.emoji} ${fam.label}`, 0, "right");
 
   // モノモン本体（飛び出す）
   const svg = renderMonomonSVG(specOf(monomon));
