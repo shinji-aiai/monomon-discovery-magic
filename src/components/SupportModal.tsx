@@ -23,8 +23,10 @@ export function SupportModal({ onClose }: SupportModalProps) {
   const [option, setOption] =
     useState<(typeof SUPPORT_OPTIONS)[number]>(SUPPORT_OPTIONS[1]);
   const [paying, setPaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  const startPayment = () => {
+  const startPayment = async () => {
     tap();
     if (!isPaymentsConfigured()) {
       toast.error("ただいま応援を受け付けられません。", {
@@ -32,7 +34,35 @@ export function SupportModal({ onClose }: SupportModalProps) {
       });
       return;
     }
+
     setPaying(true);
+    setLoading(true);
+    try {
+      const result = await createSupportCheckout({
+        data: {
+          priceId: option.priceId,
+          returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result || !result.clientSecret) {
+        throw new Error("error" in result ? result.error : "no client secret");
+      }
+      setClientSecret(result.clientSecret);
+    } catch {
+      toast.error("ただいま応援を受け付けられません。", {
+        description: "時間をおいて、もう一度おためしください。",
+      });
+      setPaying(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetSelection = () => {
+    tap();
+    setPaying(false);
+    setClientSecret(null);
   };
 
   return (
