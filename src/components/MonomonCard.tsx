@@ -87,6 +87,12 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
           「{monomon.description}」
         </p>
 
+        {monomon.uncertain && (
+          <p className="mt-2 text-xs font-medium text-muted-foreground">
+            ※ AIは少し自信がないみたい。{monomon.objectLabel ?? "この子"}の仲間かもしれません。
+          </p>
+        )}
+
         <p className="mt-3 text-right text-xs font-medium text-muted-foreground">
           発見日　{formatDiscoveredDate(monomon.discoveredAt)}
         </p>
