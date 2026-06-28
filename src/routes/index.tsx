@@ -143,6 +143,7 @@ function Home() {
       {/* メインアクション */}
       <Link
         to="/scan"
+        onClick={() => trackFindClick()}
         className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
       >
         <Camera className="h-6 w-6" />
