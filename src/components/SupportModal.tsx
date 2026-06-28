@@ -1,44 +1,34 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Heart, X, Loader2 } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import {
-  createSupportCheckout,
-  SUPPORT_AMOUNTS,
-} from "@/lib/support.functions";
+import { SUPPORT_OPTIONS } from "@/lib/support.functions";
+import { isPaymentsConfigured } from "@/lib/stripe";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { tap } from "@/lib/sound";
 
 interface SupportModalProps {
   onClose: () => void;
 }
 
-/** 「モノモンを応援する」モーダル。押すと必ず Stripe Checkout へ遷移する。 */
+/**
+ * 「モノモンを応援する」モーダル。
+ * 金額を選んで「応援する」を押すと、その場で Stripe の安全な決済画面を表示します。
+ * 決済が完了したときだけ、Stripe が成功ページ（/checkout/return）へ案内します。
+ * 途中でやめたいときは閉じれば元の画面に戻ります（成功表示は出ません）。
+ */
 export function SupportModal({ onClose }: SupportModalProps) {
-  const checkout = useServerFn(createSupportCheckout);
-  const [amount, setAmount] = useState<number>(SUPPORT_AMOUNTS[1]);
-  const [busy, setBusy] = useState(false);
+  const [option, setOption] = useState(SUPPORT_OPTIONS[1]);
+  const [paying, setPaying] = useState(false);
 
-  const support = async () => {
+  const startPayment = () => {
     tap();
-    setBusy(true);
-    try {
-      const res = await checkout({
-        data: { amount, origin: window.location.origin },
-      });
-      if (res.status === "redirect") {
-        // Stripe Checkout へ遷移
-        window.location.href = res.url;
-        return;
-      }
-      // 決済を準備できないときは、はっきりエラーを伝える（ダミー成功は出さない）
+    if (!isPaymentsConfigured()) {
       toast.error("ただいま応援を受け付けられません。", {
-        description: "時間をおいて、もう一度おためしください。",
+        description: "公開後にもう一度おためしください。",
       });
-      setBusy(false);
-    } catch {
-      toast.error("うまく開けませんでした。もう一度おためしください。");
-      setBusy(false);
+      return;
     }
+    setPaying(true);
   };
 
   return (
@@ -60,56 +50,79 @@ export function SupportModal({ onClose }: SupportModalProps) {
           </button>
         </div>
 
-        <div className="flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
-            <Heart className="h-8 w-8 fill-rose-400 text-rose-400" />
-          </span>
-          <p className="mt-4 text-[0.95rem] leading-relaxed text-muted-foreground">
-            応援いただいた金額は、
-            <br />
-            新しいモノモンの開発に使わせていただきます。
-          </p>
-        </div>
+        {paying ? (
+          <div className="mt-2">
+            <p className="mb-4 text-center text-sm text-muted-foreground">
+              ¥{option.amount} の応援
+            </p>
+            <StripeEmbeddedCheckout
+              priceId={option.priceId}
+              returnUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
+            />
+            <button
+              onClick={() => {
+                tap();
+                setPaying(false);
+              }}
+              className="mt-4 w-full rounded-full bg-muted py-3 text-sm font-bold text-muted-foreground active:scale-95"
+            >
+              金額をえらび直す
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col items-center text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
+                <Heart className="h-8 w-8 fill-rose-400 text-rose-400" />
+              </span>
+              <p className="mt-4 text-[0.95rem] leading-relaxed text-muted-foreground">
+                応援いただいた金額は、
+                <br />
+                新しいモノモンの開発に使わせていただきます。
+              </p>
+            </div>
 
-        {/* 金額えらび */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          {SUPPORT_AMOUNTS.map((a) => {
-            const active = a === amount;
-            return (
-              <button
-                key={a}
-                onClick={() => {
-                  tap();
-                  setAmount(a);
-                }}
-                className={`rounded-2xl py-4 text-center font-extrabold transition-all active:scale-95 ${
-                  active
-                    ? "gradient-primary text-primary-foreground shadow-soft"
-                    : "bg-card text-foreground shadow-soft"
-                }`}
-              >
-                <span className="text-lg">¥{a}</span>
-              </button>
-            );
-          })}
-        </div>
+            {/* 金額えらび */}
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              {SUPPORT_OPTIONS.map((o) => {
+                const active = o.priceId === option.priceId;
+                return (
+                  <button
+                    key={o.priceId}
+                    onClick={() => {
+                      tap();
+                      setOption(o);
+                    }}
+                    className={`rounded-2xl py-4 text-center font-extrabold transition-all active:scale-95 ${
+                      active
+                        ? "gradient-primary text-primary-foreground shadow-soft"
+                        : "bg-card text-foreground shadow-soft"
+                    }`}
+                  >
+                    <span className="text-lg">¥{o.amount}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-        <button
-          onClick={support}
-          disabled={busy}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-4 text-lg font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95 disabled:opacity-70"
-        >
-          {busy ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Heart className="h-5 w-5 fill-current" />
-          )}
-          ¥{amount} で応援する
-        </button>
+            <button
+              onClick={startPayment}
+              disabled={paying}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-4 text-lg font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95 disabled:opacity-70"
+            >
+              {paying ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Heart className="h-5 w-5 fill-current" />
+              )}
+              ¥{option.amount} で応援する
+            </button>
 
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          決済は Stripe の安全な画面で行われます。
-        </p>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              決済は Stripe の安全な画面で行われます。
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
