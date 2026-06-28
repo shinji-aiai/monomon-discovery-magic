@@ -143,16 +143,17 @@ export function SupportModal({ onClose }: SupportModalProps) {
 
             <button
               onClick={startPayment}
-              disabled={paying}
+              disabled={loading}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-4 text-lg font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95 disabled:opacity-70"
             >
-              {paying ? (
+              {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <Heart className="h-5 w-5 fill-current" />
               )}
               ¥{option.amount} で応援する
             </button>
+
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
               決済は Stripe の安全な画面で行われます。
