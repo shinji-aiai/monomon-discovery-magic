@@ -1,7 +1,6 @@
 import {
   COMMENTS,
   PERSONALITIES,
-  ACCESSORY_POOL,
   EYE_POOL,
   MOUTH_POOL,
   PATTERN_POOL,
@@ -14,7 +13,8 @@ import {
   type MonomonSpec,
 } from "./monomon-data";
 import { SPECIES_MAP, detectSpecies, getSpecies } from "./species";
-import { analyzePhoto, type PhotoAnalysis } from "./image-utils";
+import { analyzePhoto } from "./image-utils";
+import { analyzeSpirit } from "./monomon-ai.functions";
 
 export interface Monomon extends MonomonSpec {
   id: string;
@@ -30,6 +30,16 @@ export interface Monomon extends MonomonSpec {
   photo: string;
   /** お気に入り */
   favorite?: boolean;
+  /** AIが認識した物体名（例：コップ、ハサミ、傘） */
+  objectLabel?: string;
+  /** AIの認識に自信が低い＝推定表示（「○○の仲間かもしれない」） */
+  uncertain?: boolean;
+}
+
+function makeId(seed: number): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `mm_${seed}_${Date.now()}`;
 }
 
 function hashString(str: string): number {
