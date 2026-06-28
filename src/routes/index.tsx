@@ -46,9 +46,13 @@ function Home() {
 
   const [heroSeed, setHeroSeed] = useState(123456);
   const [heroSpecies, setHeroSpecies] = useState(SPECIES[0].id);
+  // 時刻依存のあいさつは、SSRとクライアントの初回描画を一致させるため
+  // マウント後にだけ確定させる（LINE等のWebViewでの hydration 不一致を防ぐ）。
+  const [greet, setGreet] = useState<string | null>(null);
   useEffect(() => {
     setHeroSeed(Math.floor(Math.random() * 1_000_000));
     setHeroSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)].id);
+    setGreet(greeting());
   }, []);
 
   return (
@@ -66,7 +70,7 @@ function Home() {
       {/* あいさつ */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-muted-foreground">{greeting()}</p>
+          <p className="text-sm font-bold text-muted-foreground">{greet ?? "ようこそ"}</p>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             モノモン
           </h1>
