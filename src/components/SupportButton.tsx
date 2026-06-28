@@ -20,6 +20,7 @@ export function SupportButton({ variant }: SupportButtonProps) {
 
   const handleOpen = () => {
     tap();
+    trackSupportClick(variant);
     setOpen(true);
   };
 
