@@ -148,10 +148,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   useEffect(() => {
     void import("../lib/sound").then((m) => m.initBgmAutoResume());
   }, []);
+
+  // SPA のページビュー計測：初回 + ルート遷移ごとに送信する。
+  useEffect(() => {
+    trackPageView(router.state.location.pathname + router.state.location.search);
+    const unsub = router.subscribe("onResolved", ({ toLocation }) => {
+      trackPageView(toLocation.pathname + toLocation.search);
+    });
+    return unsub;
+  }, [router]);
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
