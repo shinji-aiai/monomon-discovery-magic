@@ -102,7 +102,16 @@ export function SupportModal({ onClose }: SupportModalProps) {
                 <p className="mt-3 text-sm">決済画面を準備しています…</p>
               </div>
             ) : (
-              <StripeEmbeddedCheckout clientSecret={clientSecret} />
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <p className="mt-3 text-sm">決済画面を準備しています…</p>
+                  </div>
+                }
+              >
+                <StripeEmbeddedCheckout clientSecret={clientSecret} />
+              </Suspense>
             )}
             <button
               onClick={resetSelection}
