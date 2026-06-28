@@ -144,6 +144,9 @@ function Home() {
         見つける
       </Link>
 
+      {/* 応援（ホーム下部・小さめカード） */}
+      <SupportButton variant="home" />
+
       <BottomNav />
     </div>
   );
