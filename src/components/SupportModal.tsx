@@ -17,7 +17,8 @@ interface SupportModalProps {
  * 途中でやめたいときは閉じれば元の画面に戻ります（成功表示は出ません）。
  */
 export function SupportModal({ onClose }: SupportModalProps) {
-  const [option, setOption] = useState(SUPPORT_OPTIONS[1]);
+  const [option, setOption] =
+    useState<(typeof SUPPORT_OPTIONS)[number]>(SUPPORT_OPTIONS[1]);
   const [paying, setPaying] = useState(false);
 
   const startPayment = () => {
