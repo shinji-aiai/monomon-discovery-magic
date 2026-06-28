@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Heart, X, Loader2 } from "lucide-react";
 import {
@@ -6,8 +6,15 @@ import {
   createSupportCheckout,
 } from "@/lib/support.functions";
 import { isPaymentsConfigured, getStripeEnvironment } from "@/lib/stripe";
-import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { tap } from "@/lib/sound";
+
+// Lazily loaded so Stripe's SDK (and its storage access) never enters the
+// home screen's import graph — only when the user actually starts a payment.
+const StripeEmbeddedCheckout = lazy(() =>
+  import("@/components/StripeEmbeddedCheckout").then((m) => ({
+    default: m.StripeEmbeddedCheckout,
+  })),
+);
 
 interface SupportModalProps {
   onClose: () => void;
