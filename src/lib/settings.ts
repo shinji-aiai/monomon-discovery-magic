@@ -1,13 +1,19 @@
 import { createPersistentStore } from "./store";
 
 export interface AppSettings {
+  /** 効果音 */
   sound: boolean;
+  /** BGM */
+  bgm: boolean;
+  /** バイブ（触覚） */
   haptics: boolean;
+  /** オンボーディング表示済み */
   onboarded: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   sound: true,
+  bgm: false,
   haptics: true,
   onboarded: false,
 };
