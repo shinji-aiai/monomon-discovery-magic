@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Heart, X, Loader2 } from "lucide-react";
-import { SUPPORT_OPTIONS } from "@/lib/support.functions";
-import { isPaymentsConfigured } from "@/lib/stripe";
+import {
+  SUPPORT_OPTIONS,
+  createSupportCheckout,
+} from "@/lib/support.functions";
+import { isPaymentsConfigured, getStripeEnvironment } from "@/lib/stripe";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { tap } from "@/lib/sound";
 
@@ -20,8 +23,10 @@ export function SupportModal({ onClose }: SupportModalProps) {
   const [option, setOption] =
     useState<(typeof SUPPORT_OPTIONS)[number]>(SUPPORT_OPTIONS[1]);
   const [paying, setPaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  const startPayment = () => {
+  const startPayment = async () => {
     tap();
     if (!isPaymentsConfigured()) {
       toast.error("ただいま応援を受け付けられません。", {
@@ -29,7 +34,35 @@ export function SupportModal({ onClose }: SupportModalProps) {
       });
       return;
     }
+
     setPaying(true);
+    setLoading(true);
+    try {
+      const result = await createSupportCheckout({
+        data: {
+          priceId: option.priceId,
+          returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result || !result.clientSecret) {
+        throw new Error("error" in result ? result.error : "no client secret");
+      }
+      setClientSecret(result.clientSecret);
+    } catch {
+      toast.error("ただいま応援を受け付けられません。", {
+        description: "時間をおいて、もう一度おためしください。",
+      });
+      setPaying(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetSelection = () => {
+    tap();
+    setPaying(false);
+    setClientSecret(null);
   };
 
   return (
@@ -56,20 +89,22 @@ export function SupportModal({ onClose }: SupportModalProps) {
             <p className="mb-4 text-center text-sm text-muted-foreground">
               ¥{option.amount} の応援
             </p>
-            <StripeEmbeddedCheckout
-              priceId={option.priceId}
-              returnUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
-            />
+            {loading || !clientSecret ? (
+              <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <p className="mt-3 text-sm">決済画面を準備しています…</p>
+              </div>
+            ) : (
+              <StripeEmbeddedCheckout clientSecret={clientSecret} />
+            )}
             <button
-              onClick={() => {
-                tap();
-                setPaying(false);
-              }}
+              onClick={resetSelection}
               className="mt-4 w-full rounded-full bg-muted py-3 text-sm font-bold text-muted-foreground active:scale-95"
             >
               金額をえらび直す
             </button>
           </div>
+
         ) : (
           <>
             <div className="flex flex-col items-center text-center">
@@ -108,16 +143,17 @@ export function SupportModal({ onClose }: SupportModalProps) {
 
             <button
               onClick={startPayment}
-              disabled={paying}
+              disabled={loading}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-4 text-lg font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95 disabled:opacity-70"
             >
-              {paying ? (
+              {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <Heart className="h-5 w-5 fill-current" />
               )}
               ¥{option.amount} で応援する
             </button>
+
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
               決済は Stripe の安全な画面で行われます。

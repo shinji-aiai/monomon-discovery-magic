@@ -1,34 +1,22 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { getStripe, getStripeEnvironment } from "@/lib/stripe";
-import { createSupportCheckout } from "@/lib/support.functions";
+import { getStripe } from "@/lib/stripe";
 
 interface StripeEmbeddedCheckoutProps {
-  priceId: string;
-  returnUrl?: string;
+  /** 事前に作成済みの Checkout Session の client secret。 */
+  clientSecret: string;
 }
 
+/**
+ * 取得済みの clientSecret を使って Stripe の埋め込み決済を表示する。
+ * セッション作成（および失敗時のメッセージ表示）は呼び出し側で行うため、
+ * Stripe 標準の「Something went wrong」画面は出さない。
+ */
 export function StripeEmbeddedCheckout({
-  priceId,
-  returnUrl,
+  clientSecret,
 }: StripeEmbeddedCheckoutProps) {
-  const fetchClientSecret = async (): Promise<string> => {
-    const result = await createSupportCheckout({
-      data: {
-        priceId,
-        returnUrl:
-          returnUrl ||
-          `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-        environment: getStripeEnvironment(),
-      },
-    });
-    if ("error" in result) throw new Error(result.error);
-    if (!result.clientSecret) throw new Error("Stripe からの応答がありませんでした。");
-    return result.clientSecret;
-  };
-
   return (
     <div id="checkout">
-      <EmbeddedCheckoutProvider stripe={getStripe()} options={{ fetchClientSecret }}>
+      <EmbeddedCheckoutProvider stripe={getStripe()} options={{ clientSecret }}>
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
     </div>
