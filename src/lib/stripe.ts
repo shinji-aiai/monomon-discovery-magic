@@ -1,4 +1,10 @@
-import { loadStripe, Stripe } from "@stripe/stripe-js";
+// Import from the "/pure" entry so merely importing this module does NOT
+// auto-inject Stripe.js (fraud-signals). The script is only loaded when
+// loadStripe() is actually called (i.e. when the user opens the payment UI).
+// This keeps Stripe — and its localStorage/sessionStorage access, which throws
+// a SecurityError in storage-restricted in-app browsers like LINE's WKWebView —
+// completely out of the home screen's initial load.
+import { loadStripe, type Stripe } from "@stripe/stripe-js/pure";
 
 // Declared locally so this client module has no cross-tree imports.
 type StripeEnv = "sandbox" | "live";
