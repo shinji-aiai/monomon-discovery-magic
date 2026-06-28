@@ -89,20 +89,22 @@ export function SupportModal({ onClose }: SupportModalProps) {
             <p className="mb-4 text-center text-sm text-muted-foreground">
               ¥{option.amount} の応援
             </p>
-            <StripeEmbeddedCheckout
-              priceId={option.priceId}
-              returnUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
-            />
+            {loading || !clientSecret ? (
+              <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <p className="mt-3 text-sm">決済画面を準備しています…</p>
+              </div>
+            ) : (
+              <StripeEmbeddedCheckout clientSecret={clientSecret} />
+            )}
             <button
-              onClick={() => {
-                tap();
-                setPaying(false);
-              }}
+              onClick={resetSelection}
               className="mt-4 w-full rounded-full bg-muted py-3 text-sm font-bold text-muted-foreground active:scale-95"
             >
               金額をえらび直す
             </button>
           </div>
+
         ) : (
           <>
             <div className="flex flex-col items-center text-center">
