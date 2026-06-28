@@ -16,6 +16,7 @@ import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { BottomNav } from "@/components/BottomNav";
+import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
 import { addToDex } from "@/lib/dex";
@@ -236,6 +237,11 @@ function Scan() {
                 <RefreshCw className="h-4 w-4" />
                 もう一度
               </button>
+            </div>
+
+            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
+            <div className="mt-4 text-center">
+              <SupportButton variant="result" />
             </div>
           </div>
         </div>

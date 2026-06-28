@@ -6,13 +6,13 @@ import {
   createSupportCheckout,
   SUPPORT_AMOUNTS,
 } from "@/lib/support.functions";
-import { tap, playSound, haptic } from "@/lib/sound";
+import { tap } from "@/lib/sound";
 
 interface SupportModalProps {
   onClose: () => void;
 }
 
-/** 「モノモンを応援する」モーダル。Stripe Checkout に接続できる構造。 */
+/** 「モノモンを応援する」モーダル。押すと必ず Stripe Checkout へ遷移する。 */
 export function SupportModal({ onClose }: SupportModalProps) {
   const checkout = useServerFn(createSupportCheckout);
   const [amount, setAmount] = useState<number>(SUPPORT_AMOUNTS[1]);
@@ -26,19 +26,17 @@ export function SupportModal({ onClose }: SupportModalProps) {
         data: { amount, origin: window.location.origin },
       });
       if (res.status === "redirect") {
+        // Stripe Checkout へ遷移
         window.location.href = res.url;
         return;
       }
-      // Stripe 未接続のときも、気持ちはしっかり受け取る
-      playSound("save");
-      haptic([12, 40, 12]);
-      toast.success("応援ありがとうございます！", {
-        description: "決済の受付は準備中です。お気持ち、しかと受け取りました。",
+      // 決済を準備できないときは、はっきりエラーを伝える（ダミー成功は出さない）
+      toast.error("ただいま応援を受け付けられません。", {
+        description: "時間をおいて、もう一度おためしください。",
       });
-      onClose();
+      setBusy(false);
     } catch {
       toast.error("うまく開けませんでした。もう一度おためしください。");
-    } finally {
       setBusy(false);
     }
   };
@@ -110,7 +108,7 @@ export function SupportModal({ onClose }: SupportModalProps) {
         </button>
 
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          いつもありがとうございます。
+          決済は Stripe の安全な画面で行われます。
         </p>
       </div>
     </div>

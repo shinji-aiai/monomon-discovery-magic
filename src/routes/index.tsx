@@ -4,6 +4,7 @@ import { Camera, Sparkles, ChevronRight } from "lucide-react";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { MonomonArt } from "@/components/MonomonArt";
 import { BottomNav } from "@/components/BottomNav";
+import { SupportButton } from "@/components/SupportButton";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, countToday } from "@/lib/dex";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
@@ -142,6 +143,9 @@ function Home() {
         <Camera className="h-6 w-6" />
         見つける
       </Link>
+
+      {/* 応援（ホーム下部・小さめカード） */}
+      <SupportButton variant="home" />
 
       <BottomNav />
     </div>
