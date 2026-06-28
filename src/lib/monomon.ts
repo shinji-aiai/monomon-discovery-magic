@@ -14,7 +14,8 @@ import {
   type MonomonSpec,
 } from "./monomon-data";
 import { SPECIES_MAP, detectSpecies, getSpecies } from "./species";
-import { analyzePhoto, type PhotoAnalysis } from "./image-utils";
+import { analyzePhoto } from "./image-utils";
+import { analyzeSpirit } from "./monomon-ai.functions";
 
 export interface Monomon extends MonomonSpec {
   id: string;
@@ -30,6 +31,16 @@ export interface Monomon extends MonomonSpec {
   photo: string;
   /** お気に入り */
   favorite?: boolean;
+  /** AIが認識した物体名（例：コップ、ハサミ、傘） */
+  objectLabel?: string;
+  /** AIの認識に自信が低い＝推定表示（「○○の仲間かもしれない」） */
+  uncertain?: boolean;
+}
+
+function makeId(seed: number): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `mm_${seed}_${Date.now()}`;
 }
 
 function hashString(str: string): number {
@@ -72,42 +83,69 @@ export function buildSpec(
 /**
  * 写真から「モノモン（個体）」を生成します。
  *
- * 写真の色・明るさ・縦横比・賑やかさを分析して宿る種族を選び、
- * さらに撮影した瞬間（時刻）を混ぜることで、同じ写真でも
- * 毎回ちがう個体（色・目・口・模様・アクセサリー・ポーズ・性格）になります。
- * 世界に同じ個体は存在しません。
+ * AIが写真の「主役のモノ」を認識し、その物の役割・特徴に一致する精霊を
+ * 組み立てます（見た目＝種族シルエット・名前・性格・説明文をすべて一致）。
+ * ランダム生成はしません。AIの認識に自信が低いときは uncertain=true を返し、
+ * UI 側で「○○の仲間かもしれない」と推定であることを伝えます。
  *
- * ⚠️ キャラクターの描画はプロシージャルなモック実装です。
- *    将来 AI 画像生成APIへ接続する場合は、この関数の中身だけを
- *    差し替えてください（speciesId と個体パラメータを渡せば表示はそのまま）。
+ * AIに接続できないときだけ、控えめなフォールバック（uncertain=true）に切り替えます。
  */
 export async function generateMonomon(photo: string): Promise<Monomon> {
-  const analysis = await analyzePhoto(photo);
-
-  // 写真の指紋＋撮影の瞬間（時刻・分単位）で、毎回ゆらぐ seed を作る
+  // 写真の指紋＋撮影の瞬間で、姿の細部（模様・ポーズ等）に多様性を持たせる seed
   const base = hashString(photo.slice(0, 2048));
   const moment = Math.floor(Date.now() / 1000);
   const seed = (base ^ Math.imul(moment, 2654435761)) >>> 0;
-  const rng = mulberry32(seed);
 
+  let result: Awaited<ReturnType<typeof analyzeSpirit>>;
+  try {
+    result = await analyzeSpirit({ data: { photo } });
+  } catch (e) {
+    console.error("analyzeSpirit failed", e);
+    return fallbackMonomon(photo, seed);
+  }
+
+  if ("error" in result) {
+    return fallbackMonomon(photo, seed);
+  }
+
+  const species = getSpecies(result.speciesId);
+  const spec = buildSpec(seed, result.speciesId, result.hue);
+  // 見た目はAIの判断に合わせる（ランダム要素を上書き）
+  spec.eyes = result.eyes;
+  spec.mouth = result.mouth;
+  spec.accessory = result.accessory;
+
+  return {
+    ...spec,
+    id: makeId(seed),
+    name: result.name,
+    family: species.family,
+    personality: result.personality,
+    description: result.description,
+    objectLabel: result.object,
+    uncertain: !result.confident,
+    discoveredAt: new Date().toISOString(),
+    photo,
+    favorite: false,
+  };
+}
+
+/** AIに接続できないときのフォールバック（推定としてやさしく表示）。 */
+async function fallbackMonomon(photo: string, seed: number): Promise<Monomon> {
+  const analysis = await analyzePhoto(photo);
+  const rng = mulberry32(seed);
   const species = detectSpecies(analysis, rng);
   const spec = buildSpec(seed, species.id, analysis.hue);
 
   const nameRng = mulberry32(seed ^ 0xc2b2ae35);
-  const name = genName(nameRng);
-  const personality = pick(nameRng, PERSONALITIES);
-  const description = pick(nameRng, COMMENTS);
-
   return {
     ...spec,
-    id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `mm_${seed}_${Date.now()}`,
-    name,
+    id: makeId(seed),
+    name: genName(nameRng),
     family: species.family,
-    personality,
-    description,
+    personality: pick(nameRng, PERSONALITIES),
+    description: pick(nameRng, COMMENTS),
+    uncertain: true,
     discoveredAt: new Date().toISOString(),
     photo,
     favorite: false,

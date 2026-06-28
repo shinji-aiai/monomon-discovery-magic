@@ -50,9 +50,10 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/55 to-transparent" />
         </div>
 
-        {/* チップ */}
-        <span className="absolute left-4 top-4 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
-          {species.emoji} {species.name}
+        {/* チップ：AIが認識した「モノ」 */}
+        <span className="absolute left-4 top-4 max-w-[60%] truncate rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
+          {species.emoji} {monomon.objectLabel ?? species.name}
+          {monomon.uncertain && "の仲間かも？"}
         </span>
         <span className="absolute right-4 top-4 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
           {fam.emoji} {fam.label}
@@ -85,6 +86,12 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
         <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-[0.95rem] font-medium leading-relaxed text-foreground">
           「{monomon.description}」
         </p>
+
+        {monomon.uncertain && (
+          <p className="mt-2 text-xs font-medium text-muted-foreground">
+            ※ AIは少し自信がないみたい。{monomon.objectLabel ?? "この子"}の仲間かもしれません。
+          </p>
+        )}
 
         <p className="mt-3 text-right text-xs font-medium text-muted-foreground">
           発見日　{formatDiscoveredDate(monomon.discoveredAt)}
