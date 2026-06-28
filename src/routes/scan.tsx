@@ -238,6 +238,11 @@ function Scan() {
                 もう一度
               </button>
             </div>
+
+            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
+            <div className="mt-4 text-center">
+              <SupportButton variant="result" />
+            </div>
           </div>
         </div>
       )}
