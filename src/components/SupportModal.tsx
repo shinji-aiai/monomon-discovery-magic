@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Heart, X, Loader2 } from "lucide-react";
-import { SUPPORT_OPTIONS } from "@/lib/support.functions";
-import { isPaymentsConfigured } from "@/lib/stripe";
+import {
+  SUPPORT_OPTIONS,
+  createSupportCheckout,
+} from "@/lib/support.functions";
+import { isPaymentsConfigured, getStripeEnvironment } from "@/lib/stripe";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { tap } from "@/lib/sound";
 
