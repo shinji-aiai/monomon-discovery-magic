@@ -16,6 +16,7 @@ import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { BottomNav } from "@/components/BottomNav";
+import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
 import { addToDex } from "@/lib/dex";
