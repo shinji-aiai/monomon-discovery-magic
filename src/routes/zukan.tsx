@@ -22,6 +22,7 @@ import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species"
 import { downloadCardImage } from "@/lib/card-image";
 import type { Monomon } from "@/lib/monomon";
 import { tap, playSound, haptic } from "@/lib/sound";
+import { trackZukanOpen } from "@/lib/analytics";
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
