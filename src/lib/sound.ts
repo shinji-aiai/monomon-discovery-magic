@@ -94,3 +94,83 @@ export function tap() {
   playSound("button");
   haptic(10);
 }
+
+/* ===================== BGM（やさしい環境音） ===================== */
+/**
+ * 音源ファイルなしで、ゆったりとした優しいBGMを生成します。
+ * ペンタトニックの音をふんわり鳴らし続けるアンビエント。
+ * 将来、本物の楽曲ファイルに差し替える場合も startBgm/stopBgm のまま拡張できます。
+ */
+
+let bgmTimer: ReturnType<typeof setInterval> | null = null;
+let bgmGain: GainNode | null = null;
+let bgmStep = 0;
+
+// やわらかいペンタトニック（C メジャー系）
+const BGM_NOTES = [523.25, 587.33, 659.25, 783.99, 880.0, 659.25, 587.33];
+
+function bgmVoice(audio: AudioContext, freq: number, gain: number) {
+  const osc = audio.createOscillator();
+  const env = audio.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, audio.currentTime);
+  env.gain.setValueAtTime(0.0001, audio.currentTime);
+  env.gain.exponentialRampToValueAtTime(gain, audio.currentTime + 0.8);
+  env.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 3.4);
+  osc.connect(env);
+  env.connect(bgmGain ?? audio.destination);
+  osc.start();
+  osc.stop(audio.currentTime + 3.6);
+}
+
+export function startBgm() {
+  if (typeof window === "undefined") return;
+  if (!settingsStore.get().bgm) return;
+  if (bgmTimer) return;
+  const audio = getCtx();
+  if (!audio) return;
+  if (!bgmGain) {
+    bgmGain = audio.createGain();
+    bgmGain.gain.value = 0.5; // 全体を控えめに
+    bgmGain.connect(audio.destination);
+  }
+  const playNext = () => {
+    const a = getCtx();
+    if (!a || !settingsStore.get().bgm) return;
+    const note = BGM_NOTES[bgmStep % BGM_NOTES.length];
+    bgmVoice(a, note, 0.035);
+    // たまにオクターブ下の低音を重ねて温かみを出す
+    if (bgmStep % 4 === 0) bgmVoice(a, note / 2, 0.02);
+    bgmStep++;
+  };
+  playNext();
+  bgmTimer = setInterval(playNext, 2600);
+}
+
+export function stopBgm() {
+  if (bgmTimer) {
+    clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+}
+
+/** 設定に合わせてBGMの再生/停止を同期します。 */
+export function syncBgm() {
+  if (settingsStore.get().bgm) startBgm();
+  else stopBgm();
+}
+
+/**
+ * リロード後もBGMを復帰できるよう、最初のユーザー操作を1度だけ待ちます
+ * （ブラウザはユーザー操作なしに音を鳴らせないため）。
+ */
+export function initBgmAutoResume() {
+  if (typeof window === "undefined") return;
+  const onFirst = () => {
+    syncBgm();
+    window.removeEventListener("pointerdown", onFirst);
+    window.removeEventListener("keydown", onFirst);
+  };
+  window.addEventListener("pointerdown", onFirst, { once: true });
+  window.addEventListener("keydown", onFirst, { once: true });
+}
