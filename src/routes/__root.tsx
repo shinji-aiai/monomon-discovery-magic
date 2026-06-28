@@ -156,9 +156,9 @@ function RootComponent() {
 
   // SPA のページビュー計測：初回 + ルート遷移ごとに送信する。
   useEffect(() => {
-    trackPageView(router.state.location.pathname + router.state.location.search);
+    trackPageView(router.state.location.href);
     const unsub = router.subscribe("onResolved", ({ toLocation }) => {
-      trackPageView(toLocation.pathname + toLocation.search);
+      trackPageView(toLocation.href);
     });
     return unsub;
   }, [router]);
