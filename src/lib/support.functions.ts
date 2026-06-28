@@ -1,70 +1,71 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import {
+  type StripeEnv,
+  createStripeClient,
+  getStripeErrorMessage,
+} from "@/lib/stripe.server";
 
 /**
- * 「モノモンを応援する」決済の構造。
+ * 「モノモンを応援する」決済（Stripe Embedded Checkout）。
  *
- * いまは Stripe を未接続でも安全に動くよう設計しています。
- * STRIPE_SECRET_KEY を設定すると、自動的に Stripe Checkout に接続されます。
- * 金額は下の SUPPORT_AMOUNTS を変えるだけで後から自由に変更できます。
- *
- * 接続手順（将来）：
- *   1. Stripe のシークレットキーをシークレットに登録（STRIPE_SECRET_KEY）
- *   2. それだけで本関数が Checkout セッションURLを返すようになります
+ * 応援は一度きりの寄付（one-time payment）です。サブスクリプションはありません。
+ * 金額ごとに作成済みの Stripe 商品（price lookup_key）を使用します。
+ * 金額を変えたいときは SUPPORT_OPTIONS と Stripe 商品を合わせて更新してください。
  */
 
-/** 応援金額（円）。後からここを編集するだけで変更できます。 */
-export const SUPPORT_AMOUNTS = [120, 370, 800] as const;
+/** 応援金額（円）と、それぞれに対応する Stripe price の lookup_key。 */
+export const SUPPORT_OPTIONS = [
+  { amount: 120, priceId: "support_120" },
+  { amount: 370, priceId: "support_370" },
+  { amount: 800, priceId: "support_800" },
+] as const;
 
-export type SupportResult =
-  | { status: "redirect"; url: string }
-  | { status: "not_configured" };
+/** 互換用：金額の配列。 */
+export const SUPPORT_AMOUNTS = SUPPORT_OPTIONS.map((o) => o.amount) as number[];
+
+const VALID_PRICE_IDS = SUPPORT_OPTIONS.map((o) => o.priceId);
+
+type CheckoutResult = { clientSecret: string } | { error: string };
 
 export const createSupportCheckout = createServerFn({ method: "POST" })
   .inputValidator((data) =>
     z
       .object({
-        amount: z.number().int().min(100).max(50000),
-        origin: z.string().url(),
+        priceId: z.enum(VALID_PRICE_IDS as [string, ...string[]]),
+        returnUrl: z.string().url(),
+        environment: z.enum(["sandbox", "live"]),
       })
       .parse(data),
   )
-  .handler(async ({ data }): Promise<SupportResult> => {
-    const key = process.env.STRIPE_SECRET_KEY;
-    // 未接続ならフロント側で「準備中」を案内する
-    if (!key) return { status: "not_configured" };
+  .handler(async ({ data }): Promise<CheckoutResult> => {
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
 
-    const params = new URLSearchParams();
-    params.set("mode", "payment");
-    params.set("success_url", `${data.origin}/?support=thanks`);
-    params.set("cancel_url", `${data.origin}/settings`);
-    params.set("line_items[0][quantity]", "1");
-    params.set("line_items[0][price_data][currency]", "jpy");
-    params.set("line_items[0][price_data][unit_amount]", String(data.amount));
-    params.set(
-      "line_items[0][price_data][product_data][name]",
-      "モノモンを応援する",
-    );
-    params.set(
-      "line_items[0][price_data][product_data][description]",
-      "新しいモノモンの開発に使わせていただきます。",
-    );
+      // human-readable lookup_key から Stripe price を解決
+      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
+      if (!prices.data.length) {
+        return { error: "応援メニューが見つかりませんでした。" };
+      }
+      const stripePrice = prices.data[0];
 
-    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params,
-    });
+      // ダッシュボードで分かりやすいよう商品名を description に設定
+      const productId =
+        typeof stripePrice.product === "string"
+          ? stripePrice.product
+          : stripePrice.product.id;
+      const product = await stripe.products.retrieve(productId);
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Stripe checkout failed: ${res.status} ${text}`);
+      const session = await stripe.checkout.sessions.create({
+        line_items: [{ price: stripePrice.id, quantity: 1 }],
+        mode: "payment",
+        ui_mode: "embedded_page",
+        return_url: data.returnUrl,
+        payment_intent_data: { description: product.name },
+      });
+
+      return { clientSecret: session.client_secret ?? "" };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
     }
-
-    const json = (await res.json()) as { url?: string };
-    if (!json.url) throw new Error("Stripe checkout: missing url");
-    return { status: "redirect", url: json.url };
   });
