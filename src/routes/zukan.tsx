@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Camera,
@@ -22,6 +22,7 @@ import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species"
 import { downloadCardImage } from "@/lib/card-image";
 import type { Monomon } from "@/lib/monomon";
 import { tap, playSound, haptic } from "@/lib/sound";
+import { trackZukanOpen } from "@/lib/analytics";
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
@@ -44,6 +45,11 @@ function Zukan() {
   const [mode, setMode] = useState<Mode>("species");
   const [favOnly, setFavOnly] = useState(false);
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
+
+  // 図鑑画面を開いた回数を計測
+  useEffect(() => {
+    trackZukanOpen();
+  }, []);
 
   // 種族ごとに、見つけた個体をまとめる
   const bySpecies = useMemo(() => {

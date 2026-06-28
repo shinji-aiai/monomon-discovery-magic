@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, countToday } from "@/lib/dex";
+import { trackFindClick } from "@/lib/analytics";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies } from "@/lib/species";
 
@@ -142,6 +143,7 @@ function Home() {
       {/* メインアクション */}
       <Link
         to="/scan"
+        onClick={() => trackFindClick()}
         className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
       >
         <Camera className="h-6 w-6" />

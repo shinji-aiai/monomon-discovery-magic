@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Heart, Home } from "lucide-react";
+import { trackSupportComplete } from "@/lib/analytics";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
@@ -12,6 +14,13 @@ export const Route = createFileRoute("/checkout/return")({
 function CheckoutReturn() {
   const { session_id: sessionId } = Route.useSearch();
   const success = Boolean(sessionId);
+
+  // 応援完了（決済成功）を計測
+  useEffect(() => {
+    if (success) trackSupportComplete();
+  }, [success]);
+
+
 
   return (
     <div className="flex min-h-[100svh] flex-col items-center justify-center bg-background px-6 text-center">

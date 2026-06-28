@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Heart, ChevronRight } from "lucide-react";
 import { SupportModal } from "@/components/SupportModal";
 import { tap } from "@/lib/sound";
+import { trackSupportClick } from "@/lib/analytics";
 
 type Variant = "home" | "result";
 
@@ -19,6 +20,7 @@ export function SupportButton({ variant }: SupportButtonProps) {
 
   const handleOpen = () => {
     tap();
+    trackSupportClick(variant);
     setOpen(true);
   };
 
