@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex, countToday } from "@/lib/dex";
+import { trackFindClick } from "@/lib/analytics";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies } from "@/lib/species";
 
