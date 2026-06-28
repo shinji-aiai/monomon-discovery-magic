@@ -4,7 +4,8 @@
 // This keeps Stripe — and its localStorage/sessionStorage access, which throws
 // a SecurityError in storage-restricted in-app browsers like LINE's WKWebView —
 // completely out of the home screen's initial load.
-import { loadStripe, type Stripe } from "@stripe/stripe-js/pure";
+import { loadStripe } from "@stripe/stripe-js/pure";
+import type { Stripe } from "@stripe/stripe-js";
 
 // Declared locally so this client module has no cross-tree imports.
 type StripeEnv = "sandbox" | "live";
