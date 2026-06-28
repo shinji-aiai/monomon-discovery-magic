@@ -46,6 +46,11 @@ function Zukan() {
   const [favOnly, setFavOnly] = useState(false);
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
 
+  // 図鑑画面を開いた回数を計測
+  useEffect(() => {
+    trackZukanOpen();
+  }, []);
+
   // 種族ごとに、見つけた個体をまとめる
   const bySpecies = useMemo(() => {
     const map = new Map<string, Monomon[]>();
