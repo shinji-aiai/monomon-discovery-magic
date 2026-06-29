@@ -424,9 +424,9 @@ function DexCell({
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
-      <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-card/80 px-2 py-0.5 text-[0.62rem] font-extrabold text-muted-foreground backdrop-blur">
+      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
         No.{String(no).padStart(3, "0")}
       </span>
       <button
@@ -435,11 +435,11 @@ function DexCell({
           toggleFavorite(monomon.id);
           haptic(12);
         }}
-        className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
+        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
         aria-label="お気に入り"
       >
         <Heart
-          className={`h-4 w-4 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
         />
       </button>
       <div
@@ -452,8 +452,8 @@ function DexCell({
           <MonomonArt monomon={monomon} />
         </div>
       </div>
-      <div className="px-2 py-2 text-center">
-        <p className="truncate text-sm font-extrabold text-foreground">
+      <div className="px-1.5 py-1.5 text-center">
+        <p className="truncate text-xs font-extrabold text-foreground">
           {monomon.name}
         </p>
         <div className="mt-0.5 flex justify-center">
