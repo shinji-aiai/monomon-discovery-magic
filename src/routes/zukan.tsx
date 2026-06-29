@@ -364,10 +364,10 @@ function SpeciesCell({
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
       <div
-        className="relative aspect-square p-3"
+        className="relative aspect-square p-2"
         style={{
           backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[species.family].bg[0]}, ${FAMILY_STYLES[species.family].bg[1]})`,
         }}
@@ -378,7 +378,7 @@ function SpeciesCell({
               <MonomonArt monomon={sample} />
             </div>
             {count > 1 && (
-              <span className="absolute bottom-1.5 right-2 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.62rem] font-extrabold text-foreground/70 backdrop-blur">
+              <span className="absolute bottom-1 right-1.5 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-foreground/70 backdrop-blur">
                 ×{count}
               </span>
             )}
@@ -388,12 +388,12 @@ function SpeciesCell({
             <div className="h-full w-full opacity-25 [filter:brightness(0)]">
               <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
             </div>
-            <Lock className="absolute h-5 w-5 text-foreground/30" />
+            <Lock className="absolute h-4 w-4 text-foreground/30" />
           </div>
         )}
       </div>
-      <div className="px-3 py-2.5">
-        <p className="truncate text-center text-sm font-extrabold text-foreground">
+      <div className="px-1.5 py-1.5">
+        <p className="truncate text-center text-xs font-extrabold text-foreground">
           {found ? (
             <>
               {species.emoji} {species.name}
@@ -402,7 +402,7 @@ function SpeciesCell({
             <span className="text-muted-foreground">？？？</span>
           )}
         </p>
-        <div className="mt-1 flex justify-center">
+        <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={species.id} dim={!found} />
         </div>
       </div>
