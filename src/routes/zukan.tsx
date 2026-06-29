@@ -191,7 +191,7 @@ function Zukan() {
         filteredSpecies.length === 0 ? (
           <NoResult />
         ) : (
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-3 gap-2.5">
             {filteredSpecies.map((sp) => {
               const found = bySpecies.get(sp.id);
               return (
