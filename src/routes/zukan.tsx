@@ -261,10 +261,10 @@ function Zukan() {
               <Link
                 to="/scan"
                 onClick={tap}
-                className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
+                className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
               >
-                <span className="text-3xl opacity-60">＋</span>
-                <span className="text-xs font-bold">つぎを さがす</span>
+                <span className="text-2xl opacity-60">＋</span>
+                <span className="text-[0.7rem] font-bold">つぎを さがす</span>
               </Link>
             </div>
           )}
