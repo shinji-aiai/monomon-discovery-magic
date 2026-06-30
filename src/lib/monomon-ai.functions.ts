@@ -74,6 +74,14 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 飾り(accessory)は次から1つ: none, leaf, bow, star, antenna, flower, crown, halo, hat
 目・口・飾りは、その物・性格に合うものを選ぶ（迷ったら none / smile / round）。
 
+文章ルール（name・personality・description に必ず適用）：
+- 絵本のようにやさしく、モノモンがそっと語りかける文章にする。
+- 読点（、）と句点（。）は使わない。
+- 短く自然な日本語。子どもでも一度で理解できる表現にする。
+- 余韻を大切にする。必要な場面だけ「…」を使ってよい。
+- 「！」は本当に感情を伝えたい場面だけ。「？」は問いかけだけ。
+  例) 温かい飲み物で心に安らぎを運んでくれる / いつもそばで時間を見守っている
+
 必ず次のJSONだけを返す（前後に文章を付けない）:
 {
   "object": "認識した物（日本語・短く）",
@@ -83,7 +91,7 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
-  "description": "物の役割や特徴を反映した一言（短くてよい・全角20文字程度）"
+  "description": "物の役割や特徴を反映した一言（句読点なし・全角20文字程度）"
 }`;
 
 function extractJson(text: string): unknown {
