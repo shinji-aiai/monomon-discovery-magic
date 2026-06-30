@@ -14,16 +14,16 @@ import { SPECIES, SPECIES_COUNT, getSpecies } from "@/lib/species";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "モノモン｜モノに宿る、小さな精霊たち" },
+      { title: "モノモン｜モノに宿る小さな精霊たち" },
       {
         name: "description",
         content:
-          "身の回りのモノを撮ると、そのモノに宿る小さな精霊が見つかります。さあ、次は何を撮ってみよう？",
+          "身の回りのモノを撮るとそのモノに宿る小さな精霊が見つかる　さあ次は何を撮ってみよう",
       },
-      { property: "og:title", content: "モノモン｜モノに宿る、小さな精霊たち" },
+      { property: "og:title", content: "モノモン｜モノに宿る小さな精霊たち" },
       {
         property: "og:description",
-        content: "写真を撮ると、モノに宿る小さな精霊が見つかります。",
+        content: "写真を撮るとモノに宿る小さな精霊が見つかる",
       },
     ],
   }),
@@ -77,7 +77,7 @@ function Home() {
           </h1>
         </div>
         <span className="rounded-full bg-card/70 px-3 py-1 text-xs font-bold text-muted-foreground backdrop-blur">
-          モノに宿る、小さな精霊
+          モノに宿る小さな精霊
         </span>
       </div>
 

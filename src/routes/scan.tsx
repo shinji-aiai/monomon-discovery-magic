@@ -29,7 +29,7 @@ export const Route = createFileRoute("/scan")({
       { title: "見つける｜モノモン" },
       {
         name: "description",
-        content: "写真を撮って、モノに宿る小さな精霊を見つけよう。",
+        content: "写真を撮ってモノに宿る小さな精霊を見つけよう",
       },
     ],
   }),
@@ -146,7 +146,7 @@ function Scan() {
             モノを撮ってみよう
           </h1>
           <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            身の回りのモノを1枚。
+            身の回りのモノを1枚
             <br />
             どんな精霊が出てくるかな？
           </p>
