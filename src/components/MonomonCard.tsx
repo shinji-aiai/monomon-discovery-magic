@@ -1,4 +1,5 @@
 import { MonomonArt } from "./MonomonArt";
+import { AutoFitName } from "./AutoFitName";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
 import { getSpecies } from "@/lib/species";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
@@ -71,19 +72,25 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
         </div>
       </div>
 
-      {/* 情報エリア */}
-      <div className="px-6 pb-6 pt-9">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-3xl font-extrabold text-foreground">{monomon.name}</h2>
+      {/* 情報エリア（名前 → 性格 → 一言の順で見せる） */}
+      <div className="px-6 pb-6 pt-9 text-center">
+        {/* 名前：最優先・常に1行・中央。長い名前は自動で少し縮小 */}
+        <AutoFitName maxFontSize={30} minFontSize={16} className="font-extrabold text-foreground">
+          {monomon.name}
+        </AutoFitName>
+
+        {/* 性格（精神）：名前の下に配置 */}
+        <div className="mt-3 flex justify-center">
           <span
-            className="shrink-0 rounded-full px-3 py-1 text-xs font-bold text-white"
+            className="rounded-full px-3 py-1 text-xs font-bold text-white"
             style={{ backgroundColor: accent }}
           >
             {monomon.personality}
           </span>
         </div>
 
-        <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-[0.95rem] font-medium leading-relaxed text-foreground">
+        {/* 一言：最後に */}
+        <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-left text-[0.95rem] font-medium leading-relaxed text-foreground">
           「{monomon.description}」
         </p>
 
