@@ -322,6 +322,7 @@ function Zukan() {
       </p>
 
       <BottomNav />
+    </div>
   );
 }
 
