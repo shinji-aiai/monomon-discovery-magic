@@ -161,12 +161,16 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
     [STAGE.PAUSE]: "…",
     [STAGE.EYES]: "ふと目が合った",
   };
-  const caption = captions[stage];
+  const caption =
+    searching && stage === STAGE.GATHER ? "いま探しているよ…" : captions[stage];
 
   const objectLabel = monomon?.objectLabel?.trim();
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
+    <div
+      onClick={advance}
+      className="flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+    >
       {/* 出会いの舞台（写真 → 光 → シルエット → 姿） */}
       <div className="relative h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
         {/* 写真（進むほど静かに沈む） */}
