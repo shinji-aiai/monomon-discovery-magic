@@ -316,8 +316,12 @@ function Zukan() {
         />
       )}
 
+      {/* 最下部のひとこと */}
+      <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
+        まだ見ぬモノモンが待っているよ
+      </p>
+
       <BottomNav />
-    </div>
   );
 }
 
