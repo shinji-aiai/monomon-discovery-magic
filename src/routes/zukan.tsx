@@ -141,24 +141,36 @@ function Zukan() {
       <header className="mb-4">
         <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
         <p className="mt-0.5 text-sm font-medium text-muted-foreground">
-          {kinds}/{SPECIES_COUNT} 種族　・　{dex.length} 匹
+          {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
 
-      {/* 次の目標 */}
-      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3 shadow-soft">
-        <p className="text-sm font-bold text-foreground">
-          {remaining > 0
-            ? `あと ${remaining} 種類でコンプリート！`
-            : "🎉 ぜんぶ集めたよ！おめでとう！"}
-        </p>
+      {/* コレクション率 */}
+      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+        <div className="flex items-end justify-between">
+          <p className="text-sm font-bold text-foreground">コレクション</p>
+          <p className="text-base font-extrabold text-foreground">
+            <span className="text-primary">{kinds}</span>
+            <span className="mx-1 text-muted-foreground">/</span>
+            {SPECIES_COUNT}
+          </p>
+        </div>
         <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full gradient-primary transition-all"
             style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
           />
         </div>
+        <p className="mt-2 text-xs font-bold text-muted-foreground">
+          {remaining > 0
+            ? `あと ${remaining} 種族で コンプリート`
+            : "🎉 ぜんぶ集めたよ おめでとう"}
+        </p>
       </div>
+
+      {/* 種族ごとの達成率 */}
+      <FamilyProgress stats={familyStats} />
+
 
       {/* 検索バー */}
       <div className="relative mb-4">
