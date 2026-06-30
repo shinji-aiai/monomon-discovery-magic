@@ -596,9 +596,13 @@ function SpeciesDetailSheet({
                       <MonomonArt monomon={m} />
                     </div>
                   </div>
-                  <p className="truncate px-1 py-1 text-center text-[0.66rem] font-extrabold text-foreground">
+                  <AutoFitName
+                    className="px-1 py-1 font-extrabold text-foreground"
+                    maxFontSize={11}
+                    minFontSize={7}
+                  >
                     {m.name}
-                  </p>
+                  </AutoFitName>
                 </button>
               ))}
             </div>
