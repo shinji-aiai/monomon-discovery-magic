@@ -55,7 +55,7 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col gradient-sky px-7 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
-      {/* スキップ */}
+      {/* スキップ（見つけやすいように枠つきで少し大きく） */}
       <div className="flex justify-end">
         {!isLast && (
           <button
@@ -63,7 +63,7 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
               tap();
               setStep(SLIDES.length - 1);
             }}
-            className="rounded-full px-4 py-1.5 text-sm font-bold text-muted-foreground/80 transition-transform active:scale-95"
+            className="rounded-full border border-primary/30 bg-card/70 px-5 py-2 text-sm font-bold text-foreground/70 shadow-soft backdrop-blur transition-transform active:scale-95"
           >
             スキップ
           </button>
