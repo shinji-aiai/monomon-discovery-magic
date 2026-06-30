@@ -18,17 +18,17 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
         </div>
 
         <p className="text-[1.35rem] font-bold leading-relaxed text-foreground animate-rise-in">
-          身の回りのモノには、
+          身の回りのモノには
           <br />
-          小さな精霊が宿っています。
+          小さな精霊が宿っている
         </p>
         <p
           className="mt-5 text-base leading-relaxed text-muted-foreground animate-rise-in"
           style={{ animationDelay: "0.12s" }}
         >
-          写真を撮ると、
+          写真を撮ると
           <br />
-          その姿が見つかるかもしれません。
+          その姿が見つかるかもしれない
         </p>
 
         <button

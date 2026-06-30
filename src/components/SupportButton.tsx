@@ -39,7 +39,7 @@ export function SupportButton({ variant }: SupportButtonProps) {
               ❤️ モノモンを応援する
             </span>
             <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-              新しいモノモンの開発に使わせていただきます。
+              新しいモノモンの開発に使わせてもらうよ
             </span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />

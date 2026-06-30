@@ -36,8 +36,8 @@ export function SupportModal({ onClose }: SupportModalProps) {
   const startPayment = async () => {
     tap();
     if (!isPaymentsConfigured()) {
-      toast.error("ただいま応援を受け付けられません。", {
-        description: "公開後にもう一度おためしください。",
+      toast.error("ただいま応援を受け付けられません", {
+        description: "公開後にもう一度おためしください",
       });
       return;
     }
@@ -57,8 +57,8 @@ export function SupportModal({ onClose }: SupportModalProps) {
       }
       setClientSecret(result.clientSecret);
     } catch {
-      toast.error("ただいま応援を受け付けられません。", {
-        description: "時間をおいて、もう一度おためしください。",
+      toast.error("ただいま応援を受け付けられません", {
+        description: "時間をおいてもう一度おためしください",
       });
       setPaying(false);
     } finally {
@@ -128,9 +128,9 @@ export function SupportModal({ onClose }: SupportModalProps) {
                 <Heart className="h-8 w-8 fill-rose-400 text-rose-400" />
               </span>
               <p className="mt-4 text-[0.95rem] leading-relaxed text-muted-foreground">
-                応援いただいた金額は、
+                応援いただいた金額は
                 <br />
-                新しいモノモンの開発に使わせていただきます。
+                新しいモノモンの開発に使わせてもらうよ
               </p>
             </div>
 
@@ -172,7 +172,7 @@ export function SupportModal({ onClose }: SupportModalProps) {
 
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              決済は Stripe の安全な画面で行われます。
+              決済は Stripe の安全な画面で行われるよ
             </p>
           </>
         )}

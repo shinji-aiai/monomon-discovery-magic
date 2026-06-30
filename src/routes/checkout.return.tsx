@@ -30,21 +30,21 @@ function CheckoutReturn() {
       {success ? (
         <>
           <h1 className="mt-6 text-2xl font-extrabold text-foreground">
-            応援、ありがとうございます！
+            応援ありがとう
           </h1>
           <p className="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-muted-foreground">
-            いただいた応援は、新しいモノモンの開発に
+            いただいた応援は新しいモノモンの開発に
             <br />
-            大切に使わせていただきます。
+            大切に使わせてもらうよ
           </p>
         </>
       ) : (
         <>
           <h1 className="mt-6 text-2xl font-extrabold text-foreground">
-            決済情報が見つかりませんでした
+            決済情報が見つからなかった
           </h1>
           <p className="mt-3 max-w-sm text-[0.95rem] leading-relaxed text-muted-foreground">
-            お手数ですが、もう一度おためしください。
+            お手数だけどもう一度おためしください
           </p>
         </>
       )}

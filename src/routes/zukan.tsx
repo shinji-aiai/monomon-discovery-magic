@@ -33,7 +33,7 @@ export const Route = createFileRoute("/zukan")({
       { title: "図鑑｜モノモン" },
       {
         name: "description",
-        content: "見つけた種族と、出会った個体たちの図鑑。集めて、お気に入りを見つけよう。",
+        content: "見つけた種族と出会った個体たちの図鑑　集めてお気に入りを見つけよう",
       },
     ],
   }),
@@ -243,7 +243,7 @@ function Zukan() {
                 ここには まだ いません
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                カードの♡で お気に入りに追加できます。
+                カードの♡で お気に入りに追加できる
               </p>
             </div>
           ) : (
@@ -469,9 +469,9 @@ function NoResult() {
   return (
     <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
       <Search className="h-10 w-10 text-muted-foreground/50" />
-      <p className="mt-3 text-sm font-bold text-foreground">見つかりませんでした</p>
+      <p className="mt-3 text-sm font-bold text-foreground">見つからなかった</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        ちがう言葉でさがしてみてね。
+        ちがう言葉でさがしてみてね
       </p>
     </div>
   );
@@ -483,7 +483,7 @@ function Empty() {
       <div className="mb-6 text-6xl opacity-80">🔍</div>
       <p className="text-lg font-bold text-foreground">まだ だれも いません</p>
       <p className="mt-2 text-sm text-muted-foreground">
-        モノを撮って、最初の精霊を見つけよう。
+        モノを撮って最初の精霊を見つけよう
       </p>
       <Link
         to="/scan"
@@ -574,7 +574,7 @@ function SpeciesDetailSheet({
         {isFound ? (
           <>
             <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
-              この種族のモノモンを {found.length} 匹 見つけたよ。タップすると、それぞれの子の詳しい情報が見られるよ。
+              この種族のモノモンを {found.length} 匹 見つけたよ　タップするとそれぞれの子の詳しい情報が見られるよ
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2.5">
               {found.map((m) => (
@@ -610,7 +610,7 @@ function SpeciesDetailSheet({
         ) : (
           <>
             <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
-              まだ見つかっていない種族だよ。身近なモノを撮影して、この子を探してみよう！
+              まだ見つかっていない種族だよ　身近なモノを撮影してこの子を探してみよう
             </p>
             <Link
               to="/scan"

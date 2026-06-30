@@ -28,7 +28,7 @@ export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "設定｜モノモン" },
-      { name: "description", content: "モノモンの設定。" },
+      { name: "description", content: "モノモンの設定" },
     ],
   }),
   component: SettingsPage,
@@ -91,7 +91,7 @@ function SettingsPage() {
                 モノモンを応援する
               </span>
               <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-                新しいモノモンの開発に使わせていただきます。
+                新しいモノモンの開発に使わせてもらうよ
               </span>
             </span>
             <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -318,16 +318,17 @@ function InfoPanel({
 
         {panel === "privacy" && (
           <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <p>モノモンは、あなたのプライバシーを大切にします。</p>
+            <p>モノモンはあなたのプライバシーを大切にするよ</p>
             <p>
-              撮影・選択した写真と、見つけたモノモンのデータは、すべてお使いの端末内にのみ保存されます。外部のサーバーに送信されることはありません。
+              撮影した写真や選んだ写真と見つけたモノモンのデータは すべてお使いの端末の中だけに保存される
             </p>
+            <p>外部のサーバーに送られることはないよ</p>
             <p>
-              図鑑のデータは「設定 → 図鑑データを削除」または端末のデータ消去でいつでも削除できます。
+              図鑑のデータは「設定 → 図鑑データを削除」か端末のデータ消去でいつでも消せる
             </p>
-            <p>本アプリは、広告・トラッキングを行いません。</p>
+            <p>このアプリは広告やトラッキングをしないよ</p>
             <p>
-              「モノモンを応援する」をご利用の場合のみ、決済処理のために必要な情報が決済事業者へ送信されます。
+              「モノモンを応援する」を使うときだけ 決済に必要な情報が決済事業者へ送られる
             </p>
           </div>
         )}
@@ -335,25 +336,27 @@ function InfoPanel({
         {panel === "terms" && (
           <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
             <p>
-              本利用規約は、モノモン（以下「本アプリ」）の利用条件を定めるものです。本アプリをご利用いただいた時点で、本規約に同意したものとみなします。
+              この利用規約はモノモン（以下「本アプリ」）の使い方の条件を定めたもの
+            </p>
+            <p>本アプリを使った時点でこの規約に同意したものとみなすよ</p>
+            <p>
+              本アプリで生まれる「モノモン」は 撮影した写真をもとに自動でつくられるオリジナルのキャラクター
+            </p>
+            <p>個人で自由に楽しんでね</p>
+            <p>
+              他の人の権利を傷つける写真や 公序良俗に反する写真の利用はご遠慮ください
             </p>
             <p>
-              本アプリで生成される「モノモン」は、撮影した写真をもとに自動でつくられるオリジナルのキャラクターです。個人で自由にお楽しみいただけます。
+              本アプリは現状のまま提供され 利用で生じた損害について開発者は責任を負えない
             </p>
-            <p>
-              他者の権利を侵害する写真、公序良俗に反する写真の利用はご遠慮ください。
-            </p>
-            <p>
-              本アプリは現状有姿で提供され、利用により生じた損害について、開発者は責任を負いかねます。
-            </p>
-            <p>本規約は予告なく変更されることがあります。</p>
+            <p>この規約は予告なく変わることがあるよ</p>
           </div>
         )}
 
         {panel === "contact" && (
           <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
             <p>
-              ご感想・ご要望・不具合のご報告など、いつでもお気軽にお寄せください。みなさまの声が、次のモノモンをつくります。
+              ご感想・ご要望・不具合のご報告など いつでも気軽に送ってね　みなさまの声が次のモノモンをつくるよ
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
@@ -376,14 +379,14 @@ function InfoPanel({
               <p className="mt-3 text-lg font-extrabold text-foreground">
                 モノモン
               </p>
-              <p className="text-xs">モノに宿る、小さな精霊たち</p>
+              <p className="text-xs">モノに宿る小さな精霊たち</p>
               <p className="mt-1 text-xs">バージョン {APP_VERSION}</p>
             </div>
             <p>
-              身の回りのモノを撮ると、そのモノに宿る小さな精霊「モノモン」が見つかります。
+              身の回りのモノを撮ると そのモノに宿る小さな精霊「モノモン」が見つかる
             </p>
             <p>
-              さあ、次は何を撮ってみよう？お気に入りのモノモンを見つけて、図鑑を埋めていってね。
+              さあ次は何を撮ってみよう？お気に入りのモノモンを見つけて図鑑を埋めていってね
             </p>
           </div>
         )}
