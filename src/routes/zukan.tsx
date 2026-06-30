@@ -90,6 +90,18 @@ function Zukan() {
 
   const kinds = bySpecies.size;
 
+  // 種族（大分類）ごとの達成率
+  const familyStats = useMemo(() => {
+    const groups = new Map<Family, { total: number; found: number }>();
+    for (const s of SPECIES) {
+      const g = groups.get(s.family) ?? { total: 0, found: 0 };
+      g.total += 1;
+      if (bySpecies.has(s.id)) g.found += 1;
+      groups.set(s.family, g);
+    }
+    return [...groups.entries()].map(([family, v]) => ({ family, ...v }));
+  }, [bySpecies]);
+
   // 発見順の通し番号（No.001 = 最初の相棒）
   const numbered = useMemo(() => {
     const map = new Map<string, number>();
