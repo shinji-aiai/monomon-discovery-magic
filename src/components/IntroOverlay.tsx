@@ -18,7 +18,7 @@ const SLIDES: Slide[] = [
   {
     seed: 48127,
     speciesId: "cushion",
-    title: "ようこそ Monomonへ",
+    title: "ようこそ モノモンへ",
     lines: ["身近なモノには", "小さな精霊「モノモン」が", "宿っているかもしれません"],
   },
   {
