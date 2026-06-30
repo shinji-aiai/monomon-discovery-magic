@@ -96,7 +96,7 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
 
         {monomon.uncertain && (
           <p className="mt-2 text-xs font-medium text-muted-foreground">
-            ※ AIは少し自信がないみたい。{monomon.objectLabel ?? "この子"}の仲間かもしれません。
+            ※ AIは少し自信がないみたい　{monomon.objectLabel ?? "この子"}の仲間かもしれない
           </p>
         )}
 
