@@ -378,6 +378,51 @@ function ChipBtn({
   );
 }
 
+/** 種族（大分類）ごとの達成率。コンプリートした族はやさしくお祝い。 */
+function FamilyProgress({
+  stats,
+}: {
+  stats: { family: Family; total: number; found: number }[];
+}) {
+  return (
+    <div className="mb-5 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+      <p className="mb-2.5 text-sm font-bold text-foreground">種族ごとの達成</p>
+      <ul className="space-y-2.5">
+        {stats.map(({ family, total, found }) => {
+          const fam = FAMILY_STYLES[family];
+          const complete = found === total;
+          return (
+            <li key={family} className="flex items-center gap-3">
+              <span className="w-24 shrink-0 text-sm font-bold text-foreground">
+                {fam.emoji} {fam.label}族
+              </span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${(found / total) * 100}%`,
+                    backgroundColor: fam.tint,
+                  }}
+                />
+              </div>
+              {complete ? (
+                <span className="shrink-0 text-xs font-extrabold text-primary">
+                  🎉 コンプリート
+                </span>
+              ) : (
+                <span className="shrink-0 text-xs font-bold text-muted-foreground">
+                  {found} / {total}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+
 /** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝？？？シルエット） */
 function SpeciesCell({
   species,
