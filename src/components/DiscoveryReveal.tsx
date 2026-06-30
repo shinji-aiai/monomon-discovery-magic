@@ -40,7 +40,35 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
+  /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
+  const [searching, setSearching] = useState(false);
   const cancelled = useRef(false);
+  /** タップ送り用：現在の待機を即座に切り上げるフラグ */
+  const skipRef = useRef(false);
+  const skipResolve = useRef<(() => void) | null>(null);
+
+  /** タップで次の段へ。待機中ならその待機を即終了する。 */
+  const advance = () => {
+    skipRef.current = true;
+    if (skipResolve.current) {
+      skipResolve.current();
+      skipResolve.current = null;
+    }
+  };
+
+  /** 中断（タップ）で早送りできる待機。 */
+  const waitOrSkip = (ms: number) =>
+    new Promise<void>((resolve) => {
+      skipRef.current = false;
+      const timer = setTimeout(() => {
+        skipResolve.current = null;
+        resolve();
+      }, ms);
+      skipResolve.current = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    });
 
   useEffect(() => {
     cancelled.current = false;
@@ -49,52 +77,56 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
     (async () => {
       // 導入：そっと見つめる
       playSound("scan");
-      await wait(1100);
+      await waitOrSkip(900);
       if (cancelled.current) return;
 
       // ① 光が集まる
       setStage(STAGE.GATHER);
-      await wait(1100);
+      await waitOrSkip(900);
       if (cancelled.current) return;
 
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
+      // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
+      const slowTimer = setTimeout(() => setSearching(true), 600);
       const found = await genPromise;
+      clearTimeout(slowTimer);
+      setSearching(false);
       if (cancelled.current) return;
       setMonomon(found);
 
       // ② シルエットが現れる
       setStage(STAGE.SILHOUETTE);
       haptic(12);
-      await wait(750);
+      await waitOrSkip(650);
       if (cancelled.current) return;
 
       // ③ 静かに間を置く（0.5〜1秒）
       setStage(STAGE.PAUSE);
-      await wait(850);
+      await waitOrSkip(650);
       if (cancelled.current) return;
 
       // ④ 目だけ先に光る
       setStage(STAGE.EYES);
       haptic(10);
-      await wait(950);
+      await waitOrSkip(650);
       if (cancelled.current) return;
 
       // ⑤ 姿がゆっくり現れる
       setStage(STAGE.APPEAR);
       playSound("discover");
       haptic(16);
-      await wait(1500);
+      await waitOrSkip(1200);
       if (cancelled.current) return;
 
       // ⑥ 名前
       setStage(STAGE.NAME);
       playSound("save");
-      await wait(1300);
+      await waitOrSkip(950);
       if (cancelled.current) return;
 
       // ⑦ 一言
       setStage(STAGE.QUOTE);
-      await wait(2200);
+      await waitOrSkip(1400);
       if (cancelled.current) return;
 
       onDone(found);
