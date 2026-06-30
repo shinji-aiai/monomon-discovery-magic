@@ -278,6 +278,13 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
           「{monomon.description}」
         </div>
       )}
+
+      {/* タップ送りのヒント（最後の段までそっと表示） */}
+      {stage < STAGE.QUOTE && (
+        <p className="mt-8 animate-fade-in text-xs font-medium text-muted-foreground/70">
+          タップで進む
+        </p>
+      )}
     </div>
   );
 }
