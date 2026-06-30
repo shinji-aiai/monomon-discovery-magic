@@ -14,6 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
+import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
