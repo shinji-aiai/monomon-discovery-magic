@@ -102,7 +102,7 @@ function Home() {
           </p>
         ) : (
           <p className="mt-1 text-sm font-medium text-muted-foreground">
-            さあ、最初の精霊を見つけよう
+            さあ最初の精霊を見つけよう
           </p>
         )}
       </div>
