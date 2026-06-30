@@ -453,10 +453,10 @@ function DexCell({
           <MonomonArt monomon={monomon} />
         </div>
       </div>
-      <div className="px-1.5 py-1.5 text-center">
-        <p className="truncate text-xs font-extrabold text-foreground">
+      <div className="px-1.5 py-1.5">
+        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
           {monomon.name}
-        </p>
+        </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={monomon.speciesId} />
         </div>
