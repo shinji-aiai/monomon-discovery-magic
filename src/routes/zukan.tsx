@@ -19,7 +19,7 @@ import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
 import { useDex, removeFromDex, toggleFavorite } from "@/lib/dex";
-import { FAMILY_STYLES } from "@/lib/monomon-data";
+import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
 import { downloadCardImage } from "@/lib/card-image";
@@ -90,6 +90,18 @@ function Zukan() {
 
   const kinds = bySpecies.size;
 
+  // 種族（大分類）ごとの達成率
+  const familyStats = useMemo(() => {
+    const groups = new Map<Family, { total: number; found: number }>();
+    for (const s of SPECIES) {
+      const g = groups.get(s.family) ?? { total: 0, found: 0 };
+      g.total += 1;
+      if (bySpecies.has(s.id)) g.found += 1;
+      groups.set(s.family, g);
+    }
+    return [...groups.entries()].map(([family, v]) => ({ family, ...v }));
+  }, [bySpecies]);
+
   // 発見順の通し番号（No.001 = 最初の相棒）
   const numbered = useMemo(() => {
     const map = new Map<string, number>();
@@ -129,24 +141,36 @@ function Zukan() {
       <header className="mb-4">
         <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
         <p className="mt-0.5 text-sm font-medium text-muted-foreground">
-          {kinds}/{SPECIES_COUNT} 種族　・　{dex.length} 匹
+          {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
 
-      {/* 次の目標 */}
-      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3 shadow-soft">
-        <p className="text-sm font-bold text-foreground">
-          {remaining > 0
-            ? `あと ${remaining} 種類でコンプリート！`
-            : "🎉 ぜんぶ集めたよ！おめでとう！"}
-        </p>
+      {/* コレクション率 */}
+      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+        <div className="flex items-end justify-between">
+          <p className="text-sm font-bold text-foreground">コレクション</p>
+          <p className="text-base font-extrabold text-foreground">
+            <span className="text-primary">{kinds}</span>
+            <span className="mx-1 text-muted-foreground">/</span>
+            {SPECIES_COUNT}
+          </p>
+        </div>
         <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full gradient-primary transition-all"
             style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
           />
         </div>
+        <p className="mt-2 text-xs font-bold text-muted-foreground">
+          {remaining > 0
+            ? `あと ${remaining} 種族で コンプリート`
+            : "🎉 ぜんぶ集めたよ おめでとう"}
+        </p>
       </div>
+
+      {/* 種族ごとの達成率 */}
+      <FamilyProgress stats={familyStats} />
+
 
       {/* 検索バー */}
       <div className="relative mb-4">
@@ -292,6 +316,11 @@ function Zukan() {
         />
       )}
 
+      {/* 最下部のひとこと */}
+      <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
+        まだ見ぬモノモンが待っているよ
+      </p>
+
       <BottomNav />
     </div>
   );
@@ -348,6 +377,51 @@ function ChipBtn({
     </button>
   );
 }
+
+/** 種族（大分類）ごとの達成率。コンプリートした族はやさしくお祝い。 */
+function FamilyProgress({
+  stats,
+}: {
+  stats: { family: Family; total: number; found: number }[];
+}) {
+  return (
+    <div className="mb-5 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+      <p className="mb-2.5 text-sm font-bold text-foreground">種族ごとの達成</p>
+      <ul className="space-y-2.5">
+        {stats.map(({ family, total, found }) => {
+          const fam = FAMILY_STYLES[family];
+          const complete = found === total;
+          return (
+            <li key={family} className="flex items-center gap-3">
+              <span className="w-24 shrink-0 text-sm font-bold text-foreground">
+                {fam.emoji} {fam.label}族
+              </span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${(found / total) * 100}%`,
+                    backgroundColor: fam.tint,
+                  }}
+                />
+              </div>
+              {complete ? (
+                <span className="shrink-0 text-xs font-extrabold text-primary">
+                  🎉 コンプリート
+                </span>
+              ) : (
+                <span className="shrink-0 text-xs font-bold text-muted-foreground">
+                  {found} / {total}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 
 /** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝？？？シルエット） */
 function SpeciesCell({
