@@ -394,7 +394,7 @@ function SpeciesCell({
         )}
       </div>
       <div className="px-1.5 py-1.5">
-        <p className="truncate text-center text-xs font-extrabold text-foreground">
+        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
           {found ? (
             <>
               {species.emoji} {species.name}
@@ -402,7 +402,7 @@ function SpeciesCell({
           ) : (
             <span className="text-muted-foreground">？？？</span>
           )}
-        </p>
+        </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={species.id} dim={!found} />
         </div>
