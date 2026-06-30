@@ -123,11 +123,11 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
   const showColor = stage >= STAGE.APPEAR;
 
   const captions: Record<number, string> = {
-    [STAGE.SCAN]: "この子を、そっと見つめています…",
+    [STAGE.SCAN]: "この子をそっと見つめている…",
     [STAGE.GATHER]: "光が集まってきた…",
-    [STAGE.SILHOUETTE]: "なにかが、そこにいる…",
+    [STAGE.SILHOUETTE]: "なにかがそこにいる…",
     [STAGE.PAUSE]: "…",
-    [STAGE.EYES]: "ふと、目が合った",
+    [STAGE.EYES]: "ふと目が合った",
   };
   const caption = captions[stage];
 
