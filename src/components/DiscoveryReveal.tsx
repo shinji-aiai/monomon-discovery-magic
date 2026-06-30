@@ -35,7 +35,7 @@ const STAGE = {
   QUOTE: 7,
 } as const;
 
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 
 export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
