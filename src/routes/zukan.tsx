@@ -14,6 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
+import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
@@ -393,7 +394,7 @@ function SpeciesCell({
         )}
       </div>
       <div className="px-1.5 py-1.5">
-        <p className="truncate text-center text-xs font-extrabold text-foreground">
+        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
           {found ? (
             <>
               {species.emoji} {species.name}
@@ -401,7 +402,7 @@ function SpeciesCell({
           ) : (
             <span className="text-muted-foreground">？？？</span>
           )}
-        </p>
+        </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={species.id} dim={!found} />
         </div>
@@ -452,10 +453,10 @@ function DexCell({
           <MonomonArt monomon={monomon} />
         </div>
       </div>
-      <div className="px-1.5 py-1.5 text-center">
-        <p className="truncate text-xs font-extrabold text-foreground">
+      <div className="px-1.5 py-1.5">
+        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
           {monomon.name}
-        </p>
+        </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={monomon.speciesId} />
         </div>
@@ -595,9 +596,13 @@ function SpeciesDetailSheet({
                       <MonomonArt monomon={m} />
                     </div>
                   </div>
-                  <p className="truncate px-1 py-1 text-center text-[0.66rem] font-extrabold text-foreground">
+                  <AutoFitName
+                    className="px-1 py-1 font-extrabold text-foreground"
+                    maxFontSize={11}
+                    minFontSize={7}
+                  >
                     {m.name}
-                  </p>
+                  </AutoFitName>
                 </button>
               ))}
             </div>
