@@ -67,7 +67,7 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
         await navigator.share({ text: shareText, url: APP_URL, title: "モノモン" });
       } else {
         await saveImage();
-        toast("画像を保存しました。お好きなアプリで共有できます。");
+        toast("画像を保存したよ　お好きなアプリで共有できる");
       }
     } catch {
       /* キャンセル等は無視 */
@@ -94,7 +94,7 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
 
   const shareInstagram = async () => {
     await saveImage();
-    toast("画像を保存しました。Instagramのストーリーに貼り付けてね。");
+    toast("画像を保存したよ　Instagramのストーリーに貼り付けてね");
   };
 
   return (
