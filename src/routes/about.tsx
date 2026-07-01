@@ -1,12 +1,10 @@
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, Shield, FileText, ChevronRight, Sparkles, Apple } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
+import { buildSpec, type Monomon } from "@/lib/monomon";
 import { tap } from "@/lib/sound";
-import {
-  APP_VERSION_LABEL,
-  CONTACT_EMAIL,
-  APP_STORE_URL,
-} from "@/lib/app-info";
+import { CONTACT_EMAIL, APP_STORE_URL } from "@/lib/app-info";
 
 const SITE_URL = "https://monomon-discovery-magic.lovable.app/about";
 
