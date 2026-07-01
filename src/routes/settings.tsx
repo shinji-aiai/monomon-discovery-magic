@@ -16,6 +16,7 @@ import { tap } from "@/lib/sound";
 
 const APP_VERSION = "1.0.0";
 const CONTACT_EMAIL = "hello@monomon.app";
+const PRIVACY_UPDATED = "2026年7月1日";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
