@@ -39,7 +39,7 @@ const STAGE = {
 
 
 
-export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProps) {
+export function DiscoveryReveal({ photo, generate, onDone, onError }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
   /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
