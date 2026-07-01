@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Moon, RefreshCw } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
 import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
@@ -11,6 +11,8 @@ interface DiscoveryRevealProps {
   onDone: (m: Monomon) => void;
   /** うまく出会えなかったとき（通信・混雑・見つからない） */
   onError: (kind: DiscoveryErrorKind) => void;
+  /** 演出をやめて前の画面へそっと戻る（長時間の待ちからの退避） */
+  onCancel: () => void;
 }
 
 /**
@@ -25,6 +27,7 @@ interface DiscoveryRevealProps {
  *  ⑦ QUOTE      : その子が一言話す
  *
  * 派手にせず、やさしく・少し不思議で・思わず微笑む“出会い”を目指す。
+ * AI認識が長引いても閉じ込めないよう、一定時間でやさしい退避画面を出す。
  */
 const STAGE = {
   SCAN: 0,
@@ -37,20 +40,32 @@ const STAGE = {
   QUOTE: 7,
 } as const;
 
+/** これ以上待つと無言になってしまう、やさしい退避のめやす。 */
+const STUCK_MS = 8000;
 
 
-export function DiscoveryReveal({ photo, generate, onDone, onError }: DiscoveryRevealProps) {
+export function DiscoveryReveal({
+  photo,
+  generate,
+  onDone,
+  onError,
+  onCancel,
+}: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
   /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
   const [searching, setSearching] = useState(false);
-  const cancelled = useRef(false);
+  /** さらに長引いたとき：閉じ込めないためのやさしい退避画面 */
+  const [timedOut, setTimedOut] = useState(false);
+  /** 「もう一度ためす」で演出をやり直すための試行カウント */
+  const [attempt, setAttempt] = useState(0);
   /** タップ送り用：現在の待機を即座に切り上げるフラグ */
   const skipRef = useRef(false);
   const skipResolve = useRef<(() => void) | null>(null);
 
   /** タップで次の段へ。待機中ならその待機を即終了する。 */
   const advance = () => {
+    if (timedOut) return;
     skipRef.current = true;
     if (skipResolve.current) {
       skipResolve.current();
@@ -73,81 +88,136 @@ export function DiscoveryReveal({ photo, generate, onDone, onError }: DiscoveryR
     });
 
   useEffect(() => {
-    cancelled.current = false;
+    let alive = true;
+    setStage(STAGE.SCAN);
+    setMonomon(null);
+    setSearching(false);
+    setTimedOut(false);
+
     const genPromise = generate();
+    let slowTimer: ReturnType<typeof setTimeout> | undefined;
+    let stuckTimer: ReturnType<typeof setTimeout> | undefined;
 
     (async () => {
       // 導入：そっと見つめる
       playSound("scan");
       await waitOrSkip(900);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ① 光が集まる
       setStage(STAGE.GATHER);
       await waitOrSkip(900);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
       // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
-      const slowTimer = setTimeout(() => setSearching(true), 600);
+      // さらに長引くときは、やさしい退避画面を出して閉じ込めない。
+      slowTimer = setTimeout(() => {
+        if (alive) setSearching(true);
+      }, 600);
+      stuckTimer = setTimeout(() => {
+        if (alive) setTimedOut(true);
+      }, STUCK_MS);
+
       let found: Monomon;
       try {
         found = await genPromise;
       } catch (e) {
         clearTimeout(slowTimer);
+        clearTimeout(stuckTimer);
         setSearching(false);
-        if (cancelled.current) return;
+        if (!alive) return;
         onError(e instanceof DiscoveryError ? e.kind : "unknown");
         return;
       }
       clearTimeout(slowTimer);
+      clearTimeout(stuckTimer);
       setSearching(false);
-      if (cancelled.current) return;
+      if (!alive) return;
+      // 退避画面を出していても、ようやく見つかったらそのまま出会いへ。
+      setTimedOut(false);
       setMonomon(found);
 
       // ② シルエットが現れる
       setStage(STAGE.SILHOUETTE);
       haptic(12);
       await waitOrSkip(650);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ③ 静かに間を置く（0.5〜1秒）
       setStage(STAGE.PAUSE);
       await waitOrSkip(650);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ④ 目だけ先に光る
       setStage(STAGE.EYES);
       haptic(10);
       await waitOrSkip(650);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ⑤ 姿がゆっくり現れる
       setStage(STAGE.APPEAR);
       playSound("discover");
       haptic(16);
       await waitOrSkip(1200);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ⑥ 名前
       setStage(STAGE.NAME);
       playSound("save");
       await waitOrSkip(950);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       // ⑦ 一言
       setStage(STAGE.QUOTE);
       await waitOrSkip(1400);
-      if (cancelled.current) return;
+      if (!alive) return;
 
       onDone(found);
     })();
 
     return () => {
-      cancelled.current = true;
+      alive = false;
+      clearTimeout(slowTimer);
+      clearTimeout(stuckTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
+
+  // 長く待っても見つからないとき：閉じ込めないやさしい退避画面
+  if (timedOut) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
+          <Moon className="h-12 w-12 text-card" strokeWidth={1.6} />
+        </div>
+        <h2 className="text-xl font-extrabold text-foreground">
+          まだ見つからないみたい
+        </h2>
+        <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
+          <span className="block">モノモンはゆっくり探しているよ</span>
+          <span className="block">もう一度ためすか そっと戻ってね</span>
+        </p>
+
+        <button
+          onClick={() => {
+            haptic(12);
+            setAttempt((a) => a + 1);
+          }}
+          className="mt-10 flex items-center justify-center gap-2.5 rounded-full gradient-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+        >
+          <RefreshCw className="h-5 w-5" />
+          もう一度ためす
+        </button>
+        <button
+          onClick={onCancel}
+          className="mt-5 text-sm font-bold text-muted-foreground active:scale-95"
+        >
+          とじる
+        </button>
+      </div>
+    );
+  }
 
   // 収束する光の粒
   const particles = Array.from({ length: 12 }, (_, i) => {

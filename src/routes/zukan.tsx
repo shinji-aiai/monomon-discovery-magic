@@ -497,9 +497,17 @@ function DexCell({
   const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
       <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
         No.{String(no).padStart(3, "0")}
@@ -535,7 +543,7 @@ function DexCell({
           <RarityStars speciesId={monomon.speciesId} />
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
