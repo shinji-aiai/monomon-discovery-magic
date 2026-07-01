@@ -38,6 +38,34 @@ function greeting() {
   return "こんばんは";
 }
 
+/** 毎日そっと変わる、探索へ誘う一言。 */
+const DAILY_MESSAGES = [
+  "今日は何を発見できるかな",
+  "まだ見ぬモノモンが待っているよ",
+  "身近なモノを見つめてみよう",
+  "小さな出会いが待っているかも",
+  "モノモンは今日もどこかで眠っている",
+  "ふと目にとまるモノに宿っているかも",
+  "今日の一体に会いにいこう",
+];
+
+/** さいきんの相棒がホームで迎えてくれる一言。 */
+const COMPANION_GREETINGS = [
+  "また会えてうれしい",
+  "今日も元気だよ",
+  "おかえり",
+  "会いたかったよ",
+  "そばにいるね",
+  "きょうもよろしくね",
+];
+
+/** 端末ローカルの「日」でインデックスを決める（毎日変わる・その日は一定）。 */
+function pickByDay<T>(arr: T[], offset = 0): T {
+  const day = Math.floor(Date.now() / 86_400_000) + offset;
+  return arr[((day % arr.length) + arr.length) % arr.length];
+}
+
+
 function Home() {
   const settings = useSettings();
   const dex = useDex();
