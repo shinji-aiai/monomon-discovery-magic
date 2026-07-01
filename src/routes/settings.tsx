@@ -273,3 +273,23 @@ function InfoPanel({
     </div>
   );
 }
+
+function PrivacyItem({
+  emoji,
+  title,
+  body,
+}: {
+  emoji: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3 shadow-soft">
+      <span className="text-xl leading-none">{emoji}</span>
+      <div>
+        <p className="font-bold text-foreground">{title}</p>
+        <p className="text-sm">{body}</p>
+      </div>
+    </div>
+  );
+}
