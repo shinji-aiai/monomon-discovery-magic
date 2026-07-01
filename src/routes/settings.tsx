@@ -15,7 +15,7 @@ import { SupportModal } from "@/components/SupportModal";
 import { tap } from "@/lib/sound";
 
 const APP_VERSION = "1.0.0";
-const CONTACT_EMAIL = "hello@monomon.app";
+const CONTACT_EMAIL = "monomon.support@gmail.com";
 const PRIVACY_UPDATED = "2026年7月1日";
 const TERMS_UPDATED = "2026年7月1日";
 
