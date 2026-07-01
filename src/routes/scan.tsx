@@ -37,7 +37,7 @@ export const Route = createFileRoute("/scan")({
   component: Scan,
 });
 
-type Phase = "choose" | "reveal" | "result";
+type Phase = "choose" | "reveal" | "result" | "error";
 
 function Scan() {
   const [phase, setPhase] = useState<Phase>("choose");
@@ -46,9 +46,47 @@ function Scan() {
   const [registered, setRegistered] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errKind, setErrKind] = useState<GentleErrorKind>("unknown");
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
+
+  // カメラを開く（権限がOFFのときはやさしく案内する）
+  const openCamera = async () => {
+    tap();
+    try {
+      const perms = navigator.permissions;
+      if (perms?.query) {
+        const status = await perms.query({
+          name: "camera" as PermissionName,
+        });
+        if (status.state === "denied") {
+          setErrKind("permission");
+          setPhase("error");
+          return;
+        }
+      }
+    } catch {
+      // カメラ権限の問い合わせに未対応な端末はそのまま進む
+    }
+    cameraRef.current?.click();
+  };
+
+  // 出会いをやり直す（写真があれば同じ写真でもう一度探す）
+  const retry = () => {
+    if (errKind === "permission") {
+      openCamera();
+      return;
+    }
+    tap();
+    if (photo) {
+      setResult(null);
+      setRegistered(false);
+      setPhase("reveal");
+    } else {
+      setPhase("choose");
+    }
+  };
 
   // 結果が出たら自動で図鑑に登録（コレクションが途切れない体験）
   useEffect(() => {
