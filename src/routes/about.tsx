@@ -55,7 +55,8 @@ function AboutPage() {
             style={{ animationDelay: "1.4s" }}
           />
           <div className="h-full w-full animate-float-soft drop-shadow-[0_18px_28px_rgba(120,80,50,0.22)]">
-            <MonomonArt seed={123456} />
+            <MonomonArt monomon={heroMonomon} />
+
           </div>
         </div>
 
