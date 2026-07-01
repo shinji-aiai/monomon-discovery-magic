@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
-import type { Monomon } from "@/lib/monomon";
+import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
 
 interface DiscoveryRevealProps {
@@ -9,6 +9,8 @@ interface DiscoveryRevealProps {
   /** モノモン生成（解析と並行して実行） */
   generate: () => Promise<Monomon>;
   onDone: (m: Monomon) => void;
+  /** うまく出会えなかったとき（通信・混雑・見つからない） */
+  onError: (kind: DiscoveryErrorKind) => void;
 }
 
 /**
