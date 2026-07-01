@@ -191,7 +191,7 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     const object = String(parsed.object ?? "").slice(0, 24) || "なにか";
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
-    const description = String(parsed.description ?? "").slice(0, 80) || `${object}に宿る精霊`;
+    const description = String(parsed.description ?? "").slice(0, 80) || "やっと会えたね";
     const confident = parsed.confident === true && speciesKnown;
 
     return {
