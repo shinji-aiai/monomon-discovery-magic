@@ -93,7 +93,8 @@ function AboutPage() {
               className="flex w-full items-center justify-center gap-2.5 rounded-full bg-foreground py-4 text-sm font-extrabold text-background shadow-float active:scale-95"
             >
               <Apple className="h-5 w-5" />
-              App Store で手に入れる
+              App Store でダウンロード
+
             </a>
           ) : (
             <div className="flex w-full flex-col items-center gap-2 rounded-full border border-dashed border-border bg-card/60 py-4 text-sm font-bold text-muted-foreground">
