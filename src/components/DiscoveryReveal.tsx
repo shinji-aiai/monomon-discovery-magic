@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
-import type { Monomon } from "@/lib/monomon";
+import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
 
 interface DiscoveryRevealProps {
@@ -9,6 +9,8 @@ interface DiscoveryRevealProps {
   /** モノモン生成（解析と並行して実行） */
   generate: () => Promise<Monomon>;
   onDone: (m: Monomon) => void;
+  /** うまく出会えなかったとき（通信・混雑・見つからない） */
+  onError: (kind: DiscoveryErrorKind) => void;
 }
 
 /**
@@ -37,7 +39,7 @@ const STAGE = {
 
 
 
-export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProps) {
+export function DiscoveryReveal({ photo, generate, onDone, onError }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
   /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
@@ -88,7 +90,16 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
       // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
       const slowTimer = setTimeout(() => setSearching(true), 600);
-      const found = await genPromise;
+      let found: Monomon;
+      try {
+        found = await genPromise;
+      } catch (e) {
+        clearTimeout(slowTimer);
+        setSearching(false);
+        if (cancelled.current) return;
+        onError(e instanceof DiscoveryError ? e.kind : "unknown");
+        return;
+      }
       clearTimeout(slowTimer);
       setSearching(false);
       if (cancelled.current) return;
