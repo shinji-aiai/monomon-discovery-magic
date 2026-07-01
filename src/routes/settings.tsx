@@ -16,6 +16,7 @@ import { tap } from "@/lib/sound";
 
 const APP_VERSION = "1.0.0";
 const CONTACT_EMAIL = "hello@monomon.app";
+const PRIVACY_UPDATED = "2026年7月1日";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -201,15 +202,55 @@ function InfoPanel({
         )}
 
         {panel === "privacy" && (
-          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <p>モノモンはあなたのプライバシーを大切にするよ</p>
-            <p>
-              撮った写真と見つけたモノモンのデータはすべてお使いの端末の中だけに保存される
+          <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+            <p className="font-bold text-foreground">
+              モノモンはあなたのことを大切にするよ
             </p>
-            <p>外部のサーバーに送られることはないよ</p>
-            <p>このアプリは広告やトラッキングをしないよ</p>
-            <p>
-              「応援する」を使うときだけ決済に必要な情報が決済事業者へ送られる
+
+            <div className="space-y-3">
+              <PrivacyItem
+                emoji="📷"
+                title="カメラのこと"
+                body="カメラはモノモンを見つけるために使うよ"
+              />
+              <PrivacyItem
+                emoji="✨"
+                title="写真のこと"
+                body="撮った写真はモノモンをさがすために使うよ"
+              />
+              <PrivacyItem
+                emoji="🔒"
+                title="個人情報のこと"
+                body="いらない個人情報は集めないよ"
+              />
+              <PrivacyItem
+                emoji="🗺️"
+                title="場所のこと"
+                body="今いる場所の情報は使わないよ"
+              />
+              <PrivacyItem
+                emoji="🚫"
+                title="広告のこと"
+                body="広告のためにあなたを追いかけたりしないよ"
+              />
+            </div>
+
+            <div className="rounded-2xl bg-muted px-4 py-3">
+              <p className="mb-1 font-bold text-foreground">こまったときは</p>
+              <p>気になることがあればいつでも教えてね</p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+                  "プライバシーについて",
+                )}`}
+                onClick={tap}
+                className="mt-1 inline-block font-bold text-primary"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </div>
+
+            <p className="pt-1 text-center text-xs">
+              最終更新日 {PRIVACY_UPDATED}
             </p>
           </div>
         )}
@@ -228,6 +269,26 @@ function InfoPanel({
             <p>この規約は予告なく変わることがあるよ</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function PrivacyItem({
+  emoji,
+  title,
+  body,
+}: {
+  emoji: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3 shadow-soft">
+      <span className="text-xl leading-none">{emoji}</span>
+      <div>
+        <p className="font-bold text-foreground">{title}</p>
+        <p className="text-sm">{body}</p>
       </div>
     </div>
   );
