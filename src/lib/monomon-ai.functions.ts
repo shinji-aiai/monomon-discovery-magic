@@ -92,7 +92,7 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
-  "description": "物の役割や特徴を反映した一言（句読点なし・全角20文字程度）"
+  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）"
 }`;
 
 function extractJson(text: string): unknown {
