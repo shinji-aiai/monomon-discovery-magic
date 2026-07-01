@@ -115,6 +115,13 @@ function Home() {
 
       {/* ヒーロー（さいきん見つけた子 or これから） */}
       <div className="mt-4 flex flex-1 flex-col items-center justify-center text-center">
+        {/* さいきんの相棒がホームで迎える一言 */}
+        {last && companion && (
+          <div className="relative mb-3 animate-pop-in rounded-full bg-card px-4 py-1.5 text-sm font-bold text-card-foreground shadow-soft">
+            「{companion}」
+            <span className="absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-card" />
+          </div>
+        )}
         <div className="relative h-44 w-44">
           <span className="absolute inset-5 rounded-full bg-primary/15 animate-pulse-ring" />
           <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
@@ -138,6 +145,7 @@ function Home() {
           </p>
         )}
       </div>
+
 
       {/* 統計：個体数・種族数 */}
       <div className="mb-5 grid grid-cols-3 gap-3">
