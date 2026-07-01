@@ -180,15 +180,24 @@ function Home() {
         </Link>
       )}
 
-      {/* メインアクション */}
-      <Link
-        to="/scan"
-        onClick={() => trackFindClick()}
-        className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
-      >
-        <Camera className="h-6 w-6" />
-        見つける
-      </Link>
+      {/* きょうの一言（毎日そっと変わる・探索へ誘う） */}
+      <p className="mb-3 min-h-[1.25rem] text-center text-sm font-bold text-foreground">
+        {daily ?? "今日は何を発見できるかな"}
+      </p>
+
+      {/* メインアクション（ホームで最も目立つ主役） */}
+      <div className="relative">
+        <span className="pointer-events-none absolute -inset-1 rounded-full gradient-primary opacity-40 blur-xl animate-breathe" />
+        <Link
+          to="/scan"
+          onClick={() => trackFindClick()}
+          className="relative flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
+        >
+          <Camera className="h-6 w-6" />
+          さがしにいく
+        </Link>
+      </div>
+
 
       {/* 応援（ホーム下部・小さめカード） */}
       <SupportButton variant="home" />
