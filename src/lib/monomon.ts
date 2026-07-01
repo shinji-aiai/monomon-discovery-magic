@@ -1,20 +1,16 @@
 import {
-  COMMENTS,
-  PERSONALITIES,
   ACCESSORY_POOL,
   EYE_POOL,
   MOUTH_POOL,
   PATTERN_POOL,
   POSE_POOL,
-  genName,
   genPalette,
   mulberry32,
   pick,
   type Family,
   type MonomonSpec,
 } from "./monomon-data";
-import { SPECIES_MAP, detectSpecies, getSpecies } from "./species";
-import { analyzePhoto } from "./image-utils";
+import { SPECIES_MAP, getSpecies } from "./species";
 import { analyzeSpirit } from "./monomon-ai.functions";
 
 export interface Monomon extends MonomonSpec {
