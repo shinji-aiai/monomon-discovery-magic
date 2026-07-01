@@ -1,12 +1,10 @@
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, Shield, FileText, ChevronRight, Sparkles, Apple } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
+import { buildSpec, type Monomon } from "@/lib/monomon";
 import { tap } from "@/lib/sound";
-import {
-  APP_VERSION_LABEL,
-  CONTACT_EMAIL,
-  APP_STORE_URL,
-} from "@/lib/app-info";
+import { CONTACT_EMAIL, APP_STORE_URL } from "@/lib/app-info";
 
 const SITE_URL = "https://monomon-discovery-magic.lovable.app/about";
 
@@ -35,6 +33,13 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   const storeReady = APP_STORE_URL.trim().length > 0;
 
+  // アプリのメインキャラ「ピンクのコップのモノモン」を公式サイトでも統一表示
+  const heroMonomon = useMemo(
+    () => ({ ...buildSpec(7, "cup", 330), name: "モノモン" }) as Monomon,
+    [],
+  );
+
+
   return (
     <div className="min-h-[100svh] gradient-sky">
       <div className="mx-auto flex w-full max-w-md flex-col items-center px-6 pb-20 pt-[max(4rem,env(safe-area-inset-top))] text-center">
@@ -50,7 +55,8 @@ function AboutPage() {
             style={{ animationDelay: "1.4s" }}
           />
           <div className="h-full w-full animate-float-soft drop-shadow-[0_18px_28px_rgba(120,80,50,0.22)]">
-            <MonomonArt seed={123456} />
+            <MonomonArt monomon={heroMonomon} />
+
           </div>
         </div>
 
@@ -87,7 +93,8 @@ function AboutPage() {
               className="flex w-full items-center justify-center gap-2.5 rounded-full bg-foreground py-4 text-sm font-extrabold text-background shadow-float active:scale-95"
             >
               <Apple className="h-5 w-5" />
-              App Store で手に入れる
+              App Store でダウンロード
+
             </a>
           ) : (
             <div className="flex w-full flex-col items-center gap-2 rounded-full border border-dashed border-border bg-card/60 py-4 text-sm font-bold text-muted-foreground">
@@ -157,13 +164,14 @@ function AboutPage() {
           </Link>
         </div>
 
-        {/* ⑧ バージョン & フッター */}
+        {/* ⑧ フッター */}
         <p className="mt-16 text-xs font-bold text-muted-foreground">
-          モノモン　{APP_VERSION_LABEL}
+          モノモン
         </p>
         <p className="mt-2 text-[0.7rem] text-muted-foreground/70">
-          © モノモン
+          Copyright © 2026 Monomon
         </p>
+
       </div>
     </div>
   );
