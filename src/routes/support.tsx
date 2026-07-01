@@ -76,6 +76,7 @@ function SupportPage() {
         <div className="mt-10 flex w-full flex-col gap-4">
           <Link
             to="/settings"
+            search={{ panel: "privacy" }}
             onClick={tap}
             className="flex w-full items-center gap-4 rounded-3xl bg-card px-5 py-5 text-left shadow-soft active:scale-[0.99]"
           >
@@ -90,6 +91,7 @@ function SupportPage() {
 
           <Link
             to="/settings"
+            search={{ panel: "terms" }}
             onClick={tap}
             className="flex w-full items-center gap-4 rounded-3xl bg-card px-5 py-5 text-left shadow-soft active:scale-[0.99]"
           >
@@ -101,6 +103,7 @@ function SupportPage() {
             </span>
             <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
           </Link>
+
         </div>
 
         {/* バージョン */}
