@@ -1,25 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
-  Volume2,
-  Music,
-  Smartphone,
-  Trash2,
+  Sparkles,
+  BookOpen,
+  Mail,
   Shield,
   FileText,
-  Mail,
-  Info,
   Heart,
   ChevronRight,
   X,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportModal } from "@/components/SupportModal";
-import { useSettings, updateSettings } from "@/lib/settings";
-import { useDex, clearDex } from "@/lib/dex";
-import { tap, playSound, haptic, syncBgm } from "@/lib/sound";
+import { tap } from "@/lib/sound";
 
 const APP_VERSION = "1.0.0";
 const CONTACT_EMAIL = "hello@monomon.app";
@@ -34,177 +27,67 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-type Panel = "privacy" | "terms" | "contact" | "about" | null;
+type Panel = "about" | "howto" | "contact" | "privacy" | "terms" | null;
 
 function SettingsPage() {
-  const settings = useSettings();
-  const dex = useDex();
-  const [confirmClear, setConfirmClear] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [support, setSupport] = useState(false);
 
-  const toggleSound = (v: boolean) => {
-    updateSettings({ sound: v });
-    if (v) playSound("button");
-  };
-  const toggleBgm = (v: boolean) => {
-    updateSettings({ bgm: v });
-    syncBgm();
-    if (v) haptic(10);
-  };
-  const toggleHaptics = (v: boolean) => {
-    updateSettings({ haptics: v });
-    if (v) haptic(20);
-  };
-
-  const doClear = () => {
-    clearDex();
-    setConfirmClear(false);
-    haptic(20);
-    toast.success("図鑑データを削除しました");
+  const open = (p: Exclude<Panel, null>) => {
+    tap();
+    setPanel(p);
   };
 
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <header className="mb-6">
+    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(2rem,env(safe-area-inset-top))]">
+      <header className="mb-8">
         <h1 className="text-2xl font-extrabold text-foreground">設定</h1>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-6">
-        {/* 応援 */}
-        <section>
-          <h2 className="mb-2 px-1 text-xs font-bold text-muted-foreground">
-            応援
-          </h2>
-          <button
-            onClick={() => {
-              tap();
-              setSupport(true);
-            }}
-            className="flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-card px-4 py-4 text-left shadow-soft active:scale-[0.99]"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100">
-              <Heart className="h-6 w-6 fill-rose-400 text-rose-400" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-[0.98rem] font-bold text-foreground">
-                モノモンを応援する
-              </span>
-              <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-                新しいモノモンの開発に使わせてもらうよ
-              </span>
-            </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-          </button>
-        </section>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-4">
+        <CardRow
+          icon={<Sparkles className="h-6 w-6 text-primary" />}
+          label="アプリについて"
+          onClick={() => open("about")}
+        />
+        <CardRow
+          icon={<BookOpen className="h-6 w-6 text-primary" />}
+          label="遊び方"
+          onClick={() => open("howto")}
+        />
+        <CardRow
+          icon={<Mail className="h-6 w-6 text-primary" />}
+          label="お問い合わせ"
+          onClick={() => open("contact")}
+        />
+        <CardRow
+          icon={<Shield className="h-6 w-6 text-primary" />}
+          label="プライバシーポリシー"
+          onClick={() => open("privacy")}
+        />
+        <CardRow
+          icon={<FileText className="h-6 w-6 text-primary" />}
+          label="利用規約"
+          onClick={() => open("terms")}
+        />
 
-        {/* 一般 */}
-        <Section title="一般">
-          <Row icon={<Volume2 className="h-5 w-5 text-primary" />} label="効果音">
-            <Switch checked={settings.sound} onCheckedChange={toggleSound} />
-          </Row>
-          <Divider />
-          <Row icon={<Music className="h-5 w-5 text-primary" />} label="BGM">
-            <Switch checked={settings.bgm} onCheckedChange={toggleBgm} />
-          </Row>
-          <Divider />
-          <Row
-            icon={<Smartphone className="h-5 w-5 text-primary" />}
-            label="バイブ"
-          >
-            <Switch checked={settings.haptics} onCheckedChange={toggleHaptics} />
-          </Row>
-        </Section>
+        <button
+          onClick={() => {
+            tap();
+            setSupport(true);
+          }}
+          className="flex w-full items-center gap-4 rounded-3xl bg-card px-5 py-5 text-left shadow-soft active:scale-[0.99]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-100">
+            <Heart className="h-6 w-6 fill-rose-400 text-rose-400" />
+          </span>
+          <span className="flex-1 text-[1.05rem] font-bold text-foreground">
+            応援する ❤️
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        </button>
 
-        {/* データ */}
-        <Section title="データ">
-          {confirmClear ? (
-            <div className="px-4 py-4 text-center">
-              <p className="text-sm font-bold text-destructive">
-                図鑑のモノモンを すべて削除しますか？
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                この操作は取り消せません（{dex.length}たい）
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => {
-                    tap();
-                    setConfirmClear(false);
-                  }}
-                  className="rounded-xl bg-muted py-2.5 text-sm font-bold text-foreground active:scale-95"
-                >
-                  やめる
-                </button>
-                <button
-                  onClick={doClear}
-                  className="rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground active:scale-95"
-                >
-                  削除する
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                tap();
-                if (dex.length === 0) {
-                  toast("削除するデータがありません");
-                  return;
-                }
-                setConfirmClear(true);
-              }}
-              className="flex w-full items-center justify-between px-4 py-4 active:bg-muted/50"
-            >
-              <span className="flex items-center gap-3 text-[0.95rem] font-medium text-destructive">
-                <Trash2 className="h-5 w-5" />
-                図鑑データを削除
-              </span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </button>
-          )}
-        </Section>
-
-        {/* 情報 */}
-        <Section title="情報">
-          <NavRow
-            icon={<Mail className="h-5 w-5 text-primary" />}
-            label="お問い合わせ"
-            onClick={() => {
-              tap();
-              setPanel("contact");
-            }}
-          />
-          <Divider />
-          <NavRow
-            icon={<FileText className="h-5 w-5 text-primary" />}
-            label="利用規約"
-            onClick={() => {
-              tap();
-              setPanel("terms");
-            }}
-          />
-          <Divider />
-          <NavRow
-            icon={<Shield className="h-5 w-5 text-primary" />}
-            label="プライバシーポリシー"
-            onClick={() => {
-              tap();
-              setPanel("privacy");
-            }}
-          />
-          <Divider />
-          <NavRow
-            icon={<Info className="h-5 w-5 text-primary" />}
-            label="アプリ情報"
-            onClick={() => {
-              tap();
-              setPanel("about");
-            }}
-          />
-        </Section>
-
-        <p className="pt-2 text-center text-xs text-muted-foreground">
+        <p className="pt-4 text-center text-xs text-muted-foreground">
           モノモン　バージョン {APP_VERSION}
         </p>
       </div>
@@ -217,46 +100,7 @@ function SettingsPage() {
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <h2 className="mb-2 px-1 text-xs font-bold text-muted-foreground">
-        {title}
-      </h2>
-      <div className="overflow-hidden rounded-2xl bg-card shadow-soft">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between px-4 py-4">
-      <span className="flex items-center gap-3 text-[0.98rem] font-medium text-foreground">
-        {icon}
-        {label}
-      </span>
-      {children}
-    </div>
-  );
-}
-
-function NavRow({
+function CardRow({
   icon,
   label,
   onClick,
@@ -268,26 +112,25 @@ function NavRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-between px-4 py-4 active:bg-muted/50"
+      className="flex w-full items-center gap-4 rounded-3xl bg-card px-5 py-5 text-left shadow-soft active:scale-[0.99]"
     >
-      <span className="flex items-center gap-3 text-[0.98rem] font-medium text-foreground">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
         {icon}
+      </span>
+      <span className="flex-1 text-[1.05rem] font-bold text-foreground">
         {label}
       </span>
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
     </button>
   );
 }
 
-function Divider() {
-  return <div className="ml-12 h-px bg-border" />;
-}
-
 const PANEL_TITLE: Record<Exclude<Panel, null>, string> = {
+  about: "アプリについて",
+  howto: "遊び方",
+  contact: "お問い合わせ",
   privacy: "プライバシーポリシー",
   terms: "利用規約",
-  contact: "お問い合わせ",
-  about: "アプリ情報",
 };
 
 function InfoPanel({
@@ -316,48 +159,33 @@ function InfoPanel({
           </button>
         </div>
 
-        {panel === "privacy" && (
-          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <p>モノモンはあなたのプライバシーを大切にするよ</p>
-            <p>
-              撮影した写真や選んだ写真と見つけたモノモンのデータは すべてお使いの端末の中だけに保存される
-            </p>
-            <p>外部のサーバーに送られることはないよ</p>
-            <p>
-              図鑑のデータは「設定 → 図鑑データを削除」か端末のデータ消去でいつでも消せる
-            </p>
-            <p>このアプリは広告やトラッキングをしないよ</p>
-            <p>
-              「モノモンを応援する」を使うときだけ 決済に必要な情報が決済事業者へ送られる
-            </p>
+        {panel === "about" && (
+          <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+            <div className="flex flex-col items-center text-center">
+              <div className="text-5xl">✨</div>
+              <p className="mt-3 text-lg font-extrabold text-foreground">
+                モノモン
+              </p>
+              <p className="text-xs">モノに宿る小さな精霊たち</p>
+              <p className="mt-1 text-xs">バージョン {APP_VERSION}</p>
+            </div>
+            <p>身の回りのモノを撮るとそのモノに宿る小さな精霊が見つかる</p>
+            <p>お気に入りのモノモンを見つけて図鑑を埋めていってね</p>
           </div>
         )}
 
-        {panel === "terms" && (
+        {panel === "howto" && (
           <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <p>
-              この利用規約はモノモン（以下「本アプリ」）の使い方の条件を定めたもの
-            </p>
-            <p>本アプリを使った時点でこの規約に同意したものとみなすよ</p>
-            <p>
-              本アプリで生まれる「モノモン」は 撮影した写真をもとに自動でつくられるオリジナルのキャラクター
-            </p>
-            <p>個人で自由に楽しんでね</p>
-            <p>
-              他の人の権利を傷つける写真や 公序良俗に反する写真の利用はご遠慮ください
-            </p>
-            <p>
-              本アプリは現状のまま提供され 利用で生じた損害について開発者は責任を負えない
-            </p>
-            <p>この規約は予告なく変わることがあるよ</p>
+            <p>身近なモノを撮ってみよう</p>
+            <p>そのモノに宿るモノモンが見つかるよ</p>
+            <p>見つけたモノモンは図鑑に集まっていくよ</p>
+            <p>いろんなモノを撮って図鑑を埋めよう</p>
           </div>
         )}
 
         {panel === "contact" && (
           <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
-            <p>
-              ご感想・ご要望・不具合のご報告など いつでも気軽に送ってね　みなさまの声が次のモノモンをつくるよ
-            </p>
+            <p>ご感想やご要望はいつでも気軽に送ってね　みなさまの声が次のモノモンをつくるよ</p>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
                 "モノモンへのお問い合わせ",
@@ -372,22 +200,32 @@ function InfoPanel({
           </div>
         )}
 
-        {panel === "about" && (
-          <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
-            <div className="flex flex-col items-center text-center">
-              <div className="text-5xl">✨</div>
-              <p className="mt-3 text-lg font-extrabold text-foreground">
-                モノモン
-              </p>
-              <p className="text-xs">モノに宿る小さな精霊たち</p>
-              <p className="mt-1 text-xs">バージョン {APP_VERSION}</p>
-            </div>
+        {panel === "privacy" && (
+          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <p>モノモンはあなたのプライバシーを大切にするよ</p>
             <p>
-              身の回りのモノを撮ると そのモノに宿る小さな精霊「モノモン」が見つかる
+              撮った写真と見つけたモノモンのデータはすべてお使いの端末の中だけに保存される
             </p>
+            <p>外部のサーバーに送られることはないよ</p>
+            <p>このアプリは広告やトラッキングをしないよ</p>
             <p>
-              さあ次は何を撮ってみよう？お気に入りのモノモンを見つけて図鑑を埋めていってね
+              「応援する」を使うときだけ決済に必要な情報が決済事業者へ送られる
             </p>
+          </div>
+        )}
+
+        {panel === "terms" && (
+          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <p>この利用規約はモノモンの使い方の条件を定めたもの</p>
+            <p>本アプリを使った時点でこの規約に同意したものとみなすよ</p>
+            <p>
+              本アプリで生まれるモノモンは撮った写真をもとに自動でつくられるオリジナルのキャラクター
+            </p>
+            <p>個人で自由に楽しんでね</p>
+            <p>
+              他の人の権利を傷つける写真や公序良俗に反する写真の利用はご遠慮ください
+            </p>
+            <p>この規約は予告なく変わることがあるよ</p>
           </div>
         )}
       </div>
