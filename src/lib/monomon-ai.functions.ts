@@ -58,13 +58,14 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 そのモノの役割・使われ方・特徴から、本当にそこに宿っていそうな精霊を1体だけ導きます。
 
 絶対のルール：
-1. 見た目・名前・性格・説明文は、必ず認識した物と結びつけること。無関係な可愛さだけのキャラは禁止。
+1. 見た目・名前・性格は、必ず認識した物と結びつけること。無関係な可愛さだけのキャラは禁止。
 2. ランダムに決めない。なぜその精霊なのか、物の役割から説明できる内容にする。
-3. 説明文には、その物の「役割・特徴」を必ず反映する。
-   例) コップ→水を大切にする / ハサミ→切ることが好き / 時計→時間を守る / 傘→雨の日に元気 / 靴→旅を愛する
+3. description は「説明」ではなく、出会えたプレイヤーへそっと語りかける一言にする。
+   出会えた喜び・親しみ・また会いたい気持ちを、そのモノらしさをほんの少しだけ添えて伝える。
+   例) 見つけてくれてありがとう / やっと会えたね / ずっと待ってたよ / また会いに来てね / そばにいるね
 4. 姿(speciesId)は、下の一覧から「写っている物に形が最も近いもの」を選ぶ。
 5. 物の判別に自信がない、または一覧に近い形がない場合は confident=false にする（嘘をつかない）。
-6. ユーザーが3秒で「なるほど、確かにこの精霊っぽい！」と納得できることを最優先にする。
+6. ユーザーが3秒で「なるほど、確かにこの精霊っぽい！」と納得でき、思わず微笑めることを最優先にする。
 
 姿に使える種族(speciesId)一覧：
 {{CATALOG}}
@@ -91,7 +92,7 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
-  "description": "物の役割や特徴を反映した一言（句読点なし・全角20文字程度）"
+  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）"
 }`;
 
 function extractJson(text: string): unknown {
@@ -190,7 +191,7 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     const object = String(parsed.object ?? "").slice(0, 24) || "なにか";
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
-    const description = String(parsed.description ?? "").slice(0, 80) || `${object}に宿る精霊`;
+    const description = String(parsed.description ?? "").slice(0, 80) || "やっと会えたね";
     const confident = parsed.confident === true && speciesKnown;
 
     return {
