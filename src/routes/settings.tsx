@@ -13,11 +13,15 @@ import {
 import { BottomNav } from "@/components/BottomNav";
 import { SupportModal } from "@/components/SupportModal";
 import { tap } from "@/lib/sound";
+import {
+  APP_VERSION,
+  CONTACT_EMAIL,
+  PRIVACY_UPDATED,
+  TERMS_UPDATED,
+} from "@/lib/app-info";
 
-const APP_VERSION = "1.0.0";
-const CONTACT_EMAIL = "monomon.support@gmail.com";
-const PRIVACY_UPDATED = "2026年7月1日";
-const TERMS_UPDATED = "2026年7月1日";
+type Panel = "about" | "howto" | "contact" | "privacy" | "terms" | null;
+const PANELS = ["about", "howto", "contact", "privacy", "terms"] as const;
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -26,19 +30,28 @@ export const Route = createFileRoute("/settings")({
       { name: "description", content: "モノモンの設定" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const p = search.panel;
+    return {
+      panel:
+        typeof p === "string" && (PANELS as readonly string[]).includes(p)
+          ? (p as Exclude<Panel, null>)
+          : undefined,
+    };
+  },
   component: SettingsPage,
 });
 
-type Panel = "about" | "howto" | "contact" | "privacy" | "terms" | null;
-
 function SettingsPage() {
-  const [panel, setPanel] = useState<Panel>(null);
+  const { panel: initialPanel } = Route.useSearch();
+  const [panel, setPanel] = useState<Panel>(initialPanel ?? null);
   const [support, setSupport] = useState(false);
 
   const open = (p: Exclude<Panel, null>) => {
     tap();
     setPanel(p);
   };
+
 
   return (
     <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(2rem,env(safe-area-inset-top))]">
