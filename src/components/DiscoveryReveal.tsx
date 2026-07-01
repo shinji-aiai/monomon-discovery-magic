@@ -90,7 +90,16 @@ export function DiscoveryReveal({ photo, generate, onDone, onError }: DiscoveryR
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
       // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
       const slowTimer = setTimeout(() => setSearching(true), 600);
-      const found = await genPromise;
+      let found: Monomon;
+      try {
+        found = await genPromise;
+      } catch (e) {
+        clearTimeout(slowTimer);
+        setSearching(false);
+        if (cancelled.current) return;
+        onError(e instanceof DiscoveryError ? e.kind : "unknown");
+        return;
+      }
       clearTimeout(slowTimer);
       setSearching(false);
       if (cancelled.current) return;
