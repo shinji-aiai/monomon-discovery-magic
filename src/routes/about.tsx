@@ -33,6 +33,13 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   const storeReady = APP_STORE_URL.trim().length > 0;
 
+  // アプリのメインキャラ「ピンクのコップのモノモン」を公式サイトでも統一表示
+  const heroMonomon = useMemo(
+    () => ({ ...buildSpec(7, "cup", 330), name: "モノモン" }) as Monomon,
+    [],
+  );
+
+
   return (
     <div className="min-h-[100svh] gradient-sky">
       <div className="mx-auto flex w-full max-w-md flex-col items-center px-6 pb-20 pt-[max(4rem,env(safe-area-inset-top))] text-center">
