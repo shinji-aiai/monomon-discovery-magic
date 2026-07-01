@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
+import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { GentleError, type GentleErrorKind } from "@/components/GentleError";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
