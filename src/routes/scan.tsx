@@ -243,6 +243,11 @@ function Scan() {
             <div className="mt-4 text-center">
               <SupportButton variant="result" />
             </div>
+
+            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
+            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
+              まだ見ぬモノモンが待っているかも
+            </p>
           </div>
         </div>
       )}
