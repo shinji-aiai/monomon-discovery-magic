@@ -78,10 +78,14 @@ function Home() {
   // 時刻依存のあいさつは、SSRとクライアントの初回描画を一致させるため
   // マウント後にだけ確定させる（LINE等のWebViewでの hydration 不一致を防ぐ）。
   const [greet, setGreet] = useState<string | null>(null);
+  const [daily, setDaily] = useState<string | null>(null);
+  const [companion, setCompanion] = useState<string | null>(null);
   useEffect(() => {
     setHeroSeed(Math.floor(Math.random() * 1_000_000));
     setHeroSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)].id);
     setGreet(greeting());
+    setDaily(pickByDay(DAILY_MESSAGES));
+    setCompanion(pickByDay(COMPANION_GREETINGS));
   }, []);
 
   return (
