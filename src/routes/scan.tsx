@@ -224,7 +224,9 @@ function Scan() {
             setErrKind(kind);
             setPhase("error");
           }}
+          onCancel={reset}
         />
+
       )}
 
       {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
