@@ -164,13 +164,14 @@ function AboutPage() {
           </Link>
         </div>
 
-        {/* ⑧ バージョン & フッター */}
+        {/* ⑧ フッター */}
         <p className="mt-16 text-xs font-bold text-muted-foreground">
-          モノモン　{APP_VERSION_LABEL}
+          モノモン
         </p>
         <p className="mt-2 text-[0.7rem] text-muted-foreground/70">
-          © モノモン
+          Copyright © 2026 Monomon
         </p>
+
       </div>
     </div>
   );
