@@ -17,6 +17,7 @@ import { tap } from "@/lib/sound";
 const APP_VERSION = "1.0.0";
 const CONTACT_EMAIL = "hello@monomon.app";
 const PRIVACY_UPDATED = "2026年7月1日";
+const TERMS_UPDATED = "2026年7月1日";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -256,17 +257,72 @@ function InfoPanel({
         )}
 
         {panel === "terms" && (
-          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <p>この利用規約はモノモンの使い方の条件を定めたもの</p>
-            <p>本アプリを使った時点でこの規約に同意したものとみなすよ</p>
-            <p>
-              本アプリで生まれるモノモンは撮った写真をもとに自動でつくられるオリジナルのキャラクター
+          <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+            <p className="font-bold text-foreground">
+              モノモンをあそんでくれてありがとう
             </p>
-            <p>個人で自由に楽しんでね</p>
-            <p>
-              他の人の権利を傷つける写真や公序良俗に反する写真の利用はご遠慮ください
+            <p>あんしんしてあそべるように いくつかのおやくそくがあるよ</p>
+
+            <div className="space-y-3">
+              <PrivacyItem
+                emoji="🎈"
+                title="ごりようについて"
+                body="モノモンは楽しくあそぶためのアプリだよ"
+              />
+              <PrivacyItem
+                emoji="🌿"
+                title="あんぜんに"
+                body="あんぜんな場所であそんでね"
+              />
+              <PrivacyItem
+                emoji="🚶"
+                title="ながらあそびはやめてね"
+                body="歩きながらや運転中は使わないでね"
+              />
+              <PrivacyItem
+                emoji="🤝"
+                title="ほかの人のこと"
+                body="ほかの人のプライバシーを撮らないでね"
+              />
+              <PrivacyItem
+                emoji="🤖"
+                title="AIのこと"
+                body="AIのけっかはいつも正しいとはかぎらないよ ゲームとして楽しんでね"
+              />
+              <PrivacyItem
+                emoji="🎨"
+                title="ちょさくけん"
+                body="アプリの中の絵やデザインの無断転載はできないよ"
+              />
+              <PrivacyItem
+                emoji="🍀"
+                title="めんせきのこと"
+                body="アプリの利用で起きたことは法令の範囲内で責任を負えないことがあるよ"
+              />
+              <PrivacyItem
+                emoji="📝"
+                title="きやくのへんこう"
+                body="ひつようなときは内容を更新することがあるよ"
+              />
+            </div>
+
+            <div className="rounded-2xl bg-muted px-4 py-3">
+              <p className="mb-1 font-bold text-foreground">こまったときは</p>
+              <p>気になることがあればいつでも教えてね</p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+                  "利用規約について",
+                )}`}
+                onClick={tap}
+                className="mt-1 inline-block font-bold text-primary"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </div>
+
+            <p className="pt-1 text-center text-xs">
+              最終更新日 {TERMS_UPDATED}
             </p>
-            <p>この規約は予告なく変わることがあるよ</p>
           </div>
         )}
       </div>
