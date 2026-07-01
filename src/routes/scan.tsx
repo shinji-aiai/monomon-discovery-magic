@@ -220,8 +220,15 @@ function Scan() {
             setResult(m);
             setPhase("result");
           }}
+          onError={(kind) => {
+            setErrKind(kind);
+            setPhase("error");
+          }}
         />
       )}
+
+      {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
+
 
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
