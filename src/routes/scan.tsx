@@ -51,23 +51,38 @@ function Scan() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
 
-  // カメラを開く（権限がOFFのときはやさしく案内する）
-  const openCamera = async () => {
+  // カメラ権限を先に把握しておく（クリック時に await しないための準備）
+  const camDenied = useRef(false);
+  useEffect(() => {
+    const perms = navigator.permissions;
+    if (!perms?.query) return;
+    let status: PermissionStatus | null = null;
+    const sync = () => {
+      camDenied.current = status?.state === "denied";
+    };
+    perms
+      .query({ name: "camera" as PermissionName })
+      .then((s) => {
+        status = s;
+        sync();
+        s.onchange = sync;
+      })
+      .catch(() => {
+        // 権限の問い合わせに未対応な端末はそのまま進む
+      });
+    return () => {
+      if (status) status.onchange = null;
+    };
+  }, []);
+
+  // カメラを開く（クリックと同じ同期処理で開く＝iOSでも確実に起動する）
+  const openCamera = () => {
     tap();
-    try {
-      const perms = navigator.permissions;
-      if (perms?.query) {
-        const status = await perms.query({
-          name: "camera" as PermissionName,
-        });
-        if (status.state === "denied") {
-          setErrKind("permission");
-          setPhase("error");
-          return;
-        }
-      }
-    } catch {
-      // カメラ権限の問い合わせに未対応な端末はそのまま進む
+    // 権限がOFFのときだけやさしく案内する
+    if (camDenied.current) {
+      setErrKind("permission");
+      setPhase("error");
+      return;
     }
     cameraRef.current?.click();
   };
