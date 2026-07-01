@@ -230,13 +230,19 @@ export function DiscoveryReveal({ photo, generate, onDone }: DiscoveryRevealProp
           </div>
         )}
 
-        {/* ⑤ 姿がゆっくり現れる */}
+        {/* ⑤ 姿がゆっくり現れる → 少し嬉しそうに跳ねて、そっと浮き続ける */}
         {showColor && monomon && (
           <div className="absolute inset-0 flex items-center justify-center">
             {/* やわらかい光のにじみ（フラッシュの代わり） */}
             <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
             <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.25)]">
-              <MonomonArt monomon={monomon} />
+              {/* 出会えた喜びのひと跳ね（一度だけ） */}
+              <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
+                {/* 生命を感じる、ふわっとした浮遊（ずっと） */}
+                <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
+                  <MonomonArt monomon={monomon} />
+                </div>
+              </div>
             </div>
           </div>
         )}
