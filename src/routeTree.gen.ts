@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZukanRouteImport } from './routes/zukan'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
@@ -20,6 +21,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 const ZukanRoute = ZukanRouteImport.update({
   id: '/zukan',
   path: '/zukan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/zukan': typeof ZukanRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/zukan': typeof ZukanRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
   '/zukan': typeof ZukanRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
+    | '/support'
     | '/zukan'
     | '/checkout/return'
     | '/api/public/payments/webhook'
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
+    | '/support'
     | '/zukan'
     | '/checkout/return'
     | '/api/public/payments/webhook'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
+    | '/support'
     | '/zukan'
     | '/checkout/return'
     | '/api/public/payments/webhook'
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SupportRoute: typeof SupportRoute
   ZukanRoute: typeof ZukanRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/zukan'
       fullPath: '/zukan'
       preLoaderRoute: typeof ZukanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SupportRoute: SupportRoute,
   ZukanRoute: ZukanRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
