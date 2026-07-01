@@ -76,6 +76,19 @@ export function buildSpec(
   };
 }
 
+/** 出会いがうまくいかなかったときの種類（UIでやさしく伝える）。 */
+export type DiscoveryErrorKind = "network" | "busy" | "unknown";
+
+/** モノモンとの出会いに失敗したことを表す（怖い画面ではなくやさしく案内するため）。 */
+export class DiscoveryError extends Error {
+  kind: DiscoveryErrorKind;
+  constructor(kind: DiscoveryErrorKind) {
+    super(kind);
+    this.name = "DiscoveryError";
+    this.kind = kind;
+  }
+}
+
 /**
  * 写真から「モノモン（個体）」を生成します。
  *
@@ -84,7 +97,7 @@ export function buildSpec(
  * ランダム生成はしません。AIの認識に自信が低いときは uncertain=true を返し、
  * UI 側で「○○の仲間かもしれない」と推定であることを伝えます。
  *
- * AIに接続できないときだけ、控えめなフォールバック（uncertain=true）に切り替えます。
+ * うまく出会えなかったときは DiscoveryError を投げ、UI 側でやさしく案内します。
  */
 export async function generateMonomon(photo: string): Promise<Monomon> {
   // 写真の指紋＋撮影の瞬間で、姿の細部（模様・ポーズ等）に多様性を持たせる seed
@@ -97,11 +110,17 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     result = await analyzeSpirit({ data: { photo } });
   } catch (e) {
     console.error("analyzeSpirit failed", e);
-    return fallbackMonomon(photo, seed);
+    throw new DiscoveryError("network");
   }
 
   if ("error" in result) {
-    return fallbackMonomon(photo, seed);
+    if (result.error === "rate_limit" || result.error === "credits") {
+      throw new DiscoveryError("busy");
+    }
+    if (result.error === "AIに接続できませんでした") {
+      throw new DiscoveryError("network");
+    }
+    throw new DiscoveryError("unknown");
   }
 
   const species = getSpecies(result.speciesId);
@@ -126,27 +145,6 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
   };
 }
 
-/** AIに接続できないときのフォールバック（推定としてやさしく表示）。 */
-async function fallbackMonomon(photo: string, seed: number): Promise<Monomon> {
-  const analysis = await analyzePhoto(photo);
-  const rng = mulberry32(seed);
-  const species = detectSpecies(analysis, rng);
-  const spec = buildSpec(seed, species.id, analysis.hue);
-
-  const nameRng = mulberry32(seed ^ 0xc2b2ae35);
-  return {
-    ...spec,
-    id: makeId(seed),
-    name: genName(nameRng),
-    family: species.family,
-    personality: pick(nameRng, PERSONALITIES),
-    description: pick(nameRng, COMMENTS),
-    uncertain: true,
-    discoveredAt: new Date().toISOString(),
-    photo,
-    favorite: false,
-  };
-}
 
 /** 装飾用：seed だけから、それっぽい個体 spec を作ります。 */
 export function specFromSeed(seed: number, speciesId?: string): MonomonSpec {
