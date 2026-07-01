@@ -192,10 +192,7 @@ function Scan() {
 
           <div className="mt-10 w-full max-w-sm space-y-3">
             <button
-              onClick={() => {
-                tap();
-                cameraRef.current?.click();
-              }}
+              onClick={openCamera}
               className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
             >
               <Camera className="h-5 w-5" />
