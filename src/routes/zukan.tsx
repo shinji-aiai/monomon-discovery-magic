@@ -18,7 +18,7 @@ import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
-import { useDex, removeFromDex, toggleFavorite } from "@/lib/dex";
+import { useDex, useNewDex, removeFromDex, toggleFavorite, clearNew } from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
@@ -65,6 +65,8 @@ function RarityStars({ speciesId, dim }: { speciesId: string; dim?: boolean }) {
 
 function Zukan() {
   const dex = useDex();
+  const newIds = useNewDex();
+  const newSet = useMemo(() => new Set(newIds), [newIds]);
   const [selected, setSelected] = useState<Monomon | null>(null);
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
   const [mode, setMode] = useState<Mode>("species");
@@ -219,14 +221,17 @@ function Zukan() {
           <div className="grid grid-cols-3 gap-2.5">
             {filteredSpecies.map((sp) => {
               const found = bySpecies.get(sp.id);
+              const isNew = found?.some((f) => newSet.has(f.id)) ?? false;
               return (
                 <SpeciesCell
                   key={sp.id}
                   species={sp}
                   sample={found?.[0]}
                   count={found?.length ?? 0}
+                  isNew={isNew}
                   onOpen={() => {
                     tap();
+                    if (found) found.forEach((f) => clearNew(f.id));
                     setSelectedSpecies(sp);
                   }}
                 />
@@ -277,8 +282,10 @@ function Zukan() {
                   key={m.id}
                   monomon={m}
                   no={numbered.get(m.id) ?? 0}
+                  isNew={newSet.has(m.id)}
                   onOpen={() => {
                     tap();
+                    clearNew(m.id);
                     setSelected(m);
                   }}
                 />
@@ -423,16 +430,27 @@ function FamilyProgress({
 }
 
 
+/** 新しく登録された子に付く「NEW!」バッジ（大きく・可愛く） */
+function NewBadge() {
+  return (
+    <span className="animate-new-badge pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 rounded-full bg-primary px-2.5 py-0.5 text-[0.66rem] font-extrabold uppercase tracking-wide text-primary-foreground shadow-float ring-2 ring-card">
+      NEW!
+    </span>
+  );
+}
+
 /** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝？？？シルエット） */
 function SpeciesCell({
   species,
   sample,
   count,
+  isNew,
   onOpen,
 }: {
   species: Species;
   sample?: Monomon;
   count: number;
+  isNew?: boolean;
   onOpen: () => void;
 }) {
   const found = !!sample;
@@ -441,6 +459,7 @@ function SpeciesCell({
       onClick={onOpen}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
+      {isNew && <NewBadge />}
       <div
         className="relative aspect-square p-2"
         style={{
@@ -488,10 +507,12 @@ function SpeciesCell({
 function DexCell({
   monomon,
   no,
+  isNew,
   onOpen,
 }: {
   monomon: Monomon;
   no: number;
+  isNew?: boolean;
   onOpen: () => void;
 }) {
   const fam = FAMILY_STYLES[monomon.family];
@@ -509,6 +530,7 @@ function DexCell({
       }}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
+      {isNew && <NewBadge />}
       <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
         No.{String(no).padStart(3, "0")}
       </span>

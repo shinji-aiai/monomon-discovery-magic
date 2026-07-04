@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Moon, RefreshCw } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
 import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
+import { greetingFor } from "@/lib/greetings";
 
 interface DiscoveryRevealProps {
   photo: string;
@@ -59,6 +60,8 @@ export function DiscoveryReveal({
   const [timedOut, setTimedOut] = useState(false);
   /** 「もう一度ためす」で演出をやり直すための試行カウント */
   const [attempt, setAttempt] = useState(0);
+  /** 発見成功の紙吹雪（少しだけ舞う） */
+  const [showConfetti, setShowConfetti] = useState(false);
   /** タップ送り用：現在の待機を即座に切り上げるフラグ */
   const skipRef = useRef(false);
   const skipResolve = useRef<(() => void) | null>(null);
@@ -93,6 +96,7 @@ export function DiscoveryReveal({
     setMonomon(null);
     setSearching(false);
     setTimedOut(false);
+    setShowConfetti(false);
 
     const genPromise = generate();
     let slowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -144,9 +148,11 @@ export function DiscoveryReveal({
       await waitOrSkip(650);
       if (!alive) return;
 
-      // ③ 静かに間を置く（0.5〜1秒）
+      // ③ 静かに間を置く（0.5〜1秒）「なにかいる…」小さな鼓動
       setStage(STAGE.PAUSE);
-      await waitOrSkip(650);
+      playSound("heartbeat");
+      haptic([0, 14, 90, 14]);
+      await waitOrSkip(750);
       if (!alive) return;
 
       // ④ 目だけ先に光る
@@ -155,16 +161,18 @@ export function DiscoveryReveal({
       await waitOrSkip(650);
       if (!alive) return;
 
-      // ⑤ 姿がゆっくり現れる
+      // ⑤ 姿がゆっくり現れる → 紙吹雪とキラキラでお祝い
       setStage(STAGE.APPEAR);
       playSound("discover");
-      haptic(16);
+      setShowConfetti(true);
+      haptic([0, 16, 40, 24]);
       await waitOrSkip(1200);
       if (!alive) return;
 
-      // ⑥ 名前
+      // ⑥ 名前（大きく・キラキラ）
       setStage(STAGE.NAME);
-      playSound("save");
+      playSound("sparkle");
+      playSound("fanfare");
       await waitOrSkip(950);
       if (!alive) return;
 
@@ -247,11 +255,65 @@ export function DiscoveryReveal({
 
   const objectLabel = monomon?.objectLabel?.trim();
 
+  // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
+  const greeting = useMemo(
+    () => (monomon ? greetingFor(monomon) : ""),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monomon?.id],
+  );
+
+  // 少しだけ舞う紙吹雪（発見成功のお祝い）
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, i) => {
+        const colors = [
+          "bg-primary",
+          "bg-amber-300",
+          "bg-rose-300",
+          "bg-sky-300",
+          "bg-emerald-300",
+        ];
+        return {
+          left: `${6 + (i * 6.1) % 88}%`,
+          delay: `${(i % 8) * 0.07}s`,
+          duration: `${1.3 + (i % 4) * 0.22}s`,
+          spin: `${((i % 3) - 1) * 360 + 540}deg`,
+          size: 6 + (i % 3) * 2,
+          round: i % 2 === 0,
+          color: colors[i % colors.length],
+        };
+      }),
+    [],
+  );
+
   return (
     <div
       onClick={advance}
-      className="flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
     >
+      {/* 紙吹雪（少しだけ・発見成功のお祝い） */}
+      {showConfetti && (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+          {confetti.map((c, i) => (
+            <span
+              key={i}
+              className={`animate-confetti absolute top-0 ${c.color} ${
+                c.round ? "rounded-full" : "rounded-[2px]"
+              }`}
+              style={{
+                left: c.left,
+                width: c.size,
+                height: c.size,
+                animationDelay: c.delay,
+                animationDuration: c.duration,
+                // @ts-expect-error custom prop
+                "--spin": c.spin,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* 出会いの舞台（写真 → 光 → シルエット → 姿） */}
       <div className="relative h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
         {/* 写真（進むほど静かに沈む） */}
@@ -295,7 +357,11 @@ export function DiscoveryReveal({
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               className={`relative h-52 w-52 ${
-                stage === STAGE.SILHOUETTE ? "animate-silhouette" : ""
+                stage === STAGE.SILHOUETTE
+                  ? "animate-silhouette"
+                  : stage === STAGE.PAUSE
+                    ? "animate-heartbeat"
+                    : ""
               }`}
             >
               <div className="h-full w-full opacity-90 [filter:brightness(0)_drop-shadow(0_0_18px_rgba(255,245,210,0.55))]">
@@ -339,7 +405,7 @@ export function DiscoveryReveal({
         </p>
       )}
 
-      {/* ⑥ 名前 */}
+      {/* ⑥ 名前（大きく・キラキラ） */}
       {stage >= STAGE.NAME && monomon && (
         <div key="name" className="mt-9 animate-pop-in text-center">
           {objectLabel && (
@@ -349,22 +415,24 @@ export function DiscoveryReveal({
                 : `${objectLabel}に宿る`}
             </p>
           )}
-          <h2 className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-extrabold text-foreground">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-foreground drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]">
+            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
             {monomon.name}
+            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
           </h2>
         </div>
       )}
 
-      {/* ⑦ 一言 */}
+      {/* ⑦ 一言（その物の気持ち・ランダム） */}
       {stage >= STAGE.QUOTE && monomon && (
         <div
           key="quote"
-          className="mt-4 max-w-xs animate-rise-in rounded-3xl bg-card px-5 py-3 text-sm leading-relaxed text-card-foreground shadow-soft"
+          className="mt-4 max-w-xs animate-pop-in rounded-3xl bg-card px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft"
         >
-          「{monomon.description}」
+          「{greeting}」
         </div>
       )}
+
 
       {/* タップ送りのヒント（最後の段までそっと表示） */}
       {stage < STAGE.QUOTE && (

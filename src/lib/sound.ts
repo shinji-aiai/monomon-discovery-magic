@@ -7,7 +7,14 @@ import { settingsStore } from "./settings";
  * 同じ playSound() インターフェースのまま拡張できます。
  */
 
-type SoundName = "button" | "scan" | "discover" | "save";
+type SoundName =
+  | "button"
+  | "scan"
+  | "discover"
+  | "save"
+  | "heartbeat"
+  | "sparkle"
+  | "fanfare";
 
 let ctx: AudioContext | null = null;
 
@@ -64,6 +71,25 @@ const RECIPES: Record<SoundName, (a: AudioContext) => void> = {
   save: (a) => {
     tone(a, 587, 0, 0.14, "sine", 0.09);
     tone(a, 880, 0.1, 0.22, "sine", 0.09);
+  },
+  // 小さな鼓動（シルエットの「なにかいる…」の間に）
+  heartbeat: (a) => {
+    tone(a, 90, 0, 0.14, "sine", 0.12);
+    tone(a, 80, 0.22, 0.16, "sine", 0.1);
+  },
+  // 名前が現れるときのキラキラ
+  sparkle: (a) => {
+    tone(a, 1319, 0, 0.12, "sine", 0.06); // E6
+    tone(a, 1760, 0.08, 0.12, "sine", 0.06); // A6
+    tone(a, 2093, 0.16, 0.16, "sine", 0.05); // C7
+  },
+  // 発見成功のやさしいファンファーレ
+  fanfare: (a) => {
+    tone(a, 523, 0, 0.16, "triangle", 0.08); // C
+    tone(a, 659, 0.12, 0.16, "triangle", 0.08); // E
+    tone(a, 784, 0.24, 0.18, "triangle", 0.09); // G
+    tone(a, 1047, 0.38, 0.34, "triangle", 0.09); // C
+    tone(a, 1319, 0.5, 0.4, "sine", 0.05); // E きらり
   },
 };
 

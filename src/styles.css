@@ -450,5 +450,66 @@
   animation: life-float 3.6s ease-in-out infinite;
 }
 
+/* 小さな鼓動：シルエットが「なにかいる…」と脈打つ */
+@keyframes heartbeat-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.06);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.04);
+  }
+  60% {
+    transform: scale(1);
+  }
+}
+@utility animate-heartbeat {
+  animation: heartbeat-pulse 1.3s ease-in-out infinite;
+}
+
+/* コンフェッティ（少しだけ舞う紙吹雪） */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(320px) rotate(var(--spin, 360deg));
+    opacity: 0;
+  }
+}
+@utility animate-confetti {
+  animation: confetti-fall 1.6s cubic-bezier(0.3, 0.7, 0.5, 1) forwards;
+}
+
+/* NEW! バッジのふわっと登場＋やさしい揺れ */
+@keyframes new-badge {
+  0% {
+    transform: scale(0) rotate(-14deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(-14deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-14deg);
+    opacity: 1;
+  }
+}
+@utility animate-new-badge {
+  animation: new-badge 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
 
 
