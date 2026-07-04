@@ -430,16 +430,27 @@ function FamilyProgress({
 }
 
 
+/** 新しく登録された子に付く「NEW!」バッジ（大きく・可愛く） */
+function NewBadge() {
+  return (
+    <span className="animate-new-badge pointer-events-none absolute -left-1.5 -top-1.5 z-20 rounded-full bg-primary px-2 py-0.5 text-[0.62rem] font-extrabold uppercase tracking-wide text-primary-foreground shadow-float ring-2 ring-card">
+      NEW!
+    </span>
+  );
+}
+
 /** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝？？？シルエット） */
 function SpeciesCell({
   species,
   sample,
   count,
+  isNew,
   onOpen,
 }: {
   species: Species;
   sample?: Monomon;
   count: number;
+  isNew?: boolean;
   onOpen: () => void;
 }) {
   const found = !!sample;
@@ -448,6 +459,7 @@ function SpeciesCell({
       onClick={onOpen}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
+      {isNew && <NewBadge />}
       <div
         className="relative aspect-square p-2"
         style={{
