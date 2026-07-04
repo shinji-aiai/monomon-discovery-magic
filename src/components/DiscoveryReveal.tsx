@@ -255,6 +255,37 @@ export function DiscoveryReveal({
 
   const objectLabel = monomon?.objectLabel?.trim();
 
+  // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
+  const greeting = useMemo(
+    () => (monomon ? greetingFor(monomon) : ""),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monomon?.id],
+  );
+
+  // 少しだけ舞う紙吹雪（発見成功のお祝い）
+  const confetti = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, i) => {
+        const colors = [
+          "bg-primary",
+          "bg-amber-300",
+          "bg-rose-300",
+          "bg-sky-300",
+          "bg-emerald-300",
+        ];
+        return {
+          left: `${6 + (i * 6.1) % 88}%`,
+          delay: `${(i % 8) * 0.07}s`,
+          duration: `${1.3 + (i % 4) * 0.22}s`,
+          spin: `${((i % 3) - 1) * 360 + 540}deg`,
+          size: 6 + (i % 3) * 2,
+          round: i % 2 === 0,
+          color: colors[i % colors.length],
+        };
+      }),
+    [],
+  );
+
   return (
     <div
       onClick={advance}
