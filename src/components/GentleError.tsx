@@ -23,9 +23,9 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
   permission: {
     icon: Camera,
     title: "カメラを使わせてね",
-    lines: ["モノモンを探すために", "カメラを使わせてください"],
-    action: "設定を開く",
-    actionIcon: Settings,
+    lines: ["モノモンを探すために", "カメラの使用をゆるしてね"],
+    action: "もう一度ためす",
+    actionIcon: RefreshCw,
   },
   // ③ 通信エラー
   network: {
