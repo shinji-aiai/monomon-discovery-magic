@@ -83,7 +83,10 @@ export function GentleError({ kind, onRetry }: GentleErrorProps) {
 
       {kind === "permission" && (
         <p className="mt-6 max-w-xs text-xs leading-relaxed text-muted-foreground/70">
-          端末の設定でカメラをオンにしてね
+          <span className="block">カメラがオフのままだと探せないよ</span>
+          <span className="block">
+            ブロックした時は お使いのブラウザのカメラ許可を見直してね
+          </span>
         </p>
       )}
     </div>
