@@ -65,6 +65,8 @@ function RarityStars({ speciesId, dim }: { speciesId: string; dim?: boolean }) {
 
 function Zukan() {
   const dex = useDex();
+  const newIds = useNewDex();
+  const newSet = useMemo(() => new Set(newIds), [newIds]);
   const [selected, setSelected] = useState<Monomon | null>(null);
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
   const [mode, setMode] = useState<Mode>("species");
