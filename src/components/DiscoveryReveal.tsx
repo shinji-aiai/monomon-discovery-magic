@@ -289,8 +289,31 @@ export function DiscoveryReveal({
   return (
     <div
       onClick={advance}
-      className="flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
     >
+      {/* 紙吹雪（少しだけ・発見成功のお祝い） */}
+      {showConfetti && (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+          {confetti.map((c, i) => (
+            <span
+              key={i}
+              className={`animate-confetti absolute top-0 ${c.color} ${
+                c.round ? "rounded-full" : "rounded-[2px]"
+              }`}
+              style={{
+                left: c.left,
+                width: c.size,
+                height: c.size,
+                animationDelay: c.delay,
+                animationDuration: c.duration,
+                // @ts-expect-error custom prop
+                "--spin": c.spin,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* 出会いの舞台（写真 → 光 → シルエット → 姿） */}
       <div className="relative h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
         {/* 写真（進むほど静かに沈む） */}
