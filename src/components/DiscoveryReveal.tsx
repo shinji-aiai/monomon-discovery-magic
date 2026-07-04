@@ -405,7 +405,7 @@ export function DiscoveryReveal({
         </p>
       )}
 
-      {/* ⑥ 名前 */}
+      {/* ⑥ 名前（大きく・キラキラ） */}
       {stage >= STAGE.NAME && monomon && (
         <div key="name" className="mt-9 animate-pop-in text-center">
           {objectLabel && (
@@ -415,22 +415,24 @@ export function DiscoveryReveal({
                 : `${objectLabel}に宿る`}
             </p>
           )}
-          <h2 className="mt-0.5 flex items-center justify-center gap-1.5 text-2xl font-extrabold text-foreground">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-foreground drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]">
+            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
             {monomon.name}
+            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
           </h2>
         </div>
       )}
 
-      {/* ⑦ 一言 */}
+      {/* ⑦ 一言（その物の気持ち・ランダム） */}
       {stage >= STAGE.QUOTE && monomon && (
         <div
           key="quote"
-          className="mt-4 max-w-xs animate-rise-in rounded-3xl bg-card px-5 py-3 text-sm leading-relaxed text-card-foreground shadow-soft"
+          className="mt-4 max-w-xs animate-pop-in rounded-3xl bg-card px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft"
         >
-          「{monomon.description}」
+          「{greeting}」
         </div>
       )}
+
 
       {/* タップ送りのヒント（最後の段までそっと表示） */}
       {stage < STAGE.QUOTE && (
