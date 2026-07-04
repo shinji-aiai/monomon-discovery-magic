@@ -1,4 +1,4 @@
-import { Camera, Moon, RefreshCw, Search, Settings } from "lucide-react";
+import { Camera, Moon, RefreshCw, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DiscoveryErrorKind } from "@/lib/monomon";
 
