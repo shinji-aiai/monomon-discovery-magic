@@ -20,7 +20,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
-import { addToDex } from "@/lib/dex";
+import { addToDex, meetMonomon } from "@/lib/dex";
 import { downloadCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
 
@@ -107,6 +107,8 @@ function Scan() {
   useEffect(() => {
     if (phase === "result" && result && !registered) {
       addToDex(result);
+      // 発見＝その日はじめての出会い → なかよし度 +5
+      meetMonomon(result.id);
       setRegistered(true);
     }
   }, [phase, result, registered]);

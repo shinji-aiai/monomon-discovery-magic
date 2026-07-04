@@ -18,7 +18,16 @@ import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
-import { useDex, useNewDex, removeFromDex, toggleFavorite, clearNew } from "@/lib/dex";
+import { FriendshipMeter } from "@/components/FriendshipMeter";
+import {
+  useDex,
+  useNewDex,
+  removeFromDex,
+  toggleFavorite,
+  clearNew,
+  meetMonomon,
+  petMonomon,
+} from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
@@ -744,11 +753,31 @@ function DetailSheet({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // なかよし度などが変わってもすぐ反映されるよう、常に最新の状態を読む
+  const dex = useDex();
+  const live = dex.find((m) => m.id === monomon.id) ?? monomon;
+
+  // 会いに来たら「今日はじめて」なら なかよし度 +5（開いたとき一度だけ）
+  useEffect(() => {
+    const gained = meetMonomon(monomon.id);
+    if (gained) {
+      haptic(12);
+      toast("今日はじめて会えたね　なかよし度 +5 ❤️");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monomon.id]);
+
+  // モノモンをなでる → なかよし度 +1
+  const pet = () => {
+    petMonomon(live.id);
+    haptic(8);
+  };
+
   const save = async () => {
     tap();
     setSaving(true);
     try {
-      await downloadCardImage(monomon);
+      await downloadCardImage(live);
       playSound("save");
       toast.success("画像を保存しました");
     } catch {
@@ -759,7 +788,7 @@ function DetailSheet({
   };
 
   const del = () => {
-    removeFromDex(monomon.id);
+    removeFromDex(live.id);
     haptic(20);
     toast.success("削除しました");
     onClose();
@@ -780,14 +809,14 @@ function DetailSheet({
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                toggleFavorite(monomon.id);
+                toggleFavorite(live.id);
                 haptic(12);
               }}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
               aria-label="お気に入り"
             >
               <Heart
-                className={`h-5 w-5 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
               />
             </button>
             <button
@@ -803,7 +832,13 @@ function DetailSheet({
           </div>
         </div>
 
-        <MonomonCard monomon={monomon} />
+        <MonomonCard monomon={live} onPet={pet} />
+
+        {/* なかよし度（表情・セリフ・ゲージ） */}
+        <FriendshipMeter monomon={live} className="mt-4" />
+        <p className="mt-1.5 text-center text-xs font-medium text-muted-foreground">
+          モノモンをなでると なかよし度が上がるよ
+        </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <button
@@ -868,7 +903,7 @@ function DetailSheet({
       </div>
 
       {sharing && (
-        <ShareModal monomon={monomon} onClose={() => setSharing(false)} />
+        <ShareModal monomon={live} onClose={() => setSharing(false)} />
       )}
     </div>
   );

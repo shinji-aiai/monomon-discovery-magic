@@ -1,5 +1,6 @@
 import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
+import { withFriendshipGain, withMeet } from "./friendship";
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
@@ -22,12 +23,45 @@ export function useNewDex() {
 export function addToDex(monomon: Monomon) {
   dexStore.set((prev) => {
     if (prev.some((m) => m.id === monomon.id)) return prev;
-    return [monomon, ...prev];
+    // 同じ種族の先住モノモンがいれば「また会えた」と喜ぶ（なかよし度 +rediscover）
+    const rediscovered = prev.some((m) => m.speciesId === monomon.speciesId);
+    const next = rediscovered
+      ? prev.map((m) =>
+          m.speciesId === monomon.speciesId
+            ? withFriendshipGain(m, "rediscover")
+            : m,
+        )
+      : prev;
+    return [{ ...monomon, friendship: monomon.friendship ?? 0 }, ...next];
   });
   // 新しく登録された子は「NEW!」として印を付ける（図鑑で見たら消える）
   newDexStore.set((prev) =>
     prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
   );
+}
+
+/** モノモンをタップ（なでる）→ なかよし度 +1 */
+export function petMonomon(id: string) {
+  dexStore.set((prev) =>
+    prev.map((m) => (m.id === id ? withFriendshipGain(m, "pet") : m)),
+  );
+}
+
+/**
+ * 会いに来た（詳細を開いた／発見した）ときに呼びます。
+ * 今日はじめての来訪なら なかよし度 +5。加算できたら true を返します。
+ */
+export function meetMonomon(id: string): boolean {
+  let gained = false;
+  dexStore.set((prev) =>
+    prev.map((m) => {
+      if (m.id !== id) return m;
+      const r = withMeet(m);
+      gained = r.gained;
+      return r.monomon;
+    }),
+  );
+  return gained;
 }
 
 /** 指定した子の NEW! 表示を消します（図鑑で見たとき）。 */
