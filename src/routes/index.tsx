@@ -149,43 +149,58 @@ function Home() {
       </div>
 
 
-      {/* 統計：個体数・種族数 */}
-      <div className="mb-5 grid grid-cols-3 gap-3">
-        <Stat label="きょう" value={today} unit="匹" accent />
-        <Stat label="個体" value={dex.length} unit="匹" />
-        <Stat label="種族" value={`${kinds}/${SPECIES_COUNT}`} unit="種" />
-      </div>
-
-      {/* さいきん見つけた一覧 */}
-      {dex.length > 0 && (
-        <Link
-          to="/zukan"
-          className="mb-4 flex items-center gap-3 rounded-3xl bg-card/80 p-3 shadow-soft backdrop-blur active:scale-[0.98]"
-        >
-          <div className="flex -space-x-3">
-            {dex.slice(0, 4).map((m) => (
-              <div
-                key={m.id}
-                className="h-11 w-11 overflow-hidden rounded-full border-2 border-card"
-                style={{
-                  backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[m.family].bg[0]}, ${FAMILY_STYLES[m.family].bg[1]})`,
-                }}
-              >
-                <MonomonArt monomon={m} />
-              </div>
-            ))}
+      {isFirstTime ? (
+        /* 初回：空の統計は出さず、歓迎メッセージを主役にする */
+        <div className="mb-6 text-center">
+          <p className="text-lg font-extrabold leading-snug text-foreground">
+            最初のモノモンを
+            <br />
+            見つけに行こう！
+          </p>
+          <p className="mt-2 text-sm font-medium text-muted-foreground">
+            身近なモノを撮ると小さな精霊に出会えるよ
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* 統計：個体数・種族数 */}
+          <div className="mb-5 grid grid-cols-3 gap-3">
+            <Stat label="きょう" value={today} unit="匹" accent />
+            <Stat label="個体" value={dex.length} unit="匹" />
+            <Stat label="種族" value={`${kinds}/${SPECIES_COUNT}`} unit="種" />
           </div>
-          <span className="flex-1 text-sm font-bold text-foreground">
-            図鑑を見る
-          </span>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </Link>
+
+          {/* さいきん見つけた一覧 */}
+          <Link
+            to="/zukan"
+            className="mb-4 flex items-center gap-3 rounded-3xl bg-card/80 p-3 shadow-soft backdrop-blur active:scale-[0.98]"
+          >
+            <div className="flex -space-x-3">
+              {dex.slice(0, 4).map((m) => (
+                <div
+                  key={m.id}
+                  className="h-11 w-11 overflow-hidden rounded-full border-2 border-card"
+                  style={{
+                    backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[m.family].bg[0]}, ${FAMILY_STYLES[m.family].bg[1]})`,
+                  }}
+                >
+                  <MonomonArt monomon={m} />
+                </div>
+              ))}
+            </div>
+            <span className="flex-1 text-sm font-bold text-foreground">
+              図鑑を見る
+            </span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+
+          {/* きょうの一言（毎日そっと変わる・探索へ誘う） */}
+          <p className="mb-3 min-h-[1.25rem] text-center text-sm font-bold text-foreground">
+            {daily ?? "今日は何を発見できるかな"}
+          </p>
+        </>
       )}
 
-      {/* きょうの一言（毎日そっと変わる・探索へ誘う） */}
-      <p className="mb-3 min-h-[1.25rem] text-center text-sm font-bold text-foreground">
-        {daily ?? "今日は何を発見できるかな"}
-      </p>
 
       {/* メインアクション（ホームで最も目立つ主役） */}
       <div className="relative">
