@@ -7,7 +7,14 @@ import { settingsStore } from "./settings";
  * 同じ playSound() インターフェースのまま拡張できます。
  */
 
-type SoundName = "button" | "scan" | "discover" | "save";
+type SoundName =
+  | "button"
+  | "scan"
+  | "discover"
+  | "save"
+  | "heartbeat"
+  | "sparkle"
+  | "fanfare";
 
 let ctx: AudioContext | null = null;
 
