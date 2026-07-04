@@ -433,7 +433,7 @@ function FamilyProgress({
 /** 新しく登録された子に付く「NEW!」バッジ（大きく・可愛く） */
 function NewBadge() {
   return (
-    <span className="animate-new-badge pointer-events-none absolute -left-1.5 -top-1.5 z-20 rounded-full bg-primary px-2 py-0.5 text-[0.62rem] font-extrabold uppercase tracking-wide text-primary-foreground shadow-float ring-2 ring-card">
+    <span className="animate-new-badge pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 rounded-full bg-primary px-2.5 py-0.5 text-[0.66rem] font-extrabold uppercase tracking-wide text-primary-foreground shadow-float ring-2 ring-card">
       NEW!
     </span>
   );
