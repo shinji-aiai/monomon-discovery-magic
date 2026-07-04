@@ -72,6 +72,8 @@ function Home() {
   const last = dex[0];
   const today = countToday(dex);
   const kinds = useMemo(() => new Set(dex.map((m) => m.speciesId)).size, [dex]);
+  // まだ1匹も見つけていない初回ユーザーは、空の統計より歓迎メッセージを主役にする
+  const isFirstTime = dex.length === 0;
 
   const [heroSeed, setHeroSeed] = useState(123456);
   const [heroSpecies, setHeroSpecies] = useState(SPECIES[0].id);
