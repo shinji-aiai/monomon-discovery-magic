@@ -96,6 +96,7 @@ export function DiscoveryReveal({
     setMonomon(null);
     setSearching(false);
     setTimedOut(false);
+    setShowConfetti(false);
 
     const genPromise = generate();
     let slowTimer: ReturnType<typeof setTimeout> | undefined;
