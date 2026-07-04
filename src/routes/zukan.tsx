@@ -507,10 +507,12 @@ function SpeciesCell({
 function DexCell({
   monomon,
   no,
+  isNew,
   onOpen,
 }: {
   monomon: Monomon;
   no: number;
+  isNew?: boolean;
   onOpen: () => void;
 }) {
   const fam = FAMILY_STYLES[monomon.family];
@@ -528,6 +530,7 @@ function DexCell({
       }}
       className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
     >
+      {isNew && <NewBadge />}
       <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
         No.{String(no).padStart(3, "0")}
       </span>
