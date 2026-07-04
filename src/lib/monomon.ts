@@ -31,6 +31,10 @@ export interface Monomon extends MonomonSpec {
   objectLabel?: string;
   /** AIの認識に自信が低い＝推定表示（「○○の仲間かもしれない」） */
   uncertain?: boolean;
+  /** なかよし度（0〜100）。詳しくは friendship.ts */
+  friendship?: number;
+  /** 最後に会いに来た日時（ISO）。今日はじめての来訪判定に使う。 */
+  lastMetAt?: string;
 }
 
 function makeId(seed: number): string {
@@ -142,6 +146,7 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     discoveredAt: new Date().toISOString(),
     photo,
     favorite: false,
+    friendship: 0,
   };
 }
 

@@ -10,10 +10,12 @@ interface MonomonCardProps {
   className?: string;
   /** 登場アニメーション */
   animate?: boolean;
+  /** モノモンをタップ（なでる）したときの処理。渡すとイラストが押せるようになる */
+  onPet?: () => void;
 }
 
 /** 保存したくなる、上質なモノモンカード（写真から精霊が飛び出す構図）。 */
-export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
+export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardProps) {
   const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   const accent = monomon.palette.c3;
@@ -67,7 +69,18 @@ export function MonomonCard({ monomon, className, animate }: MonomonCardProps) {
             style={{ backgroundColor: `${accent}55` }}
           />
           <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
-            <MonomonArt monomon={monomon} />
+            {onPet ? (
+              <button
+                type="button"
+                onClick={onPet}
+                aria-label="なでる"
+                className="h-full w-full cursor-pointer transition-transform active:scale-90"
+              >
+                <MonomonArt monomon={monomon} />
+              </button>
+            ) : (
+              <MonomonArt monomon={monomon} />
+            )}
           </div>
         </div>
       </div>
