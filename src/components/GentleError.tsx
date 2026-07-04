@@ -1,4 +1,4 @@
-import { Camera, Moon, RefreshCw, Search, Settings } from "lucide-react";
+import { Camera, Moon, RefreshCw, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DiscoveryErrorKind } from "@/lib/monomon";
 
@@ -23,9 +23,9 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
   permission: {
     icon: Camera,
     title: "カメラを使わせてね",
-    lines: ["モノモンを探すために", "カメラを使わせてください"],
-    action: "設定を開く",
-    actionIcon: Settings,
+    lines: ["モノモンを探すために", "カメラの使用をゆるしてね"],
+    action: "もう一度ためす",
+    actionIcon: RefreshCw,
   },
   // ③ 通信エラー
   network: {
@@ -83,7 +83,10 @@ export function GentleError({ kind, onRetry }: GentleErrorProps) {
 
       {kind === "permission" && (
         <p className="mt-6 max-w-xs text-xs leading-relaxed text-muted-foreground/70">
-          端末の設定でカメラをオンにしてね
+          <span className="block">カメラがオフのままだと探せないよ</span>
+          <span className="block">
+            ブロックした時は お使いのブラウザのカメラ許可を見直してね
+          </span>
         </p>
       )}
     </div>
