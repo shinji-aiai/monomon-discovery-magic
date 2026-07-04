@@ -42,6 +42,7 @@ export function clearAllNew() {
 
 export function removeFromDex(id: string) {
   dexStore.set((prev) => prev.filter((m) => m.id !== id));
+  clearNew(id);
 }
 
 export function toggleFavorite(id: string) {
@@ -52,6 +53,7 @@ export function toggleFavorite(id: string) {
 
 export function clearDex() {
   dexStore.set([]);
+  clearAllNew();
 }
 
 export function getMonomon(id: string): Monomon | undefined {
