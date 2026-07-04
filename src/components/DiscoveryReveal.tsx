@@ -357,7 +357,11 @@ export function DiscoveryReveal({
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               className={`relative h-52 w-52 ${
-                stage === STAGE.SILHOUETTE ? "animate-silhouette" : ""
+                stage === STAGE.SILHOUETTE
+                  ? "animate-silhouette"
+                  : stage === STAGE.PAUSE
+                    ? "animate-heartbeat"
+                    : ""
               }`}
             >
               <div className="h-full w-full opacity-90 [filter:brightness(0)_drop-shadow(0_0_18px_rgba(255,245,210,0.55))]">
