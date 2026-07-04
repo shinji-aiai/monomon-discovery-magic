@@ -60,6 +60,8 @@ export function DiscoveryReveal({
   const [timedOut, setTimedOut] = useState(false);
   /** 「もう一度ためす」で演出をやり直すための試行カウント */
   const [attempt, setAttempt] = useState(0);
+  /** 発見成功の紙吹雪（少しだけ舞う） */
+  const [showConfetti, setShowConfetti] = useState(false);
   /** タップ送り用：現在の待機を即座に切り上げるフラグ */
   const skipRef = useRef(false);
   const skipResolve = useRef<(() => void) | null>(null);
