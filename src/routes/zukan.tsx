@@ -18,7 +18,7 @@ import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
-import { useDex, removeFromDex, toggleFavorite } from "@/lib/dex";
+import { useDex, useNewDex, removeFromDex, toggleFavorite, clearNew } from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
