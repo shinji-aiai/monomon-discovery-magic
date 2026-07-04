@@ -221,14 +221,17 @@ function Zukan() {
           <div className="grid grid-cols-3 gap-2.5">
             {filteredSpecies.map((sp) => {
               const found = bySpecies.get(sp.id);
+              const isNew = found?.some((f) => newSet.has(f.id)) ?? false;
               return (
                 <SpeciesCell
                   key={sp.id}
                   species={sp}
                   sample={found?.[0]}
                   count={found?.length ?? 0}
+                  isNew={isNew}
                   onOpen={() => {
                     tap();
+                    if (found) found.forEach((f) => clearNew(f.id));
                     setSelectedSpecies(sp);
                   }}
                 />
