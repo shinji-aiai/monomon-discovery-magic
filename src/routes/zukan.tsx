@@ -282,8 +282,10 @@ function Zukan() {
                   key={m.id}
                   monomon={m}
                   no={numbered.get(m.id) ?? 0}
+                  isNew={newSet.has(m.id)}
                   onOpen={() => {
                     tap();
+                    clearNew(m.id);
                     setSelected(m);
                   }}
                 />
