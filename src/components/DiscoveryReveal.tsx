@@ -148,9 +148,11 @@ export function DiscoveryReveal({
       await waitOrSkip(650);
       if (!alive) return;
 
-      // ③ 静かに間を置く（0.5〜1秒）
+      // ③ 静かに間を置く（0.5〜1秒）「なにかいる…」小さな鼓動
       setStage(STAGE.PAUSE);
-      await waitOrSkip(650);
+      playSound("heartbeat");
+      haptic([0, 14, 90, 14]);
+      await waitOrSkip(750);
       if (!alive) return;
 
       // ④ 目だけ先に光る
@@ -159,16 +161,18 @@ export function DiscoveryReveal({
       await waitOrSkip(650);
       if (!alive) return;
 
-      // ⑤ 姿がゆっくり現れる
+      // ⑤ 姿がゆっくり現れる → 紙吹雪とキラキラでお祝い
       setStage(STAGE.APPEAR);
       playSound("discover");
-      haptic(16);
+      setShowConfetti(true);
+      haptic([0, 16, 40, 24]);
       await waitOrSkip(1200);
       if (!alive) return;
 
-      // ⑥ 名前
+      // ⑥ 名前（大きく・キラキラ）
       setStage(STAGE.NAME);
-      playSound("save");
+      playSound("sparkle");
+      playSound("fanfare");
       await waitOrSkip(950);
       if (!alive) return;
 
