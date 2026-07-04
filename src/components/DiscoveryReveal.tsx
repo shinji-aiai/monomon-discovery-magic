@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Moon, RefreshCw } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
 import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
+import { greetingFor } from "@/lib/greetings";
 
 interface DiscoveryRevealProps {
   photo: string;
