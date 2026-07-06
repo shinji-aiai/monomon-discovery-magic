@@ -8,7 +8,7 @@
 #        codemagic_asc_api_key
 #      (Codemagic uses it to auto-create signing certificates & provisioning
 #       profiles and to upload the build — this replaces all manual Xcode signing.)
-#   2. In App Store Connect, register the app with bundle id: com.monomon.app
+#   2. In App Store Connect, register the app with bundle id: com.shinjikumagai.monomon
 #
 # Everything else (certificates, profiles, build number) is handled here.
 
@@ -24,11 +24,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.monomon.app
+        bundle_identifier: com.shinjikumagai.monomon
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
-        BUNDLE_ID: "com.monomon.app"
+        BUNDLE_ID: "com.shinjikumagai.monomon"
       node: 20
       xcode: latest
 
