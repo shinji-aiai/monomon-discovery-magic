@@ -1,0 +1,66 @@
+# Codemagic CI/CD — Monomon iOS (Capacitor)
+#
+# Builds a signed IPA and (optionally) ships it to TestFlight / App Store,
+# with NO manual Xcode setup required.
+#
+# One-time setup in the Codemagic UI (Teams / App settings → Integrations):
+#   1. Add an "App Store Connect API key" integration and name it exactly:
+#        codemagic_asc_api_key
+#      (Codemagic uses it to auto-create signing certificates & provisioning
+#       profiles and to upload the build — this replaces all manual Xcode signing.)
+#   2. In App Store Connect, register the app with bundle id: com.monomon.app
+#
+# Everything else (certificates, profiles, build number) is handled here.
+
+workflows:
+  ios-appstore:
+    name: Monomon iOS (App Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: codemagic_asc_api_key
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.monomon.app
+      vars:
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.monomon.app"
+      node: 20
+      xcode: latest
+
+    scripts:
+      - name: Install JS dependencies
+        script: |
+          npm install
+      - name: Sync Capacitor iOS project
+        script: |
+          # Regenerates capacitor.config.json, web assets and plugin wiring
+          # inside ios/ so no local Xcode step is ever needed.
+          npx cap sync ios
+      - name: Set up code signing (automatic, via App Store Connect API key)
+        script: |
+          xcode-project use-profiles
+      - name: Set build number
+        script: |
+          cd ios/App
+          # Codemagic provides an auto-incrementing $BUILD_NUMBER per build.
+          agvtool new-version -all "$(($BUILD_NUMBER + 1))"
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Set to true to auto-deliver builds to TestFlight after a green build.
+        submit_to_testflight: false
