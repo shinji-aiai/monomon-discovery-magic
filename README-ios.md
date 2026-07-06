@@ -52,26 +52,21 @@ iOS のビルドは **Mac + Xcode** が必須です（Windows/Linux/このエデ
 
 - macOS
 - [Xcode](https://apps.apple.com/app/xcode/id497799835)（App Store から）
-- CocoaPods: `sudo gem install cocoapods`
 - Apple Developer Program への登録（App Store 提出用）
 - Node.js + Bun（このリポジトリと同じ環境）
 
+※ この iOS プロジェクトは **Swift Package Manager** 方式なので CocoaPods は不要です。
+
 ## セットアップ（初回のみ）
 
-Mac 上でリポジトリを取得し、依存をインストールします。
+`ios/` フォルダはリポジトリにコミット済みです。生成ファイルを最新化するには:
 
 ```bash
 bun install
+bun run ios:sync      # = npx cap sync ios（設定・Webアセット・プラグインを同期）
 ```
 
-iOS ネイティブプロジェクトを生成します（`ios/` フォルダが作られます）。
-
-```bash
-bun run ios:add       # = npx cap add ios
-bun run ios:sync      # = npx cap sync ios（Pods を入れて設定を同期）
-```
-
-## Xcode で開いて実行
+## Xcode で開いて実行（任意）
 
 ```bash
 bun run ios:open      # = npx cap open ios
@@ -81,18 +76,18 @@ Xcode で:
 
 1. 左上のターゲット `App` を選択 → **Signing & Capabilities**
 2. **Team** に自分の Apple Developer アカウントを設定
-3. **Bundle Identifier** を `com.monomon.app`（必要なら自分のものに変更）
+3. **Bundle Identifier** は `com.monomon.app`（必要なら自分のものに変更）
 4. 実機またはシミュレータを選んで ▶︎ で起動
 
-## 必須：権限の説明文（Info.plist）
+## 権限の説明文（Info.plist）— 設定済み
 
-カメラ・写真を使うため、以下を **Info.plist** に追加してください（Xcode の
-`App` ターゲット → Info タブ、または `ios/App/App/Info.plist` を直接編集）。
-これが無いと審査でリジェクト、または起動時にクラッシュします。
+カメラ・写真の権限説明は `ios/App/App/Info.plist` に設定済みです（下記）。
+変更したい場合はこのファイルを直接編集してください。
 
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>モノに宿る精霊「モノモン」を見つけるために、写真の撮影に使います。</string>
+
 <key>NSPhotoLibraryUsageDescription</key>
 <string>アルバムの写真からモノモンを見つけるために使います。</string>
 <key>NSPhotoLibraryAddUsageDescription</key>
