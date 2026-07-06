@@ -47,5 +47,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>モノに宿る精霊「モノモン」を見つけるために、写真の撮影に使います。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>アルバムの写真からモノモンを見つけるために使います。</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>見つけたモノモンのカードを写真に保存するために使います。</string>
 </dict>
 </plist>
