@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <title>モノモン</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #fbf3e6;
+        color: #6b5b4a;
+        font-family:
+          "M PLUS Rounded 1c",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Hiragino Kaku Gothic ProN",
+          sans-serif;
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      .bubble {
+        font-size: 64px;
+        animation: float 2.4s ease-in-out infinite;
+      }
+      h1 {
+        margin: 20px 0 8px;
+        font-size: 20px;
+        font-weight: 800;
+      }
+      p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.7;
+        opacity: 0.75;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Offline / fallback screen.
+      Capacitor loads the live app from server.url (see capacitor.config.ts).
+      This page only appears if the device is offline when launching.
+    -->
+    <div class="wrap">
+      <div class="bubble">🫧</div>
+      <h1>つながらないみたい</h1>
+      <p>
+        インターネットにつないでから<br />
+        もう一度ひらいてね
+      </p>
+    </div>
+  </body>
+</html>
