@@ -29,7 +29,7 @@ workflows:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.shinjikumagai.monomon"
-      node: 20
+      node: 22
       xcode: latest
 
     scripts:
