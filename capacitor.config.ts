@@ -14,7 +14,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * offline fallback page (see capacitor/www/index.html).
  */
 const config: CapacitorConfig = {
-  appId: "com.monomon.app",
+  appId: "com.shinjikumagai.monomon",
   appName: "モノモン",
   webDir: "capacitor/www",
   server: {

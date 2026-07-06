@@ -29,7 +29,7 @@ Codemagic 側の初回設定（UI 上での一度きり・Xcode 不要）:
    **App Store Connect API key** を追加し、名前を必ず
    `codemagic_asc_api_key` にする（証明書・プロビジョニングプロファイルの
    自動生成とアップロードに使われ、Xcode での手動署名を完全に置き換えます）。
-3. App Store Connect で bundle id `com.monomon.app` のアプリを登録する。
+3. App Store Connect で bundle id `com.shinjikumagai.monomon` のアプリを登録する。
 
 あとは Codemagic で `ios-appstore` ワークフローを実行すると、以下が自動で走ります:
 
@@ -76,7 +76,7 @@ Xcode で:
 
 1. 左上のターゲット `App` を選択 → **Signing & Capabilities**
 2. **Team** に自分の Apple Developer アカウントを設定
-3. **Bundle Identifier** は `com.monomon.app`（必要なら自分のものに変更）
+3. **Bundle Identifier** は `com.shinjikumagai.monomon`（必要なら自分のものに変更）
 4. 実機またはシミュレータを選んで ▶︎ で起動
 
 ## 権限の説明文（Info.plist）— 設定済み
