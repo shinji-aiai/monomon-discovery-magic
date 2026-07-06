@@ -5,7 +5,7 @@
 #
 # One-time setup in the Codemagic UI (Teams / App settings → Integrations):
 #   1. Add an "App Store Connect API key" integration and name it exactly:
-#        codemagic_asc_api_key
+#        Codemagic
 #      (Codemagic uses it to auto-create signing certificates & provisioning
 #       profiles and to upload the build — this replaces all manual Xcode signing.)
 #   2. In App Store Connect, register the app with bundle id: com.shinjikumagai.monomon
@@ -19,7 +19,7 @@ workflows:
     instance_type: mac_mini_m2
 
     integrations:
-      app_store_connect: codemagic_asc_api_key
+      app_store_connect: Codemagic
 
     environment:
       ios_signing:
