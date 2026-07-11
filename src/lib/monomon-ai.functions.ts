@@ -105,8 +105,10 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 必ず次のJSONだけを返す（前後に文章を付けない）:
 {
   "object": "認識した物（日本語・短く）",
+  "category": "カテゴリ語彙のいずれか",
   "speciesId": "一覧のいずれかのID",
-  "confident": true または false,
+  "confidence": 0〜1の小数,
+  "quality": "ok / too_far / too_dark / blurry / no_object のいずれか",
   "hue": 0〜360の整数,
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
