@@ -35,6 +35,8 @@ export interface Monomon extends MonomonSpec {
   friendship?: number;
   /** 最後に会いに来た日時（ISO）。今日はじめての来訪判定に使う。 */
   lastMetAt?: string;
+  /** 再会回数（会いに来た日の延べ回数）。詳しくは friendship.ts の reunion */
+  reunionCount?: number;
 }
 
 function makeId(seed: number): string {
