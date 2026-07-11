@@ -207,7 +207,16 @@ function Scan() {
             どんな精霊が出てくるかな？
           </p>
 
-          <div className="mt-10 w-full max-w-sm space-y-3">
+          <div className="mt-10 w-full max-w-sm space-y-1 text-center">
+            <p className="text-sm font-bold text-foreground/90">
+              モノ全体が写るように撮ってみよう！
+            </p>
+            <p className="text-xs text-muted-foreground">
+              ぬいぐるみ・文房具・植物がおすすめ！
+            </p>
+          </div>
+
+          <div className="mt-4 w-full max-w-sm space-y-3">
             <button
               onClick={openCamera}
               className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
