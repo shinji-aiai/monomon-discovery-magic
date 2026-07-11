@@ -934,7 +934,7 @@ function DetailSheet({
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -948,7 +948,7 @@ function DetailSheet({
               tap();
               setSharing(true);
             }}
-            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
           >
             <Share2 className="h-4 w-4" />
             シェア
@@ -960,7 +960,7 @@ function DetailSheet({
           <Link
             to="/"
             onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
           >
             <Home className="h-4 w-4" />
             ホームへ戻る
