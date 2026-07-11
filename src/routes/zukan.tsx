@@ -855,7 +855,26 @@ function DetailSheet({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center"
     >
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+      <div className="relative w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+        {/* なかよし度アップの小さなお祝い：ハートがふわっと舞う */}
+        {burst > 0 && (
+          <div
+            key={burst}
+            className="pointer-events-none absolute inset-x-0 top-24 z-10 flex justify-center"
+            aria-hidden
+          >
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Heart
+                key={i}
+                className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
+                style={{
+                  left: `${44 + (i - 2) * 7}%`,
+                  animationDelay: `${i * 80}ms`,
+                }}
+              />
+            ))}
+          </div>
+        )}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
