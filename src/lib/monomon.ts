@@ -11,6 +11,7 @@ import {
   type MonomonSpec,
 } from "./monomon-data";
 import { SPECIES_MAP, getSpecies } from "./species";
+import { resolveSpecies } from "./classification";
 import { analyzeSpirit } from "./monomon-ai.functions";
 
 export interface Monomon extends MonomonSpec {
