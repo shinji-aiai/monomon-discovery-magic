@@ -623,6 +623,7 @@ function SpeciesDetailSheet({
   onOpenIndividual: (m: Monomon) => void;
 }) {
   const isFound = found.length > 0;
+  const primary = found[0];
   const fam = FAMILY_STYLES[species.family];
 
   return (
@@ -632,16 +633,32 @@ function SpeciesDetailSheet({
           <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
             {fam.emoji} {fam.label}
           </span>
-          <button
-            onClick={() => {
-              tap();
-              onClose();
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {primary && (
+              <button
+                onClick={() => {
+                  toggleFavorite(primary.id);
+                  haptic(12);
+                }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
+                aria-label={primary.favorite ? "お気に入りを解除" : "お気に入り"}
+              >
+                <Heart
+                  className={`h-5 w-5 ${primary.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                tap();
+                onClose();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* ヒーロー */}
@@ -691,14 +708,36 @@ function SpeciesDetailSheet({
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2.5">
               {found.map((m) => (
-                <button
+                <div
                   key={m.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     tap();
                     onOpenIndividual(m);
                   }}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      tap();
+                      onOpenIndividual(m);
+                    }
+                  }}
+                  className="relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
                 >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(m.id);
+                      haptic(12);
+                    }}
+                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
+                    aria-label={m.favorite ? "お気に入りを解除" : "お気に入り"}
+                  >
+                    <Heart
+                      className={`h-3.5 w-3.5 ${m.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                    />
+                  </button>
                   <div
                     className="aspect-square p-1.5"
                     style={{
@@ -716,7 +755,7 @@ function SpeciesDetailSheet({
                   >
                     {m.name}
                   </AutoFitName>
-                </button>
+                </div>
               ))}
             </div>
           </>
