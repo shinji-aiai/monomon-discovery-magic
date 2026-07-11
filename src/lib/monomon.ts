@@ -11,6 +11,7 @@ import {
   type MonomonSpec,
 } from "./monomon-data";
 import { SPECIES_MAP, getSpecies } from "./species";
+import { resolveSpecies } from "./classification";
 import { analyzeSpirit } from "./monomon-ai.functions";
 
 export interface Monomon extends MonomonSpec {
@@ -83,7 +84,17 @@ export function buildSpec(
 }
 
 /** 出会いがうまくいかなかったときの種類（UIでやさしく伝える）。 */
-export type DiscoveryErrorKind = "network" | "busy" | "unknown";
+export type DiscoveryErrorKind =
+  | "network"
+  | "busy"
+  | "too_far"
+  | "too_dark"
+  | "blurry"
+  | "unclear"
+  | "unknown";
+
+/** 認識に十分な自信があるとみなす下限（これ未満は撮り直しを促す）。 */
+const MIN_CONFIDENCE = 0.35;
 
 /** モノモンとの出会いに失敗したことを表す（怖い画面ではなくやさしく案内するため）。 */
 export class DiscoveryError extends Error {
@@ -129,8 +140,27 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     throw new DiscoveryError("unknown");
   }
 
-  const species = getSpecies(result.speciesId);
-  const spec = buildSpec(seed, result.speciesId, result.hue);
+  // 写真がうまく見えないとき：想像で決めず、やさしく撮り直しを促す
+  switch (result.quality) {
+    case "too_far":
+      throw new DiscoveryError("too_far");
+    case "too_dark":
+      throw new DiscoveryError("too_dark");
+    case "blurry":
+      throw new DiscoveryError("blurry");
+    case "no_object":
+      throw new DiscoveryError("unclear");
+    default:
+      break;
+  }
+  // 自信が低すぎるときも、当てずっぽうにせず撮り直しへ
+  if (result.confidence < MIN_CONFIDENCE) {
+    throw new DiscoveryError("unclear");
+  }
+
+  // 認識パイプライン：カテゴリ → 家族/種族（明らかに違う家族を防ぐ）
+  const species = resolveSpecies(result.category, result.speciesId);
+  const spec = buildSpec(seed, species.id, result.hue);
   // 見た目はAIの判断に合わせる（ランダム要素を上書き）
   spec.eyes = result.eyes;
   spec.mouth = result.mouth;

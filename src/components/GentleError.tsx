@@ -1,4 +1,4 @@
-import { Camera, Moon, RefreshCw, Search } from "lucide-react";
+import { Camera, Moon, RefreshCw, Search, Sun, ScanEye } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DiscoveryErrorKind } from "@/lib/monomon";
 
@@ -31,7 +31,7 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
   network: {
     icon: Moon,
     title: "少し休憩しているみたい",
-    lines: ["モノモンは今おやすみ中かも", "もう一度試してみよう"],
+    lines: ["うまくつながらなかったみたい", "少し時間をあけて試してね"],
     action: "もう一度ためす",
     actionIcon: RefreshCw,
   },
@@ -39,19 +39,52 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
   busy: {
     icon: Moon,
     title: "少し休憩しているみたい",
-    lines: ["たくさんの出会いでちょっと一休み", "少し待ってからまた探そう"],
+    lines: ["たくさんの出会いでちょっと一休み", "少し時間をあけて試してね"],
     action: "もう一度ためす",
     actionIcon: RefreshCw,
   },
+  // ② 遠すぎる → 近づいてもらう
+  too_far: {
+    icon: ScanEye,
+    title: "もう少し近づいてね",
+    lines: ["モノが小さく写っているみたい", "近づいて もう一度撮ってみよう"],
+    action: "もう一度撮る",
+    actionIcon: Camera,
+  },
+  // ② 暗すぎる → 明るい場所で
+  too_dark: {
+    icon: Sun,
+    title: "明るい場所で撮ってみよう",
+    lines: ["少し暗くて見えにくいみたい", "光のある場所でもう一度ためそう"],
+    action: "もう一度撮る",
+    actionIcon: Camera,
+  },
+  // ② ぶれ → モノ全体をゆっくり
+  blurry: {
+    icon: ScanEye,
+    title: "モノ全体が入るように撮ってね",
+    lines: ["少しぶれてしまったみたい", "ゆっくり構えてもう一度ためそう"],
+    action: "もう一度撮る",
+    actionIcon: Camera,
+  },
   // ②④ 見つけられなかった／写真がうまく見えない
+  unclear: {
+    icon: Search,
+    title: "今日はかくれんぼ中みたい",
+    lines: ["うまく見つけられなかったみたい", "もう一度撮影してみよう！"],
+    action: "もう一度撮る",
+    actionIcon: Camera,
+  },
+  // ④ そのほか（想定外）
   unknown: {
     icon: Search,
     title: "今日はかくれんぼ中みたい",
-    lines: ["もう少し近づいてみよう", "明るい場所で探してみよう"],
-    action: "もう一度探す",
-    actionIcon: RefreshCw,
+    lines: ["うまく見つけられなかったみたい", "もう一度撮影してみよう！"],
+    action: "もう一度撮る",
+    actionIcon: Camera,
   },
 };
+
 
 /** 怖いエラー画面ではなく、Monomonらしいやさしい案内を出す。 */
 export function GentleError({ kind, onRetry }: GentleErrorProps) {

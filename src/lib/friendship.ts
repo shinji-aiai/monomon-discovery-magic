@@ -89,20 +89,8 @@ export function withFriendshipGain(m: Monomon, action: FriendshipAction): Monomo
   };
 }
 
-/**
- * 「会いに来た」ときの処理。
- * 今日はじめてなら dailyMeet を加算し、最終来訪日を更新します。
- */
-export function withMeet(m: Monomon): { monomon: Monomon; gained: boolean } {
-  if (isToday(m.lastMetAt)) return { monomon: m, gained: false };
-  return {
-    monomon: {
-      ...withFriendshipGain(m, "dailyMeet"),
-      lastMetAt: new Date().toISOString(),
-    },
-    gained: true,
-  };
-}
+
+
 
 /* =========================================================================
  * 再会（Reunion）— フェーズ1

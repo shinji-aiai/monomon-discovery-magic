@@ -13,6 +13,7 @@ import {
   Lock,
   Search,
   Home,
+  Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { AutoFitName } from "@/components/AutoFitName";
@@ -28,6 +29,7 @@ import {
   clearNew,
   meetMonomon,
   petMonomon,
+  removeFromDex,
 } from "@/lib/dex";
 import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
@@ -970,7 +972,30 @@ function DetailSheet({
             もう一度さがす
           </Link>
         </div>
+
+        {/* 削除（コレクション内だけの、低優先アクション。発見結果には出さない） */}
+        <button
+          onClick={() => {
+            tap();
+            if (
+              typeof window !== "undefined" &&
+              !window.confirm("このモノモンをコレクションから消してもいい？")
+            ) {
+              return;
+            }
+            removeFromDex(live.id);
+            haptic(12);
+            toast("コレクションから消したよ");
+            onClose();
+          }}
+          className="mx-auto mt-8 flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-muted-foreground/70 active:scale-95"
+          aria-label="このモノモンを削除"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          コレクションから消す
+        </button>
       </div>
+
 
       {sharing && (
         <ShareModal monomon={live} onClose={() => setSharing(false)} />

@@ -21,8 +21,17 @@ export function useNewDex() {
 }
 
 export function addToDex(monomon: Monomon) {
+  let added = true;
   dexStore.set((prev) => {
-    if (prev.some((m) => m.id === monomon.id)) return prev;
+    // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
+    // （同じ1枚をつづけて解析／連続タップ）。既存の記録を使い回して重複登録を防ぐ。
+    const duplicate = prev.find(
+      (m) => m.id === monomon.id || (!!m.photo && m.photo === monomon.photo),
+    );
+    if (duplicate) {
+      added = false;
+      return prev;
+    }
     // 同じ種族の先住モノモンがいれば「また会えた」と喜ぶ（なかよし度 +rediscover）
     const rediscovered = prev.some((m) => m.speciesId === monomon.speciesId);
     const next = rediscovered
@@ -34,10 +43,12 @@ export function addToDex(monomon: Monomon) {
       : prev;
     return [{ ...monomon, friendship: monomon.friendship ?? 0 }, ...next];
   });
-  // 新しく登録された子は「NEW!」として印を付ける（図鑑で見たら消える）
-  newDexStore.set((prev) =>
-    prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
-  );
+  // 新しく登録された子だけ「NEW!」の印を付ける（うっかり重複では付けない）
+  if (added) {
+    newDexStore.set((prev) =>
+      prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
+    );
+  }
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */

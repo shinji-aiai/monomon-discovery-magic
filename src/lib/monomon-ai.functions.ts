@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { SPECIES } from "./species";
+import { OBJECT_CATEGORIES } from "./classification";
 import {
   ACCESSORY_POOL,
   EYE_POOL,
@@ -13,20 +14,33 @@ import {
 /**
  * 写真に写った「モノ」をAIが認識し、そのモノに本当に宿りそうな精霊を組み立てます。
  *
+ * パイプライン（信頼性のかなめ）：
+ *  物体認識 → カテゴリ(category) → 家族(Family)/種族(Species)。
+ *  家族・種族はカテゴリから決めるので、明らかに違う家族は割り当たらない。
+ *
  * 設計方針（最優先＝納得感）：
  *  - ランダム生成は禁止。見た目・名前・性格・説明文は必ず認識した物に一致させる。
- *  - 関連性が弱い／自信が低いときは uncertain=true を返し、UIで「○○の仲間かもしれない」と伝える。
- *  - 説明文には、そのモノの役割や特徴を必ず反映する（例：コップ→水を大切にする）。
+ *  - 自信が低いときは confidence を低く返す（UIで推定表示、または撮り直しを促す）。
+ *  - 写真がうまく見えないときは quality で理由を返す（近づく・明るく・全体を写す）。
  */
+
+/** 写真の写りぐあい（poor のときは撮り直しをやさしく促す）。 */
+export type ImageQuality = "ok" | "too_far" | "too_dark" | "blurry" | "no_object";
 
 /** AIが返す精霊データ（描画はこの speciesId に対応する手続き的SVG）。 */
 export interface SpiritAnalysis {
   /** 認識した物体（日本語・短く） 例: "コップ" "ハサミ" "傘" */
   object: string;
+  /** 物のカテゴリ（決まった語彙のいずれか。家族・種族を決める土台） */
+  category: string;
   /** 姿に使う種族ID（既知の SPECIES のいずれか。最も形が近いもの） */
   speciesId: string;
+  /** 認識の自信（0〜1）。低いほど推定・撮り直し寄り。 */
+  confidence: number;
   /** 認識に十分な自信があるか（false のとき UI は推定表現にする） */
   confident: boolean;
+  /** 写真の写りぐあい */
+  quality: ImageQuality;
   /** 物の色をふまえた色相 0-360 */
   hue: number;
   eyes: EyeStyle;
@@ -63,9 +77,14 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 3. description は「説明」ではなく、出会えたプレイヤーへそっと語りかける一言にする。
    出会えた喜び・親しみ・また会いたい気持ちを、そのモノらしさをほんの少しだけ添えて伝える。
    例) 見つけてくれてありがとう / やっと会えたね / ずっと待ってたよ / また会いに来てね / そばにいるね
-4. 姿(speciesId)は、下の一覧から「写っている物に形が最も近いもの」を選ぶ。
-5. 物の判別に自信がない、または一覧に近い形がない場合は confident=false にする（嘘をつかない）。
-6. ユーザーが3秒で「なるほど、確かにこの精霊っぽい！」と納得でき、思わず微笑めることを最優先にする。
+4. まず物のカテゴリ(category)を下の語彙から1つ選ぶ。姿(speciesId)は一覧から「形が最も近いもの」を選ぶ。
+5. 自信の度合いを confidence（0〜1の小数）で正直に返す。あいまいなら低く、確信があれば高く。
+6. 写真がうまく見えないときは quality で理由を返す（近すぎ/遠すぎ/暗い/ぶれ/物が写っていない）。
+   ものがはっきり見えないのに、無理に想像で決めない。
+7. ユーザーが3秒で「なるほど、確かにこの精霊っぽい！」と納得でき、思わず微笑めることを最優先にする。
+
+物のカテゴリ(category)は次から1つ:
+{{CATEGORIES}}
 
 姿に使える種族(speciesId)一覧：
 {{CATALOG}}
@@ -86,8 +105,10 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 必ず次のJSONだけを返す（前後に文章を付けない）:
 {
   "object": "認識した物（日本語・短く）",
+  "category": "カテゴリ語彙のいずれか",
   "speciesId": "一覧のいずれかのID",
-  "confident": true または false,
+  "confidence": 0〜1の小数,
+  "quality": "ok / too_far / too_dark / blurry / no_object のいずれか",
   "hue": 0〜360の整数,
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
@@ -111,7 +132,10 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!key) return { error: "AIキーが設定されていません" };
 
     const speciesIds = new Set(SPECIES.map((s) => s.id));
-    const system = SYSTEM_PROMPT.replace("{{CATALOG}}", buildSpeciesCatalog());
+    const system = SYSTEM_PROMPT.replace(
+      "{{CATALOG}}",
+      buildSpeciesCatalog(),
+    ).replace("{{CATEGORIES}}", OBJECT_CATEGORIES.join(", "));
 
     let res: Response;
     try {
@@ -192,12 +216,39 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
     const description = String(parsed.description ?? "").slice(0, 80) || "やっと会えたね";
-    const confident = parsed.confident === true && speciesKnown;
+
+    const category = String(parsed.category ?? "").trim();
+
+    // 自信：数値優先。旧 confident(boolean) も後方互換で拾う。
+    let confidence = Number(parsed.confidence);
+    if (!Number.isFinite(confidence)) {
+      confidence = parsed.confident === true ? 0.8 : 0.4;
+    }
+    confidence = Math.max(0, Math.min(1, confidence));
+
+    const QUALITIES = new Set([
+      "ok",
+      "too_far",
+      "too_dark",
+      "blurry",
+      "no_object",
+    ]);
+    const quality = (
+      typeof parsed.quality === "string" && QUALITIES.has(parsed.quality)
+        ? parsed.quality
+        : "ok"
+    ) as ImageQuality;
+
+    // 「自信あり＝推定表示にしない」条件：種族が既知で、写りが良く、自信が高い
+    const confident = speciesKnown && quality === "ok" && confidence >= 0.6;
 
     return {
       object,
+      category,
       speciesId,
+      confidence,
       confident,
+      quality,
       hue,
       eyes,
       mouth,
