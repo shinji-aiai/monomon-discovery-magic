@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Camera,
@@ -12,6 +12,8 @@ import {
   Star,
   Lock,
   Search,
+  Home,
+  Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { AutoFitName } from "@/components/AutoFitName";
