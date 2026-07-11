@@ -286,7 +286,7 @@ function Scan() {
                 tap();
                 openCamera();
               }}
-              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-card py-4 text-[15px] font-bold text-foreground shadow-soft active:scale-95"
             >
               📷 撮り直す
             </button>
