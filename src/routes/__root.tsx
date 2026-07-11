@@ -90,6 +90,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "身の回りのモノを撮るとそのモノに宿る小さな精霊「モノモン」が見つかるアプリ　さあ次は何を撮ってみよう",
       },
       { name: "theme-color", content: "#fbf3e6" },
+      { httpEquiv: "Cache-Control", content: "no-cache, no-store, must-revalidate" },
+      { httpEquiv: "Pragma", content: "no-cache" },
       { name: "author", content: "モノモン" },
       { property: "og:title", content: "モノモン｜モノに宿る小さな精霊たち" },
       {
