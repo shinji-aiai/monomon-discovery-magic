@@ -28,6 +28,7 @@ import {
   meetMonomon,
   petMonomon,
 } from "@/lib/dex";
+import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
@@ -793,6 +794,13 @@ function DetailSheet({
   const [saving, setSaving] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  // なかよし度アップの小さなお祝い（ハートがふわっと舞う）演出のトリガー
+  const [burst, setBurst] = useState(0);
+  const celebrate = (big = false) => {
+    setBurst((n) => n + 1);
+    haptic(big ? [12, 40, 12] : 10);
+  };
+
   // 詳細を開いたら必ず先頭（キャラのイラスト）から見えるようにする
   useEffect(() => {
     overlayRef.current?.scrollTo({ top: 0 });
@@ -803,20 +811,29 @@ function DetailSheet({
   const dex = useDex();
   const live = dex.find((m) => m.id === monomon.id) ?? monomon;
 
-  // 会いに来たら「今日はじめて」なら なかよし度 +5（開いたとき一度だけ）
+  // 会いに来たら「今日はじめて」なら再会が成立（なかよし度 +5・再会回数 +1）
   useEffect(() => {
-    const gained = meetMonomon(monomon.id);
-    if (gained) {
-      haptic(12);
-      toast("今日はじめて会えたね　なかよし度 +5 ❤️");
+    const r = meetMonomon(monomon.id);
+    if (!r) return;
+    // 経過日数・なかよし度・再会回数に応じたセリフ
+    const dialogue = getReunionDialogue({
+      reunionCount: r.reunionCount,
+      daysSinceLastMet: r.daysSinceLastMet,
+      friendship: getFriendship(r.monomon),
+    });
+    if (r.friendshipGained > 0) celebrate(Boolean(r.unlockedThreshold));
+    toast(`「${dialogue}」`);
+    // なかよし度の節目を越えたら、新しいセリフの解放を伝える
+    if (r.unlockedThreshold) {
+      toast(`なかよし度 ${r.unlockedThreshold} をこえたよ　あたらしいセリフが増えた ✨`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monomon.id]);
 
-  // モノモンをなでる → なかよし度 +1
+  // モノモンをなでる → なかよし度 +1（小さなお祝い）
   const pet = () => {
     petMonomon(live.id);
-    haptic(8);
+    celebrate();
   };
 
   const save = async () => {
@@ -838,7 +855,26 @@ function DetailSheet({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center"
     >
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+      <div className="relative w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+        {/* なかよし度アップの小さなお祝い：ハートがふわっと舞う */}
+        {burst > 0 && (
+          <div
+            key={burst}
+            className="pointer-events-none absolute inset-x-0 top-24 z-10 flex justify-center"
+            aria-hidden
+          >
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Heart
+                key={i}
+                className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
+                style={{
+                  left: `${44 + (i - 2) * 7}%`,
+                  animationDelay: `${i * 80}ms`,
+                }}
+              />
+            ))}
+          </div>
+        )}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
