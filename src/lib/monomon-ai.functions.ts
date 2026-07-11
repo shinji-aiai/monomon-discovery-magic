@@ -216,12 +216,39 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
     const description = String(parsed.description ?? "").slice(0, 80) || "やっと会えたね";
-    const confident = parsed.confident === true && speciesKnown;
+
+    const category = String(parsed.category ?? "").trim();
+
+    // 自信：数値優先。旧 confident(boolean) も後方互換で拾う。
+    let confidence = Number(parsed.confidence);
+    if (!Number.isFinite(confidence)) {
+      confidence = parsed.confident === true ? 0.8 : 0.4;
+    }
+    confidence = Math.max(0, Math.min(1, confidence));
+
+    const QUALITIES = new Set([
+      "ok",
+      "too_far",
+      "too_dark",
+      "blurry",
+      "no_object",
+    ]);
+    const quality = (
+      typeof parsed.quality === "string" && QUALITIES.has(parsed.quality)
+        ? parsed.quality
+        : "ok"
+    ) as ImageQuality;
+
+    // 「自信あり＝推定表示にしない」条件：種族が既知で、写りが良く、自信が高い
+    const confident = speciesKnown && quality === "ok" && confidence >= 0.6;
 
     return {
       object,
+      category,
       speciesId,
+      confidence,
       confident,
+      quality,
       hue,
       eyes,
       mouth,
