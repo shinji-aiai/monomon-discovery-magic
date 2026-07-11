@@ -189,7 +189,7 @@ function Home() {
                 </div>
               ))}
             </div>
-            <span className="flex-1 text-sm font-bold text-foreground">
+            <span className="flex-1 whitespace-nowrap text-sm font-bold text-foreground">
               図鑑を見る
             </span>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
