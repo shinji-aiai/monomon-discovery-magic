@@ -80,9 +80,14 @@ export function removeFromDex(id: string) {
 }
 
 export function toggleFavorite(id: string) {
-  dexStore.set((prev) =>
-    prev.map((m) => (m.id === id ? { ...m, favorite: !m.favorite } : m)),
-  );
+  dexStore.set((prev) => {
+    const target = prev.find((m) => m.id === id);
+    const willFavorite = !target?.favorite;
+    return prev.map((m) => ({
+      ...m,
+      favorite: m.id === id ? willFavorite : false,
+    }));
+  });
 }
 
 export function clearDex() {
