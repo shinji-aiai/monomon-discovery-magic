@@ -292,7 +292,7 @@ function Scan() {
             </button>
             <button
               onClick={startSearch}
-              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full gradient-primary py-4 text-[15px] font-bold text-primary-foreground shadow-float active:scale-95"
             >
               🔍 モノモンを探す
             </button>
