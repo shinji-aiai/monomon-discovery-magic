@@ -84,7 +84,17 @@ export function buildSpec(
 }
 
 /** 出会いがうまくいかなかったときの種類（UIでやさしく伝える）。 */
-export type DiscoveryErrorKind = "network" | "busy" | "unknown";
+export type DiscoveryErrorKind =
+  | "network"
+  | "busy"
+  | "too_far"
+  | "too_dark"
+  | "blurry"
+  | "unclear"
+  | "unknown";
+
+/** 認識に十分な自信があるとみなす下限（これ未満は撮り直しを促す）。 */
+const MIN_CONFIDENCE = 0.35;
 
 /** モノモンとの出会いに失敗したことを表す（怖い画面ではなくやさしく案内するため）。 */
 export class DiscoveryError extends Error {
