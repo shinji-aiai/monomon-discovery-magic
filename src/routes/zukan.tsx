@@ -835,20 +835,6 @@ function DetailSheet({
     }
   };
 
-  const remove = () => {
-    tap();
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm("この子を図鑑から削除する？")
-    ) {
-      return;
-    }
-    removeFromDex(live.id);
-    haptic(12);
-    toast("図鑑から削除したよ");
-    onClose();
-  };
-
   return (
     <div
       ref={overlayRef}
