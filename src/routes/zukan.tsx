@@ -27,7 +27,6 @@ import {
   clearNew,
   meetMonomon,
   petMonomon,
-  removeFromDex,
 } from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
