@@ -197,7 +197,7 @@ export function renderMonomonSVG(spec: MonomonSpec): string {
 
   // viewBox に上下左右の余白を持たせ、王冠・葉・触角・耳などの装飾や影が
   // 絶対に切れないようにする（キャラは縦横中央に contain 配置される）
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -18 224 244" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -18 224 244" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">
 <defs>
 <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0%" stop-color="${p.c1}"/>
