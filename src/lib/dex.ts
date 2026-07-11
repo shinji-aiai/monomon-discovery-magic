@@ -49,19 +49,21 @@ export function petMonomon(id: string) {
 
 /**
  * 会いに来た（詳細を開いた／発見した）ときに呼びます。
- * 今日はじめての来訪なら なかよし度 +5。加算できたら true を返します。
+ * 今日はじめての来訪なら再会が成立し、なかよし度 +5・再会回数 +1 を記録します。
+ * 再会が成立したときは詳しい結果（セリフやお祝い演出に使う）を返します。
+ * 今日すでに会っていれば null を返します。
  */
-export function meetMonomon(id: string): boolean {
-  let gained = false;
+export function meetMonomon(id: string): ReunionResult | null {
+  let result: ReunionResult | null = null;
   dexStore.set((prev) =>
     prev.map((m) => {
       if (m.id !== id) return m;
-      const r = withMeet(m);
-      gained = r.gained;
+      const r = reunion(m);
+      if (r.isReunion) result = r;
       return r.monomon;
     }),
   );
-  return gained;
+  return result;
 }
 
 /** 指定した子の NEW! 表示を消します（図鑑で見たとき）。 */
