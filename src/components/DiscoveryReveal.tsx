@@ -443,9 +443,21 @@ export function DiscoveryReveal({
         </p>
       )}
 
-      {/* ⑥ 名前（大きく・キラキラ） */}
+      {/* ⑥ 発見の見出し（新規／再会）＋名前（大きく・キラキラ） */}
+      {stage >= STAGE.NAME && monomon && presentation && (
+        <div
+          key="banner"
+          className={`mt-8 animate-pop-in rounded-full px-5 py-2 text-sm font-bold shadow-soft ${
+            presentation.kind === "reunion"
+              ? "bg-amber-100 text-amber-700"
+              : "bg-primary/15 text-primary"
+          }`}
+        >
+          {presentation.banner}
+        </div>
+      )}
       {stage >= STAGE.NAME && monomon && (
-        <div key="name" className="mt-9 animate-pop-in text-center">
+        <div key="name" className="mt-4 animate-pop-in text-center">
           {objectLabel && (
             <p className="text-xs font-bold text-muted-foreground">
               {monomon.uncertain
