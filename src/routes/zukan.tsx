@@ -922,6 +922,36 @@ function DetailSheet({
           </button>
         </div>
 
+        {/* 移動：ホームへ戻る（主）／もう一度さがす（副） */}
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Link
+            to="/"
+            onClick={tap}
+            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+          >
+            <Home className="h-4 w-4" />
+            ホームへ戻る
+          </Link>
+          <Link
+            to="/scan"
+            onClick={tap}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+          >
+            <Camera className="h-4 w-4 text-primary" />
+            もう一度さがす
+          </Link>
+        </div>
+
+        {/* 低優先度：削除はいちばん下にそっと置く */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={remove}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground active:scale-95"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            この子を図鑑から削除
+          </button>
+        </div>
       </div>
 
       {sharing && (
