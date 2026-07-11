@@ -968,7 +968,7 @@ function DetailSheet({
           <Link
             to="/scan"
             onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
           >
             <Camera className="h-4 w-4 text-primary" />
             もう一度さがす
