@@ -187,7 +187,7 @@ export async function renderCardImage(
     ctx.textAlign = "center";
   };
   chip(`${species.emoji} ${species.name}`, 0, "left");
-  chip(`${fam.emoji} ${fam.label}`, 0, "right");
+  chip(`${fam.emoji} ${fam.label}族`, 0, "right");
 
   // モノモン本体（飛び出す）
   const svg = renderMonomonSVG(specOf(monomon));
