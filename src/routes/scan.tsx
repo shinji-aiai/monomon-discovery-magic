@@ -131,10 +131,19 @@ function Scan() {
       setPhoto(small);
       setResult(null);
       setRegistered(false);
-      setPhase("reveal");
+      // Apple標準の確認ではなく、モノモンらしい確認画面でひと呼吸おく
+      setPhase("confirm");
     } catch {
       toast.error("写真を読み込めませんでした");
     }
+  };
+
+  // 確認画面から「モノモンを探す」→ 出会いの演出＆AI認識をはじめる
+  const startSearch = () => {
+    tap();
+    setResult(null);
+    setRegistered(false);
+    setPhase("reveal");
   };
 
   const reset = () => {
