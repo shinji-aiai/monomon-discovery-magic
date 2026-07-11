@@ -28,6 +28,7 @@ import {
   meetMonomon,
   petMonomon,
 } from "@/lib/dex";
+import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
