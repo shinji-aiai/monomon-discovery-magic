@@ -251,25 +251,18 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** ネイティブ端末の「写真」アプリへ保存する（権限が無ければ確認が出る）。 */
-async function saveBlobToPhotos(blob: Blob, fileBase: string): Promise<void> {
-  const [{ Media }, { Filesystem, Directory }] = await Promise.all([
-    import("@capacitor-community/media"),
-    import("@capacitor/filesystem"),
-  ]);
+/**
+ * ネイティブ端末の「写真」アプリへ保存する（権限が無ければ確認が出る）。
+ *
+ * `@capacitor-community/media` の savePhoto は base64 データURLを直接受け取れる
+ * ため、Filesystem への書き出し→読み込み→削除という壊れやすい往復を挟まず、
+ * 生成した PNG をそのまま渡す。iOS 14+ で albumIdentifier を省略すると
+ * NSPhotoLibraryAddUsageDescription に基づく「追加のみ」の権限確認が出る。
+ */
+async function saveBlobToPhotos(blob: Blob): Promise<void> {
+  const { Media } = await import("@capacitor-community/media");
   const base64 = await blobToBase64(blob);
-  const fileName = `${fileBase}-${Date.now()}.png`;
-  const written = await Filesystem.writeFile({
-    path: fileName,
-    data: base64,
-    directory: Directory.Cache,
-  });
-  await Media.savePhoto({ path: written.uri });
-  try {
-    await Filesystem.deleteFile({ path: fileName, directory: Directory.Cache });
-  } catch {
-    /* 一時ファイルの掃除に失敗しても問題なし */
-  }
+  await Media.savePhoto({ path: `data:image/png;base64,${base64}` });
 }
 
 /** web 向け：ブラウザのダウンロードで保存する。 */
