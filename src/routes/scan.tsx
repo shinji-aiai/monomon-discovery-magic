@@ -37,7 +37,7 @@ export const Route = createFileRoute("/scan")({
   component: Scan,
 });
 
-type Phase = "choose" | "reveal" | "result" | "error";
+type Phase = "choose" | "confirm" | "reveal" | "result" | "error";
 
 function Scan() {
   const [phase, setPhase] = useState<Phase>("choose");
