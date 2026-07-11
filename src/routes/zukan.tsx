@@ -852,7 +852,7 @@ function DetailSheet({
                 haptic(12);
               }}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
-              aria-label="お気に入り"
+              aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
             >
               <Heart
                 className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
