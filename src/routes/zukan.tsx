@@ -20,6 +20,7 @@ import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
 import { FriendshipMeter } from "@/components/FriendshipMeter";
+import { SupportButton } from "@/components/SupportButton";
 import {
   useDex,
   useNewDex,
