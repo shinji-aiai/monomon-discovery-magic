@@ -207,13 +207,14 @@ export function DiscoveryReveal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
-  // 探している間だけ、数秒ごとにメッセージをそっと切り替える
+  // 探している間だけ、数秒ごとにメッセージをランダムでそっと切り替える
   useEffect(() => {
     if (!searching) {
       setSearchIdx(0);
       return;
     }
-    const t = setInterval(() => setSearchIdx((i) => i + 1), 2400);
+    setSearchIdx(randomMsgIdx());
+    const t = setInterval(() => setSearchIdx(randomMsgIdx()), 2400);
     return () => clearInterval(t);
   }, [searching]);
 
