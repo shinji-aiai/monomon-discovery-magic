@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { SPECIES } from "./species";
+import { OBJECT_CATEGORIES } from "./classification";
 import {
   ACCESSORY_POOL,
   EYE_POOL,
@@ -13,20 +14,33 @@ import {
 /**
  * 写真に写った「モノ」をAIが認識し、そのモノに本当に宿りそうな精霊を組み立てます。
  *
+ * パイプライン（信頼性のかなめ）：
+ *  物体認識 → カテゴリ(category) → 家族(Family)/種族(Species)。
+ *  家族・種族はカテゴリから決めるので、明らかに違う家族は割り当たらない。
+ *
  * 設計方針（最優先＝納得感）：
  *  - ランダム生成は禁止。見た目・名前・性格・説明文は必ず認識した物に一致させる。
- *  - 関連性が弱い／自信が低いときは uncertain=true を返し、UIで「○○の仲間かもしれない」と伝える。
- *  - 説明文には、そのモノの役割や特徴を必ず反映する（例：コップ→水を大切にする）。
+ *  - 自信が低いときは confidence を低く返す（UIで推定表示、または撮り直しを促す）。
+ *  - 写真がうまく見えないときは quality で理由を返す（近づく・明るく・全体を写す）。
  */
+
+/** 写真の写りぐあい（poor のときは撮り直しをやさしく促す）。 */
+export type ImageQuality = "ok" | "too_far" | "too_dark" | "blurry" | "no_object";
 
 /** AIが返す精霊データ（描画はこの speciesId に対応する手続き的SVG）。 */
 export interface SpiritAnalysis {
   /** 認識した物体（日本語・短く） 例: "コップ" "ハサミ" "傘" */
   object: string;
+  /** 物のカテゴリ（決まった語彙のいずれか。家族・種族を決める土台） */
+  category: string;
   /** 姿に使う種族ID（既知の SPECIES のいずれか。最も形が近いもの） */
   speciesId: string;
+  /** 認識の自信（0〜1）。低いほど推定・撮り直し寄り。 */
+  confidence: number;
   /** 認識に十分な自信があるか（false のとき UI は推定表現にする） */
   confident: boolean;
+  /** 写真の写りぐあい */
+  quality: ImageQuality;
   /** 物の色をふまえた色相 0-360 */
   hue: number;
   eyes: EyeStyle;
