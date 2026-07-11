@@ -159,10 +159,12 @@ function Scan() {
     tap();
     setSaving(true);
     try {
-      await downloadCardImage(result);
-      toast.success("画像を保存しました");
+      const where = await saveCardImage(result);
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
     } catch {
-      toast.error("もう一度ためしてみてね");
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
