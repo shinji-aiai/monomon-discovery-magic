@@ -645,8 +645,8 @@ function SpeciesDetailSheet({
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
-              {fam.emoji} {fam.label}
+            <span className="whitespace-nowrap rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
+              {fam.emoji} {fam.label}族
             </span>
           </div>
           {primary && (
