@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { X, Download, Share2, Loader2 } from "lucide-react";
 import type { Monomon } from "@/lib/monomon";
-import { renderCardImage } from "@/lib/card-image";
+import { renderCardImage, saveImageBlob } from "@/lib/card-image";
 import { tap, playSound } from "@/lib/sound";
 
 interface ShareModalProps {
