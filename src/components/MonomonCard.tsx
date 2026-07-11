@@ -85,27 +85,8 @@ export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardP
             </div>
           </div>
         </div>
-
-          <span
-            className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-            style={{ backgroundColor: `${accent}55` }}
-          />
-          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
-            {onPet ? (
-              <button
-                type="button"
-                onClick={onPet}
-                aria-label="なでる"
-                className="h-full w-full cursor-pointer transition-transform active:scale-90"
-              >
-                <MonomonArt monomon={monomon} />
-              </button>
-            ) : (
-              <MonomonArt monomon={monomon} />
-            )}
-          </div>
-        </div>
       </div>
+
 
       {/* 情報エリア（名前 → 性格 → 一言の順で見せる） */}
       <div className="px-6 pb-6 pt-9 text-center">
