@@ -13,7 +13,6 @@ import {
   Lock,
   Search,
   Home,
-  Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { AutoFitName } from "@/components/AutoFitName";
@@ -28,7 +27,6 @@ import {
   clearNew,
   meetMonomon,
   petMonomon,
-  removeFromDex,
 } from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
@@ -835,20 +833,6 @@ function DetailSheet({
     }
   };
 
-  const remove = () => {
-    tap();
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm("この子を図鑑から削除する？")
-    ) {
-      return;
-    }
-    removeFromDex(live.id);
-    haptic(12);
-    toast("図鑑から削除したよ");
-    onClose();
-  };
-
   return (
     <div
       ref={overlayRef}
@@ -941,18 +925,8 @@ function DetailSheet({
             もう一度さがす
           </Link>
         </div>
-
-        {/* 低優先度：削除はいちばん下にそっと置く */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={remove}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground active:scale-95"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            この子を図鑑から削除
-          </button>
-        </div>
       </div>
+
 
       {sharing && (
         <ShareModal monomon={live} onClose={() => setSharing(false)} />

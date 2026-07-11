@@ -195,9 +195,9 @@ export function renderMonomonSVG(spec: MonomonSpec): string {
 
   const tilt = spec.pose === "tilt" ? ` transform="rotate(-5 100 116)"` : "";
 
-  // viewBox に上下の余白を持たせ、王冠・葉・触角などの装飾が絶対に切れないようにする
-  // （キャラは縦中央に contain 配置される）
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 10 200 200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">
+  // viewBox に上下左右の余白を持たせ、王冠・葉・触角・耳などの装飾や影が
+  // 絶対に切れないようにする（キャラは縦横中央に contain 配置される）
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -18 224 244" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">
 <defs>
 <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0%" stop-color="${p.c1}"/>
