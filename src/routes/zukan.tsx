@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Camera,
@@ -12,6 +12,8 @@ import {
   Star,
   Lock,
   Search,
+  Home,
+  Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { AutoFitName } from "@/components/AutoFitName";
@@ -26,6 +28,7 @@ import {
   clearNew,
   meetMonomon,
   petMonomon,
+  removeFromDex,
 } from "@/lib/dex";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
@@ -790,6 +793,13 @@ function DetailSheet({
 }) {
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // 詳細を開いたら必ず先頭（キャラのイラスト）から見えるようにする
+  useEffect(() => {
+    overlayRef.current?.scrollTo({ top: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monomon.id]);
 
   // なかよし度などが変わってもすぐ反映されるよう、常に最新の状態を読む
   const dex = useDex();
@@ -825,8 +835,25 @@ function DetailSheet({
     }
   };
 
+  const remove = () => {
+    tap();
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("この子を図鑑から削除する？")
+    ) {
+      return;
+    }
+    removeFromDex(live.id);
+    haptic(12);
+    toast("図鑑から削除したよ");
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center">
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center"
+    >
       <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -895,6 +922,36 @@ function DetailSheet({
           </button>
         </div>
 
+        {/* 移動：ホームへ戻る（主）／もう一度さがす（副） */}
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Link
+            to="/"
+            onClick={tap}
+            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+          >
+            <Home className="h-4 w-4" />
+            ホームへ戻る
+          </Link>
+          <Link
+            to="/scan"
+            onClick={tap}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+          >
+            <Camera className="h-4 w-4 text-primary" />
+            もう一度さがす
+          </Link>
+        </div>
+
+        {/* 低優先度：削除はいちばん下にそっと置く */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={remove}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground active:scale-95"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            この子を図鑑から削除
+          </button>
+        </div>
       </div>
 
       {sharing && (

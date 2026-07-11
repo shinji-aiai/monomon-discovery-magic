@@ -209,7 +209,7 @@ function Scan() {
 
           <div className="mt-10 w-full max-w-sm space-y-1 text-center">
             <p className="text-sm font-bold text-foreground/90">
-              モノ全体が写るように撮ってみよう！
+              モノ全体が入るように撮ってね
             </p>
             <p className="text-xs text-muted-foreground">
               ぬいぐるみ・文房具・植物がおすすめ！

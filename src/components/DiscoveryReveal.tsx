@@ -44,6 +44,9 @@ const STAGE = {
 /** これ以上待つと無言になってしまう、やさしい退避のめやす。 */
 const STUCK_MS = 8000;
 
+/** 探している間に数秒ごとに切り替わる、そっと寄り添うメッセージ。 */
+const SEARCH_MSGS = ["この子かな…", "もう少し探してみるね…", "あと少し…"];
+
 
 export function DiscoveryReveal({
   photo,
@@ -56,6 +59,8 @@ export function DiscoveryReveal({
   const [monomon, setMonomon] = useState<Monomon | null>(null);
   /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
   const [searching, setSearching] = useState(false);
+  /** 探している間のメッセージを数秒ごとに切り替えるための index */
+  const [searchIdx, setSearchIdx] = useState(0);
   /** さらに長引いたとき：閉じ込めないためのやさしい退避画面 */
   const [timedOut, setTimedOut] = useState(false);
   /** 「もう一度ためす」で演出をやり直すための試行カウント */
@@ -192,6 +197,18 @@ export function DiscoveryReveal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
+  // 探している間だけ、数秒ごとにメッセージをそっと切り替える
+  useEffect(() => {
+    if (!searching) {
+      setSearchIdx(0);
+      return;
+    }
+    const t = setInterval(() => setSearchIdx((i) => i + 1), 2400);
+    return () => clearInterval(t);
+  }, [searching]);
+
+
+
   // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
   const greeting = useMemo(
     () => (monomon ? greetingFor(monomon) : ""),
@@ -281,8 +298,10 @@ export function DiscoveryReveal({
     [STAGE.PAUSE]: "…",
     [STAGE.EYES]: "ふと目が合った",
   };
-  const caption =
-    searching && stage === STAGE.GATHER ? "いま探しているよ…" : captions[stage];
+  const isSearching = searching && stage === STAGE.GATHER;
+  const caption = isSearching
+    ? SEARCH_MSGS[searchIdx % SEARCH_MSGS.length]
+    : captions[stage];
 
   const objectLabel = monomon?.objectLabel?.trim();
 
@@ -399,7 +418,7 @@ export function DiscoveryReveal({
       {/* 導入〜出会いのことば */}
       {caption && (
         <p
-          key={stage}
+          key={isSearching ? `s${searchIdx % SEARCH_MSGS.length}` : `stage${stage}`}
           className="mt-10 min-h-[1.75rem] animate-rise-in text-lg font-bold text-foreground"
         >
           {caption}
