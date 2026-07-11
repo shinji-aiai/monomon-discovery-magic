@@ -159,7 +159,7 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
   }
 
   // 認識パイプライン：カテゴリ → 家族/種族（明らかに違う家族を防ぐ）
-  const species = resolveSpecies(result.category, result.speciesId);
+  const species = resolveSpecies(result.category, result.speciesId, result.confident);
   const spec = buildSpec(seed, species.id, result.hue);
   // 見た目はAIの判断に合わせる（ランダム要素を上書き）
   spec.eyes = result.eyes;

@@ -212,7 +212,7 @@ function Scan() {
       />
 
       {phase === "choose" && (
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
           <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
             <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
           </div>
@@ -257,7 +257,7 @@ function Scan() {
       )}
 
       {phase === "confirm" && photo && (
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
           <div className="animate-pop-in">
             <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
               <img
