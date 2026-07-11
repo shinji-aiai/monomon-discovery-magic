@@ -835,8 +835,25 @@ function DetailSheet({
     }
   };
 
+  const remove = () => {
+    tap();
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("この子を図鑑から削除する？")
+    ) {
+      return;
+    }
+    removeFromDex(live.id);
+    haptic(12);
+    toast("図鑑から削除したよ");
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center">
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center"
+    >
       <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
