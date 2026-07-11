@@ -69,7 +69,8 @@ function pickByDay<T>(arr: T[], offset = 0): T {
 function Home() {
   const settings = useSettings();
   const dex = useDex();
-  const last = dex[0];
+  // お気に入りがいれば必ずホームで迎える　いなければ さいきん見つけた子
+  const last = useMemo(() => dex.find((m) => m.favorite) ?? dex[0], [dex]);
   const today = countToday(dex);
   const kinds = useMemo(() => new Set(dex.map((m) => m.speciesId)).size, [dex]);
   // まだ1匹も見つけていない初回ユーザーは、空の統計より歓迎メッセージを主役にする
