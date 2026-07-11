@@ -263,17 +263,34 @@ export function familyForCategory(category: string): Family | null {
 }
 
 /**
+ * 自信が低くカテゴリも分からないときに使う「無難な家族」の代表種族。
+ * みのまわり（wear）は身近な物すべてを広く受け止められるので、
+ * 明らかに間違った家族を割り当てるより安全。
+ */
+const GENERIC_SPECIES_ID = "cushion";
+
+/**
  * 最終的な種族を決めます。
  * AIが選んだ姿(speciesId)は、カテゴリの家族と一致するときだけ尊重し、
  * ずれている（家族が違う）ときはカテゴリの代表種族に丸めます。
  * こうして「明らかに違う家族」の割り当てを防ぎます。
+ *
+ * confident=false（自信が低い）でカテゴリも未知のときは、
+ * AIの当てずっぽうな家族に賭けず、無難な家族に丸めます。
  */
-export function resolveSpecies(category: string, aiSpeciesId: string): Species {
+export function resolveSpecies(
+  category: string,
+  aiSpeciesId: string,
+  confident = true,
+): Species {
   const aiSpecies = SPECIES_MAP[aiSpeciesId];
 
-  // カテゴリが未知：AIの姿が有効ならそれを使う（最後の保険）
+  // カテゴリが未知のとき
   if (!isKnownCategory(category)) {
-    return aiSpecies ?? SPECIES_MAP.cup;
+    // 自信があり、姿も有効ならそれを尊重（最後の保険）
+    if (confident && aiSpecies) return aiSpecies;
+    // 自信が低いなら、間違った家族より無難な家族へ
+    return SPECIES_MAP[GENERIC_SPECIES_ID] ?? aiSpecies ?? SPECIES_MAP.cup;
   }
 
   const canonical = SPECIES_MAP[CATEGORY_TO_SPECIES[category]];
