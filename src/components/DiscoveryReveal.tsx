@@ -418,7 +418,7 @@ export function DiscoveryReveal({
       {/* 導入〜出会いのことば */}
       {caption && (
         <p
-          key={stage}
+          key={isSearching ? `s${searchIdx % SEARCH_MSGS.length}` : `stage${stage}`}
           className="mt-10 min-h-[1.75rem] animate-rise-in text-lg font-bold text-foreground"
         >
           {caption}
