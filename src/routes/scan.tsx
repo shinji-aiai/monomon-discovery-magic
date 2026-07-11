@@ -87,18 +87,27 @@ function Scan() {
     cameraRef.current?.click();
   };
 
-  // 出会いをやり直す（写真があれば同じ写真でもう一度探す）
+  // 出会いをやり直す
   const retry = () => {
     if (errKind === "permission") {
       openCamera();
       return;
     }
     tap();
-    if (photo) {
+    // 写りが原因のときは、同じ写真ではなく撮り直してもらう
+    const needsNewPhoto =
+      errKind === "too_far" ||
+      errKind === "too_dark" ||
+      errKind === "blurry" ||
+      errKind === "unclear";
+    if (photo && !needsNewPhoto) {
       setResult(null);
       setRegistered(false);
       setPhase("reveal");
     } else {
+      setResult(null);
+      setPhoto(null);
+      setRegistered(false);
       setPhase("choose");
     }
   };
