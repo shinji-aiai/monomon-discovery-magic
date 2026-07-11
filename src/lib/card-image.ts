@@ -236,14 +236,73 @@ export async function renderCardImage(
   );
 }
 
-export async function downloadCardImage(monomon: Monomon) {
-  const blob = await renderCardImage(monomon, "save");
+/** 保存結果。native では Photos、web ではダウンロード。 */
+export type SaveResult = "photos" | "download";
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const s = typeof reader.result === "string" ? reader.result : "";
+      resolve(s.slice(s.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** ネイティブ端末の「写真」アプリへ保存する（権限が無ければ確認が出る）。 */
+async function saveBlobToPhotos(blob: Blob, fileBase: string): Promise<void> {
+  const [{ Media }, { Filesystem, Directory }] = await Promise.all([
+    import("@capacitor-community/media"),
+    import("@capacitor/filesystem"),
+  ]);
+  const base64 = await blobToBase64(blob);
+  const fileName = `${fileBase}-${Date.now()}.png`;
+  const written = await Filesystem.writeFile({
+    path: fileName,
+    data: base64,
+    directory: Directory.Cache,
+  });
+  await Media.savePhoto({ path: written.uri });
+  try {
+    await Filesystem.deleteFile({ path: fileName, directory: Directory.Cache });
+  } catch {
+    /* 一時ファイルの掃除に失敗しても問題なし */
+  }
+}
+
+/** web 向け：ブラウザのダウンロードで保存する。 */
+function downloadBlob(blob: Blob, fileBase: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `monomon-${monomon.name}.png`;
+  a.download = `${fileBase}.png`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+/** 生成済みの画像 Blob を保存する（native=写真アプリ / web=ダウンロード）。 */
+export async function saveImageBlob(
+  blob: Blob,
+  fileBase: string,
+): Promise<SaveResult> {
+  if (Capacitor.isNativePlatform()) {
+    await saveBlobToPhotos(blob, fileBase);
+    return "photos";
+  }
+  downloadBlob(blob, fileBase);
+  return "download";
+}
+
+/** モノモンのカード画像を生成して保存する。 */
+export async function saveCardImage(
+  monomon: Monomon,
+  variant: "save" | "share" = "save",
+): Promise<SaveResult> {
+  const blob = await renderCardImage(monomon, variant);
+  return saveImageBlob(blob, `monomon-${monomon.name}`);
+}
+
