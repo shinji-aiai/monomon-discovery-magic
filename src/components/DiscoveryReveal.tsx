@@ -227,6 +227,13 @@ export function DiscoveryReveal({
     [monomon?.id],
   );
 
+  // 発見の種類（新規／再会）ごとの見出し。将来の演出拡張の入り口。
+  const presentation = useMemo(
+    () => (monomon ? discoveryPresentation(monomon) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monomon?.id],
+  );
+
   // 少しだけ舞う紙吹雪（発見成功のお祝い）
   const confetti = useMemo(
     () =>
