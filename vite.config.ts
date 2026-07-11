@@ -12,4 +12,17 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    define: {
+      // Unique per deployment. Baked into BOTH the client bundle and the SSR
+      // server (same build run = same value). The client compares its baked id
+      // against the live server's id to detect a new deployment. See
+      // src/lib/build-info.ts and src/components/AutoUpdater.tsx.
+      __BUILD_ID__: JSON.stringify(
+        process.env.LOVABLE_BUILD_ID ??
+          process.env.CF_PAGES_COMMIT_SHA ??
+          String(Date.now()),
+      ),
+    },
+  },
 });
