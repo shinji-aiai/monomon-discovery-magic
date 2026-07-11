@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Download,
   Share2,
-  Trash2,
   Loader2,
   Heart,
   Star,
@@ -23,7 +22,6 @@ import { FriendshipMeter } from "@/components/FriendshipMeter";
 import {
   useDex,
   useNewDex,
-  removeFromDex,
   toggleFavorite,
   clearNew,
   meetMonomon,
@@ -791,7 +789,6 @@ function DetailSheet({
   onClose: () => void;
 }) {
   const [sharing, setSharing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // なかよし度などが変わってもすぐ反映されるよう、常に最新の状態を読む
@@ -826,13 +823,6 @@ function DetailSheet({
     } finally {
       setSaving(false);
     }
-  };
-
-  const del = () => {
-    removeFromDex(live.id);
-    haptic(20);
-    toast.success("削除しました");
-    onClose();
   };
 
   return (
@@ -905,41 +895,6 @@ function DetailSheet({
           </button>
         </div>
 
-        {confirmDelete ? (
-          <div className="mt-3 rounded-2xl bg-destructive/10 p-3 text-center">
-            <p className="text-sm font-bold text-destructive">
-              このモノモンを削除しますか？
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  tap();
-                  setConfirmDelete(false);
-                }}
-                className="rounded-xl bg-card py-2.5 text-sm font-bold text-foreground active:scale-95"
-              >
-                やめる
-              </button>
-              <button
-                onClick={del}
-                className="rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground active:scale-95"
-              >
-                削除する
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              tap();
-              setConfirmDelete(true);
-            }}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold text-destructive active:scale-95"
-          >
-            <Trash2 className="h-4 w-4" />
-            削除する
-          </button>
-        )}
       </div>
 
       {sharing && (
