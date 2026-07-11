@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { FAMILY_STYLES } from "./monomon-data";
 import { getSpecies } from "./species";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
