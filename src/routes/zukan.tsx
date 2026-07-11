@@ -13,7 +13,6 @@ import {
   Lock,
   Search,
   Home,
-  Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
 import { AutoFitName } from "@/components/AutoFitName";
