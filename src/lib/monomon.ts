@@ -140,8 +140,27 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     throw new DiscoveryError("unknown");
   }
 
-  const species = getSpecies(result.speciesId);
-  const spec = buildSpec(seed, result.speciesId, result.hue);
+  // 写真がうまく見えないとき：想像で決めず、やさしく撮り直しを促す
+  switch (result.quality) {
+    case "too_far":
+      throw new DiscoveryError("too_far");
+    case "too_dark":
+      throw new DiscoveryError("too_dark");
+    case "blurry":
+      throw new DiscoveryError("blurry");
+    case "no_object":
+      throw new DiscoveryError("unclear");
+    default:
+      break;
+  }
+  // 自信が低すぎるときも、当てずっぽうにせず撮り直しへ
+  if (result.confidence < MIN_CONFIDENCE) {
+    throw new DiscoveryError("unclear");
+  }
+
+  // 認識パイプライン：カテゴリ → 家族/種族（明らかに違う家族を防ぐ）
+  const species = resolveSpecies(result.category, result.speciesId);
+  const spec = buildSpec(seed, species.id, result.hue);
   // 見た目はAIの判断に合わせる（ランダム要素を上書き）
   spec.eyes = result.eyes;
   spec.mouth = result.mouth;
