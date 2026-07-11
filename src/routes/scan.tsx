@@ -292,13 +292,14 @@ function Scan() {
                 <Check className="h-4 w-4" />
                 図鑑を見る
               </Link>
-              <button
-                onClick={reset}
+              <Link
+                to="/"
+                onClick={tap}
                 className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
               >
-                <RefreshCw className="h-4 w-4" />
-                もう一度
-              </button>
+                <Home className="h-4 w-4" />
+                ホーム
+              </Link>
             </div>
 
             {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
