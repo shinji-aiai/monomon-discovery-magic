@@ -4,6 +4,7 @@ import { MonomonArt } from "./MonomonArt";
 import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
 import { greetingFor } from "@/lib/greetings";
+import { discoveryPresentation } from "@/lib/discovery";
 
 interface DiscoveryRevealProps {
   photo: string;
