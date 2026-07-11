@@ -59,6 +59,8 @@ export function DiscoveryReveal({
   const [monomon, setMonomon] = useState<Monomon | null>(null);
   /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
   const [searching, setSearching] = useState(false);
+  /** 探している間のメッセージを数秒ごとに切り替えるための index */
+  const [searchIdx, setSearchIdx] = useState(0);
   /** さらに長引いたとき：閉じ込めないためのやさしい退避画面 */
   const [timedOut, setTimedOut] = useState(false);
   /** 「もう一度ためす」で演出をやり直すための試行カウント */
