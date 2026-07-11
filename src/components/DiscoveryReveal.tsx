@@ -298,8 +298,10 @@ export function DiscoveryReveal({
     [STAGE.PAUSE]: "…",
     [STAGE.EYES]: "ふと目が合った",
   };
-  const caption =
-    searching && stage === STAGE.GATHER ? "いま探しているよ…" : captions[stage];
+  const isSearching = searching && stage === STAGE.GATHER;
+  const caption = isSearching
+    ? SEARCH_MSGS[searchIdx % SEARCH_MSGS.length]
+    : captions[stage];
 
   const objectLabel = monomon?.objectLabel?.trim();
 
