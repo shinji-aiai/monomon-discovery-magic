@@ -103,3 +103,114 @@ export function withMeet(m: Monomon): { monomon: Monomon; gained: boolean } {
     gained: true,
   };
 }
+
+/* =========================================================================
+ * 再会（Reunion）— フェーズ1
+ *
+ * 会いに来た（詳細を開いた／発見した）ときの「再会」を扱います。
+ * ・初回発見日（discoveredAt）・最終来訪日（lastMetAt）・再会回数（reunionCount）
+ *   ・なかよし度（friendship）を土台に、
+ *   再会回数や経過日数・なかよし度に応じてセリフを出し分けます。
+ * ======================================================================= */
+
+/** なかよし度が節目に達すると新しいセリフが解放される（フェーズ1のしきい値）。 */
+export const FRIENDSHIP_UNLOCKS = [20, 50, 100] as const;
+
+/** 前回会ってからのおおよその経過日数（未記録なら Infinity）。 */
+export function daysSince(iso?: string): number {
+  if (!iso) return Infinity;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return Infinity;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+}
+
+/** 再会の結果（UI でセリフやお祝い演出に使う）。 */
+export interface ReunionResult {
+  monomon: Monomon;
+  /** 今日はじめての来訪だったか（＝再会が成立したか） */
+  isReunion: boolean;
+  /** これまでの再会回数（今回を含む） */
+  reunionCount: number;
+  /** 前回会ってからのおおよその経過日数 */
+  daysSinceLastMet: number;
+  /** なかよし度が増えた量（0 なら増えていない） */
+  friendshipGained: number;
+  /** 今回の再会で新しく解放されたなかよし度のしきい値（20/50/100）。なければ undefined */
+  unlockedThreshold?: number;
+}
+
+/**
+ * 「会いに来た」ときの再会処理（純粋関数）。
+ * 今日はじめてなら dailyMeet を加算し、再会回数を +1、最終来訪日を更新します。
+ * 既存の遊び（+5/日）はそのままに、再会の記録だけを重ねます。
+ */
+export function reunion(m: Monomon): ReunionResult {
+  const daysSinceLastMet = daysSince(m.lastMetAt);
+  const prevCount = m.reunionCount ?? 0;
+
+  // 今日すでに会っていれば、記録は変えずに現状を返す
+  if (isToday(m.lastMetAt)) {
+    return {
+      monomon: m,
+      isReunion: false,
+      reunionCount: prevCount,
+      daysSinceLastMet,
+      friendshipGained: 0,
+    };
+  }
+
+  const before = getFriendship(m);
+  const gainedMon = withFriendshipGain(m, "dailyMeet");
+  const after = getFriendship(gainedMon);
+
+  // 20/50/100 をまたいだら、その節目を解放とみなす
+  const unlockedThreshold = FRIENDSHIP_UNLOCKS.find(
+    (t) => before < t && after >= t,
+  );
+
+  return {
+    monomon: {
+      ...gainedMon,
+      reunionCount: prevCount + 1,
+      lastMetAt: new Date().toISOString(),
+    },
+    isReunion: true,
+    reunionCount: prevCount + 1,
+    daysSinceLastMet,
+    friendshipGained: after - before,
+    unlockedThreshold,
+  };
+}
+
+/** 長く会えていなかったときのセリフ。 */
+const LONG_ABSENCE_QUOTES = ["久しぶり！元気だった？", "ずっと待ってたよ！"];
+
+/**
+ * 再会したときのセリフを、経過日数・なかよし度・再会回数から選びます。
+ * ・長く会えていなかったとき → 久しぶりのセリフ
+ * ・なかよし度の節目（20/50/100）で特別なセリフを解放
+ * ・それ以外は再会回数の節目（1/3/10 回）で出し分け
+ */
+export function getReunionDialogue(opts: {
+  reunionCount: number;
+  daysSinceLastMet: number;
+  friendship: number;
+}): string {
+  const { reunionCount, daysSinceLastMet, friendship } = opts;
+
+  if (daysSinceLastMet >= 7) {
+    return daysSinceLastMet >= 30
+      ? LONG_ABSENCE_QUOTES[1]
+      : LONG_ABSENCE_QUOTES[0];
+  }
+
+  // なかよし度で解放される特別なセリフ
+  if (friendship >= 100) return "きみといると世界が輝くよ！";
+  if (friendship >= 50) return "きみは特別な友だちだね！";
+  if (friendship >= 20) return "また会えてすごくうれしい！";
+
+  // 再会回数の節目
+  if (reunionCount >= 10) return "もう親友だね！";
+  if (reunionCount >= 3) return "最近よく会えてうれしい！";
+  return "あっ！また会えたね！";
+}
