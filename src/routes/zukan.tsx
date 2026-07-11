@@ -20,6 +20,7 @@ import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
 import { FriendshipMeter } from "@/components/FriendshipMeter";
+import { SupportButton } from "@/components/SupportButton";
 import {
   useDex,
   useNewDex,
@@ -853,28 +854,11 @@ function DetailSheet({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
     >
-      <div className="relative w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
-        {/* なかよし度アップの小さなお祝い：ハートがふわっと舞う */}
-        {burst > 0 && (
-          <div
-            key={burst}
-            className="pointer-events-none absolute inset-x-0 top-24 z-10 flex justify-center"
-            aria-hidden
-          >
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Heart
-                key={i}
-                className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
-                style={{
-                  left: `${44 + (i - 2) * 7}%`,
-                  animationDelay: `${i * 80}ms`,
-                }}
-              />
-            ))}
-          </div>
-        )}
+      {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
+      <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+        {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -908,15 +892,40 @@ function DetailSheet({
           </button>
         </div>
 
+        {/* 1. イラスト → 2. 名前 → 3. 説明（MonomonCard が縦に並べて表示） */}
+        <div className="relative">
+          {/* なかよし度アップの小さなお祝い：ハートがふわっと舞う */}
+          {burst > 0 && (
+            <div
+              key={burst}
+              className="pointer-events-none absolute inset-x-0 top-20 z-10 flex justify-center"
+              aria-hidden
+            >
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Heart
+                  key={i}
+                  className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
+                  style={{
+                    left: `${44 + (i - 2) * 7}%`,
+                    animationDelay: `${i * 80}ms`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <MonomonCard monomon={live} onPet={pet} />
+        </div>
 
-        <MonomonCard monomon={live} onPet={pet} />
-
-        {/* なかよし度（表情・セリフ・ゲージ） */}
+        {/* 4. なかよし度（表情・セリフ・ゲージ） */}
         <FriendshipMeter monomon={live} className="mt-4" />
         <p className="mt-1.5 text-center text-xs font-medium text-muted-foreground">
           モノモンをなでると なかよし度が上がるよ
         </p>
 
+        {/* 5. 応援セクション */}
+        <SupportButton variant="home" />
+
+        {/* 6. 画像を保存 ／ 7. シェア */}
         <div className="mt-4 grid grid-cols-2 gap-3">
           <button
             onClick={save}
@@ -942,7 +951,7 @@ function DetailSheet({
           </button>
         </div>
 
-        {/* 移動：ホームへ戻る（主）／もう一度さがす（副） */}
+        {/* 8. ホームへ戻る ／ 9. もう一度さがす */}
         <div className="mt-3 grid grid-cols-2 gap-3">
           <Link
             to="/"
@@ -962,7 +971,6 @@ function DetailSheet({
           </Link>
         </div>
       </div>
-
 
       {sharing && (
         <ShareModal monomon={live} onClose={() => setSharing(false)} />
