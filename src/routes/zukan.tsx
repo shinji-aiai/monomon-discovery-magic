@@ -793,6 +793,13 @@ function DetailSheet({
 }) {
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // 詳細を開いたら必ず先頭（キャラのイラスト）から見えるようにする
+  useEffect(() => {
+    overlayRef.current?.scrollTo({ top: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monomon.id]);
 
   // なかよし度などが変わってもすぐ反映されるよう、常に最新の状態を読む
   const dex = useDex();
