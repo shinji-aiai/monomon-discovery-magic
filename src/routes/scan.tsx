@@ -37,7 +37,7 @@ export const Route = createFileRoute("/scan")({
   component: Scan,
 });
 
-type Phase = "choose" | "reveal" | "result" | "error";
+type Phase = "choose" | "confirm" | "reveal" | "result" | "error";
 
 function Scan() {
   const [phase, setPhase] = useState<Phase>("choose");
@@ -131,10 +131,19 @@ function Scan() {
       setPhoto(small);
       setResult(null);
       setRegistered(false);
-      setPhase("reveal");
+      // Apple標準の確認ではなく、モノモンらしい確認画面でひと呼吸おく
+      setPhase("confirm");
     } catch {
       toast.error("写真を読み込めませんでした");
     }
+  };
+
+  // 確認画面から「モノモンを探す」→ 出会いの演出＆AI認識をはじめる
+  const startSearch = () => {
+    tap();
+    setResult(null);
+    setRegistered(false);
+    setPhase("reveal");
   };
 
   const reset = () => {
@@ -246,6 +255,49 @@ function Scan() {
           </div>
         </div>
       )}
+
+      {phase === "confirm" && photo && (
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="animate-pop-in">
+            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
+              <img
+                src={photo}
+                alt="撮影した写真"
+                className="h-full w-full object-cover"
+              />
+              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-1">
+            <h1 className="text-xl font-extrabold text-foreground">
+              この写真でさがす？
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              モノモンがかくれているかも
+            </p>
+          </div>
+
+          <div className="mt-9 grid w-full max-w-sm grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                tap();
+                openCamera();
+              }}
+              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+            >
+              📷 撮り直す
+            </button>
+            <button
+              onClick={startSearch}
+              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+            >
+              🔍 モノモンを探す
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {phase === "reveal" && photo && (
         <DiscoveryReveal
