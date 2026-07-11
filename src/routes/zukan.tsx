@@ -35,7 +35,7 @@ import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
-import { downloadCardImage } from "@/lib/card-image";
+import { saveCardImage } from "@/lib/card-image";
 import type { Monomon } from "@/lib/monomon";
 import { tap, playSound, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
