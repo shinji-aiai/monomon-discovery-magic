@@ -44,7 +44,8 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
       toast.success(
         where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
       );
-    } catch {
+    } catch (err) {
+      console.error("[monomon] 画像保存に失敗:", err);
       toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
     }
   };
