@@ -37,17 +37,16 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
 
   const saveImage = async () => {
     tap();
-    const b = blob ?? (await renderCardImage(monomon, "share"));
-    const url = URL.createObjectURL(b);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `monomon-${monomon.name}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    playSound("save");
-    toast.success("画像を保存しました");
+    try {
+      const b = blob ?? (await renderCardImage(monomon, "share"));
+      const where = await saveImageBlob(b, `monomon-${monomon.name}`);
+      playSound("save");
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
+    } catch {
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
+    }
   };
 
   const systemShare = async () => {
