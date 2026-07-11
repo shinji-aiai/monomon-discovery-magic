@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GA_MEASUREMENT_ID, trackPageView } from "../lib/analytics";
 import { Toaster } from "../components/ui/sonner";
+import { AutoUpdater } from "../components/AutoUpdater";
 
 function NotFoundComponent() {
   return (
@@ -89,6 +90,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "身の回りのモノを撮るとそのモノに宿る小さな精霊「モノモン」が見つかるアプリ　さあ次は何を撮ってみよう",
       },
       { name: "theme-color", content: "#fbf3e6" },
+      { httpEquiv: "Cache-Control", content: "no-cache, no-store, must-revalidate" },
+      { httpEquiv: "Pragma", content: "no-cache" },
       { name: "author", content: "モノモン" },
       { property: "og:title", content: "モノモン｜モノに宿る小さな精霊たち" },
       {
@@ -170,6 +173,8 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />
+      {/* 公開後、ユーザーが自動で最新UIを受け取るための更新チェッカー。 */}
+      <AutoUpdater />
     </QueryClientProvider>
   );
 }
