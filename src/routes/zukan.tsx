@@ -847,7 +847,7 @@ function DetailSheet({
       playSound("save");
       toast.success("画像を保存しました");
     } catch {
-      toast.error("保存に失敗しました");
+      toast.error("もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
