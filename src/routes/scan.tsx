@@ -134,7 +134,7 @@ function Scan() {
       // Apple標準の確認ではなく、モノモンらしい確認画面でひと呼吸おく
       setPhase("confirm");
     } catch {
-      toast.error("写真を読み込めませんでした");
+      toast.error("もう一度えらんでみてね");
     }
   };
 
@@ -162,7 +162,7 @@ function Scan() {
       await downloadCardImage(result);
       toast.success("画像を保存しました");
     } catch {
-      toast.error("保存に失敗しました");
+      toast.error("もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
