@@ -256,6 +256,49 @@ function Scan() {
         </div>
       )}
 
+      {phase === "confirm" && photo && (
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="animate-pop-in">
+            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
+              <img
+                src={photo}
+                alt="撮影した写真"
+                className="h-full w-full object-cover"
+              />
+              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-1">
+            <h1 className="text-xl font-extrabold text-foreground">
+              この写真でさがす？
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              モノモンがかくれているかも
+            </p>
+          </div>
+
+          <div className="mt-9 grid w-full max-w-sm grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                tap();
+                openCamera();
+              }}
+              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+            >
+              📷 撮り直す
+            </button>
+            <button
+              onClick={startSearch}
+              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+            >
+              🔍 モノモンを探す
+            </button>
+          </div>
+        </div>
+      )}
+
+
       {phase === "reveal" && photo && (
         <DiscoveryReveal
           photo={photo}
