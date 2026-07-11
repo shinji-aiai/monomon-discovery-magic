@@ -29,6 +29,7 @@ import {
   clearNew,
   meetMonomon,
   petMonomon,
+  removeFromDex,
 } from "@/lib/dex";
 import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
