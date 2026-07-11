@@ -413,7 +413,7 @@ function FamilyProgress({
           const complete = found === total;
           return (
             <li key={family} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-sm font-bold text-foreground">
+              <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-foreground">
                 {fam.emoji} {fam.label}族
               </span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
