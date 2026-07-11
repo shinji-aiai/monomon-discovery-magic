@@ -45,14 +45,17 @@ const STAGE = {
 /** これ以上待つと無言になってしまう、やさしい退避のめやす。 */
 const STUCK_MS = 8000;
 
-/** 探している間に数秒ごとに切り替わる、そっと寄り添うメッセージ。 */
+/** 探している間に数秒ごとにランダムで切り替わる、そっと寄り添うメッセージ。 */
 const SEARCH_MSGS = [
   "モノモンを探してるよ…",
+  "小さな精霊を探しています…",
+  "どこかにいるみたい…",
   "どこにいるかな…",
-  "もう少し待ってね…",
-  "この子かな…",
   "あと少し…",
 ];
+
+/** SEARCH_MSGS からランダムに1つ選ぶ index。 */
+const randomMsgIdx = () => Math.floor(Math.random() * SEARCH_MSGS.length);
 
 
 export function DiscoveryReveal({
