@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   Camera,
   X,
+  ArrowLeft,
   Download,
   Share2,
   Trash2,
