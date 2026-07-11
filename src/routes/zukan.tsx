@@ -927,18 +927,8 @@ function DetailSheet({
             もう一度さがす
           </Link>
         </div>
-
-        {/* 低優先度：削除はいちばん下にそっと置く */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={remove}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground active:scale-95"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            この子を図鑑から削除
-          </button>
-        </div>
       </div>
+
 
       {sharing && (
         <ShareModal monomon={live} onClose={() => setSharing(false)} />
