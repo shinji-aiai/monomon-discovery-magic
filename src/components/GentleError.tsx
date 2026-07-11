@@ -92,7 +92,7 @@ export function GentleError({ kind, onRetry }: GentleErrorProps) {
     CONTENT[kind];
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
+    <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
       <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
         <Icon className="h-14 w-14 text-card" strokeWidth={1.6} />
       </div>
