@@ -173,6 +173,8 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />
+      {/* 公開後、ユーザーが自動で最新UIを受け取るための更新チェッカー。 */}
+      <AutoUpdater />
     </QueryClientProvider>
   );
 }
