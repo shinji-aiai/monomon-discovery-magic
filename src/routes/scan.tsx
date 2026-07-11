@@ -21,7 +21,7 @@ import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
 import { addToDex, meetMonomon } from "@/lib/dex";
-import { downloadCardImage } from "@/lib/card-image";
+import { saveCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
 
 export const Route = createFileRoute("/scan")({
