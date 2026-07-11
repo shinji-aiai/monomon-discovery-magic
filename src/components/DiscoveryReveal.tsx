@@ -197,6 +197,18 @@ export function DiscoveryReveal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
+  // 探している間だけ、数秒ごとにメッセージをそっと切り替える
+  useEffect(() => {
+    if (!searching) {
+      setSearchIdx(0);
+      return;
+    }
+    const t = setInterval(() => setSearchIdx((i) => i + 1), 2400);
+    return () => clearInterval(t);
+  }, [searching]);
+
+
+
   // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
   const greeting = useMemo(
     () => (monomon ? greetingFor(monomon) : ""),
