@@ -132,7 +132,10 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!key) return { error: "AIキーが設定されていません" };
 
     const speciesIds = new Set(SPECIES.map((s) => s.id));
-    const system = SYSTEM_PROMPT.replace("{{CATALOG}}", buildSpeciesCatalog());
+    const system = SYSTEM_PROMPT.replace(
+      "{{CATALOG}}",
+      buildSpeciesCatalog(),
+    ).replace("{{CATEGORIES}}", OBJECT_CATEGORIES.join(", "));
 
     let res: Response;
     try {
