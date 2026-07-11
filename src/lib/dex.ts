@@ -1,6 +1,6 @@
 import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
-import { withFriendshipGain, withMeet } from "./friendship";
+import { withFriendshipGain, reunion, type ReunionResult } from "./friendship";
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
