@@ -283,7 +283,7 @@ export async function saveImageBlob(
   fileBase: string,
 ): Promise<SaveResult> {
   if (Capacitor.isNativePlatform()) {
-    await saveBlobToPhotos(blob, fileBase);
+    await saveBlobToPhotos(blob);
     return "photos";
   }
   downloadBlob(blob, fileBase);
