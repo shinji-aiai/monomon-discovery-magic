@@ -840,6 +840,16 @@ function DetailSheet({
       <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                tap();
+                onClose();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+              aria-label="戻る"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
               No.{String(no).padStart(3, "0")}
             </span>
@@ -847,31 +857,20 @@ function DetailSheet({
               <RarityStars speciesId={monomon.speciesId} />
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                toggleFavorite(live.id);
-                haptic(12);
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
-              aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
-            >
-              <Heart
-                className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-              />
-            </button>
-            <button
-              onClick={() => {
-                tap();
-                onClose();
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95"
-              aria-label="閉じる"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              toggleFavorite(live.id);
+              haptic(12);
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
+            aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
+          >
+            <Heart
+              className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+            />
+          </button>
         </div>
+
 
         <MonomonCard monomon={live} onPet={pet} />
 
