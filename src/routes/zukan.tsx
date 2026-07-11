@@ -843,11 +843,13 @@ function DetailSheet({
     tap();
     setSaving(true);
     try {
-      await downloadCardImage(live);
+      const where = await saveCardImage(live);
       playSound("save");
-      toast.success("画像を保存しました");
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
     } catch {
-      toast.error("もう一度ためしてみてね");
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
