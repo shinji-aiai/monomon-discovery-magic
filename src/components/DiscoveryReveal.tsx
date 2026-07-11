@@ -45,7 +45,13 @@ const STAGE = {
 const STUCK_MS = 8000;
 
 /** 探している間に数秒ごとに切り替わる、そっと寄り添うメッセージ。 */
-const SEARCH_MSGS = ["この子かな…", "もう少し探してみるね…", "あと少し…"];
+const SEARCH_MSGS = [
+  "モノモンを探してるよ…",
+  "どこにいるかな…",
+  "この子かな…",
+  "もう少し探してみるね…",
+  "あと少し…",
+];
 
 
 export function DiscoveryReveal({
