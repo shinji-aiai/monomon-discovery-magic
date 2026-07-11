@@ -4,6 +4,7 @@ import { MonomonArt } from "./MonomonArt";
 import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
 import { playSound, haptic } from "@/lib/sound";
 import { greetingFor } from "@/lib/greetings";
+import { discoveryPresentation } from "@/lib/discovery";
 
 interface DiscoveryRevealProps {
   photo: string;
@@ -44,14 +45,17 @@ const STAGE = {
 /** これ以上待つと無言になってしまう、やさしい退避のめやす。 */
 const STUCK_MS = 8000;
 
-/** 探している間に数秒ごとに切り替わる、そっと寄り添うメッセージ。 */
+/** 探している間に数秒ごとにランダムで切り替わる、そっと寄り添うメッセージ。 */
 const SEARCH_MSGS = [
   "モノモンを探してるよ…",
+  "小さな精霊を探しています…",
+  "どこかにいるみたい…",
   "どこにいるかな…",
-  "もう少し待ってね…",
-  "この子かな…",
   "あと少し…",
 ];
+
+/** SEARCH_MSGS からランダムに1つ選ぶ index。 */
+const randomMsgIdx = () => Math.floor(Math.random() * SEARCH_MSGS.length);
 
 
 export function DiscoveryReveal({
@@ -203,13 +207,14 @@ export function DiscoveryReveal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
-  // 探している間だけ、数秒ごとにメッセージをそっと切り替える
+  // 探している間だけ、数秒ごとにメッセージをランダムでそっと切り替える
   useEffect(() => {
     if (!searching) {
       setSearchIdx(0);
       return;
     }
-    const t = setInterval(() => setSearchIdx((i) => i + 1), 2400);
+    setSearchIdx(randomMsgIdx());
+    const t = setInterval(() => setSearchIdx(randomMsgIdx()), 2400);
     return () => clearInterval(t);
   }, [searching]);
 
@@ -218,6 +223,13 @@ export function DiscoveryReveal({
   // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
   const greeting = useMemo(
     () => (monomon ? greetingFor(monomon) : ""),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [monomon?.id],
+  );
+
+  // 発見の種類（新規／再会）ごとの見出し。将来の演出拡張の入り口。
+  const presentation = useMemo(
+    () => (monomon ? discoveryPresentation(monomon) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [monomon?.id],
   );
@@ -431,9 +443,21 @@ export function DiscoveryReveal({
         </p>
       )}
 
-      {/* ⑥ 名前（大きく・キラキラ） */}
+      {/* ⑥ 発見の見出し（新規／再会）＋名前（大きく・キラキラ） */}
+      {stage >= STAGE.NAME && monomon && presentation && (
+        <div
+          key="banner"
+          className={`mt-8 animate-pop-in rounded-full px-5 py-2 text-sm font-bold shadow-soft ${
+            presentation.kind === "reunion"
+              ? "bg-amber-100 text-amber-700"
+              : "bg-primary/15 text-primary"
+          }`}
+        >
+          {presentation.banner}
+        </div>
+      )}
       {stage >= STAGE.NAME && monomon && (
-        <div key="name" className="mt-9 animate-pop-in text-center">
+        <div key="name" className="mt-4 animate-pop-in text-center">
           {objectLabel && (
             <p className="text-xs font-bold text-muted-foreground">
               {monomon.uncertain
