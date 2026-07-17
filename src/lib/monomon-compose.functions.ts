@@ -7,8 +7,7 @@
  *  - 光源方向・色温度・被写界深度・粒子ノイズ・遠近を元写真に一致させる。
  *  - モノは常に主役。モノモンは静かな発見（画面短辺の5〜20%）。
  *
- * 失敗は許容：合成できなくても発見体験は元写真のみで完結する。
- * 何度も呼び出さない：同じ個体につき1回の合成のみ（呼び出し側で担保）。
+ * 失敗を成功として扱わない：有効な合成画像を得られた場合だけ出会いを完成させる。
  *
  * モデル：google/gemini-3-pro-image
  *  Lovable AI Gateway 上で編集品質が最も高く、元画像の光・影・DoF の
@@ -85,11 +84,30 @@ const ComposeInput = z.object({
 });
 
 export type ComposeResult =
-  | { ok: true; dataUrl: string }
-  | { ok: false; reason: string };
+  | {
+      ok: true;
+      dataUrl: string;
+      mimeType: string;
+      model: string;
+      elapsedMs: number;
+    }
+  | {
+      ok: false;
+      reason: string;
+      status?: number;
+      model: string;
+      errorType: string;
+      elapsedMs: number;
+      responseBody?: string;
+    };
 
-/** モデル呼び出しの最大待ち時間（ミリ秒）。超えたら諦めて元写真で成立。 */
-const COMPOSE_TIMEOUT_MS = 28_000;
+export const COMPOSITION_MODEL = "google/gemini-3-pro-image";
+/** 画像編集はテキスト認識より長くかかるため、短いタイムアウトを共有しない。 */
+const COMPOSE_TIMEOUT_MS = 120_000;
+
+function safeErrorBody(body: string): string {
+  return body.replace(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/g, "[image omitted]").slice(0, 2_000);
+}
 
 /**
  * 物の種類から「自然な住処」の英語ヒントを返す。AIの placementNote が空でも
@@ -181,10 +199,27 @@ function buildInstruction(
 export const composeMonomonScene = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ComposeInput.parse(input))
   .handler(async ({ data }): Promise<ComposeResult> => {
+    const startedAt = Date.now();
     const key = process.env.LOVABLE_API_KEY;
-    if (!key) return { ok: false, reason: "no_key" };
+    if (!key) {
+      return {
+        ok: false,
+        reason: "LOVABLE_API_KEY is unavailable",
+        model: COMPOSITION_MODEL,
+        errorType: "configuration",
+        elapsedMs: Date.now() - startedAt,
+      };
+    }
 
     const instruction = buildInstruction(data.spirit);
+    const mimeType = /^data:([^;,]+);base64,/.exec(data.photo)?.[1] ?? "unknown";
+    const imageBytes = Math.floor(((data.photo.split(",")[1]?.length ?? 0) * 3) / 4);
+    console.info("[monomon-pipeline]", {
+      stage: "COMPOSITION_REQUEST_STARTED",
+      model: COMPOSITION_MODEL,
+      inputMimeType: mimeType,
+      inputImageBytes: imageBytes,
+    });
 
     const controller = new AbortController();
     const to = setTimeout(() => controller.abort(), COMPOSE_TIMEOUT_MS);
@@ -201,7 +236,7 @@ export const composeMonomonScene = createServerFn({ method: "POST" })
           },
           signal: controller.signal,
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image",
+            model: COMPOSITION_MODEL,
             modalities: ["image", "text"],
             messages: [
               {
@@ -222,17 +257,58 @@ export const composeMonomonScene = createServerFn({ method: "POST" })
       clearTimeout(to);
       const reason =
         e instanceof Error && e.name === "AbortError" ? "timeout" : "network";
-      console.error("[monomon-compose] fetch failed", reason, e);
-      return { ok: false, reason };
+      const elapsedMs = Date.now() - startedAt;
+      console.error("[monomon-pipeline]", {
+        failedStage: "COMPOSITION_REQUEST_STARTED",
+        model: COMPOSITION_MODEL,
+        errorMessage: e instanceof Error ? e.message : String(e),
+        errorType: reason,
+        elapsedMs,
+        inputMimeType: mimeType,
+        inputImageBytes: imageBytes,
+      });
+      return { ok: false, reason, model: COMPOSITION_MODEL, errorType: reason, elapsedMs };
     }
     clearTimeout(to);
 
+    console.info("[monomon-pipeline]", {
+      stage: "COMPOSITION_RESPONSE_RECEIVED",
+      status: res.status,
+      model: COMPOSITION_MODEL,
+      elapsedMs: Date.now() - startedAt,
+    });
+
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.error("[monomon-compose] gateway error", res.status, body);
-      if (res.status === 429) return { ok: false, reason: "rate_limit" };
-      if (res.status === 402) return { ok: false, reason: "credits" };
-      return { ok: false, reason: `http_${res.status}` };
+      const responseBody = safeErrorBody(body);
+      let errorType = `http_${res.status}`;
+      try {
+        const parsed = JSON.parse(body) as { type?: string };
+        if (parsed.type) errorType = parsed.type;
+      } catch {
+        // HTTP status remains the diagnostic type when the body is not JSON.
+      }
+      const elapsedMs = Date.now() - startedAt;
+      console.error("[monomon-pipeline]", {
+        failedStage: "COMPOSITION_RESPONSE_RECEIVED",
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        responseBody,
+        errorMessage: `Gateway returned HTTP ${res.status}`,
+        errorType,
+        elapsedMs,
+        inputMimeType: mimeType,
+        inputImageBytes: imageBytes,
+      });
+      return {
+        ok: false,
+        reason: errorType,
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        errorType,
+        elapsedMs,
+        responseBody,
+      };
     }
 
     let b64: string | undefined;
@@ -242,12 +318,60 @@ export const composeMonomonScene = createServerFn({ method: "POST" })
       };
       b64 = json.data?.[0]?.b64_json;
     } catch (e) {
-      console.error("[monomon-compose] parse failed", e);
-      return { ok: false, reason: "parse" };
+      const elapsedMs = Date.now() - startedAt;
+      console.error("[monomon-pipeline]", {
+        failedStage: "GENERATED_IMAGE_PARSED",
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        errorMessage: e instanceof Error ? e.message : String(e),
+        errorType: "response_parse",
+        elapsedMs,
+        inputMimeType: mimeType,
+        inputImageBytes: imageBytes,
+      });
+      return {
+        ok: false,
+        reason: "response_parse",
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        errorType: "response_parse",
+        elapsedMs,
+      };
     }
     if (!b64 || b64.length < 1000) {
-      return { ok: false, reason: "empty_image" };
+      const elapsedMs = Date.now() - startedAt;
+      console.error("[monomon-pipeline]", {
+        failedStage: "GENERATED_IMAGE_PARSED",
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        errorMessage: "Response did not contain data[0].b64_json",
+        errorType: "empty_image",
+        elapsedMs,
+        inputMimeType: mimeType,
+        inputImageBytes: imageBytes,
+      });
+      return {
+        ok: false,
+        reason: "empty_image",
+        status: res.status,
+        model: COMPOSITION_MODEL,
+        errorType: "empty_image",
+        elapsedMs,
+      };
     }
 
-    return { ok: true, dataUrl: `data:image/png;base64,${b64}` };
+    console.info("[monomon-pipeline]", {
+      stage: "GENERATED_IMAGE_PARSED",
+      status: res.status,
+      model: COMPOSITION_MODEL,
+      outputImageBytes: Math.floor((b64.length * 3) / 4),
+      elapsedMs: Date.now() - startedAt,
+    });
+    return {
+      ok: true,
+      dataUrl: `data:image/png;base64,${b64}`,
+      mimeType: "image/png",
+      model: COMPOSITION_MODEL,
+      elapsedMs: Date.now() - startedAt,
+    };
   });

@@ -9,6 +9,62 @@ export function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+export interface NormalizedImage {
+  dataUrl: string;
+  mimeType: "image/jpeg";
+  byteSize: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * iPhone の HEIC/HEIF を含む撮影画像をブラウザでデコードし、
+ * AI Gateway が確実に受け取れる縮小 JPEG data URL に正規化します。
+ * デコードできない形式は元データへ黙ってフォールバックせず、明示的に失敗させます。
+ */
+export async function normalizeCapturedImage(
+  file: File,
+  maxDimension = 1280,
+  quality = 0.86,
+): Promise<NormalizedImage> {
+  if (!file.type.startsWith("image/") && file.type !== "") {
+    throw new Error(`UNSUPPORTED_IMAGE_TYPE:${file.type}`);
+  }
+
+  const raw = await fileToDataUrl(file);
+  let img: HTMLImageElement;
+  try {
+    img = await loadImage(raw);
+  } catch {
+    throw new Error(`IMAGE_DECODE_FAILED:${file.type || "unknown"}`);
+  }
+
+  if (!img.naturalWidth || !img.naturalHeight) {
+    throw new Error("IMAGE_DIMENSIONS_INVALID");
+  }
+
+  const scale = Math.min(
+    1,
+    maxDimension / Math.max(img.naturalWidth, img.naturalHeight),
+  );
+  const width = Math.max(1, Math.round(img.naturalWidth * scale));
+  const height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  if (!ctx) throw new Error("IMAGE_CANVAS_UNAVAILABLE");
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const dataUrl = canvas.toDataURL("image/jpeg", quality);
+  if (!dataUrl.startsWith("data:image/jpeg;base64,")) {
+    throw new Error("IMAGE_JPEG_CONVERSION_FAILED");
+  }
+  const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  const byteSize = Math.floor((base64.length * 3) / 4);
+  return { dataUrl, mimeType: "image/jpeg", byteSize, width, height };
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();

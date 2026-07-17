@@ -11,7 +11,7 @@ interface DiscoveryRevealProps {
   photo: string;
   generate: () => Promise<Monomon>;
   /** 生成が成功した直後に一度だけ呼ばれる（演出を待たずに保存するため）。 */
-  onGenerated?: (m: Monomon) => void;
+  onGenerated?: (m: Monomon) => void | Promise<void>;
   onDone: (m: Monomon) => void;
   onError: (kind: DiscoveryErrorKind) => void;
   onCancel: () => void;
@@ -37,9 +37,6 @@ const STAGE = {
   NAME: 4,
 } as const;
 
-/** 合成モデルの応答を含めた最大待ち時間。超えたら「今日はうまく会えなかった」表示。 */
-const STUCK_MS = 35_000;
-
 export function DiscoveryReveal({
   photo,
   generate,
@@ -50,7 +47,6 @@ export function DiscoveryReveal({
 }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.HUSH);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
-  const [timedOut, setTimedOut] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   const skipResolve = useRef<(() => void) | null>(null);
@@ -67,7 +63,6 @@ export function DiscoveryReveal({
     });
 
   const advance = () => {
-    if (timedOut) return;
     skipResolve.current?.();
   };
 
@@ -75,10 +70,8 @@ export function DiscoveryReveal({
     let alive = true;
     setStage(STAGE.HUSH);
     setMonomon(null);
-    setTimedOut(false);
 
     const genPromise = generate();
-    let stuckTimer: ReturnType<typeof setTimeout> | undefined;
 
     (async () => {
       // 1. 写真がそっと沈む
@@ -87,26 +80,27 @@ export function DiscoveryReveal({
 
       // 2. 光が集まる（AIの完了を待つ）
       setStage(STAGE.GATHER);
-      stuckTimer = setTimeout(() => alive && setTimedOut(true), STUCK_MS);
-
       let found: Monomon;
       try {
         found = await genPromise;
       } catch (e) {
-        clearTimeout(stuckTimer);
         if (!alive) return;
         onError(e instanceof DiscoveryError ? e.kind : "unknown");
         return;
       }
-      clearTimeout(stuckTimer);
       if (!alive) return;
-      setTimedOut(false);
       setMonomon(found);
-      // 演出を待たずに即保存（体験の途中で戻られても記録は残す）
+      // 保存完了を確認してから成功演出へ進む
       try {
-        onGenerated?.(found);
+        await onGenerated?.(found);
       } catch (err) {
-        console.error("[monomon] onGenerated failed", err);
+        console.error("[monomon-pipeline]", {
+          failedStage: "MEMORY_SAVE_STARTED",
+          errorMessage: err instanceof Error ? err.message : String(err),
+          errorType: err instanceof Error ? err.name : typeof err,
+        });
+        if (alive) onError("storage");
+        return;
       }
 
       // 光がしばらく集まり続ける余韻
@@ -134,7 +128,6 @@ export function DiscoveryReveal({
 
     return () => {
       alive = false;
-      clearTimeout(stuckTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
@@ -154,35 +147,6 @@ export function DiscoveryReveal({
       }),
     [],
   );
-
-  // タイムアウト時：閉じ込めないやさしい退避
-  if (timedOut) {
-    return (
-      <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center"
-        style={{ backgroundColor: "#FAF8F3" }}
-      >
-        <p className="whitespace-pre-line text-[15px] font-medium leading-[2] text-foreground/60">
-          {"今日はうまく\n会えなかったみたい"}
-        </p>
-        <button
-          onClick={() => {
-            haptic(10);
-            setAttempt((a) => a + 1);
-          }}
-          className="mt-10 rounded-full bg-foreground px-8 py-4 text-[14px] font-semibold tracking-[0.12em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
-        >
-          もう一度
-        </button>
-        <button
-          onClick={onCancel}
-          className="mt-6 text-[13px] font-medium tracking-[0.06em] text-foreground/45 active:opacity-70"
-        >
-          そっと戻る
-        </button>
-      </div>
-    );
-  }
 
   const showMonomon = stage >= STAGE.PEEK && monomon;
   const objectLabel = monomon?.objectLabel?.trim();

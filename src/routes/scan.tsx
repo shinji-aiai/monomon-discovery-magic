@@ -8,8 +8,13 @@ import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { GentleError, type GentleErrorKind } from "@/components/GentleError";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
-import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
-import { generateMonomon, type Monomon } from "@/lib/monomon";
+import { normalizeCapturedImage } from "@/lib/image-utils";
+import {
+  DiscoveryError,
+  generateMonomon,
+  type Monomon,
+  type PipelineDiagnostic,
+} from "@/lib/monomon";
 import { addToDex, meetMonomon } from "@/lib/dex";
 import { saveCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
@@ -34,6 +39,7 @@ function Scan() {
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errKind, setErrKind] = useState<GentleErrorKind>("unknown");
+  const [diagnostic, setDiagnostic] = useState<PipelineDiagnostic | undefined>();
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
@@ -80,7 +86,14 @@ function Scan() {
   const retry = () => {
     tap();
     // ネットワーク／混雑 → 同じ写真でもう一度出会いにいく（label なしの通常ボタン経由）
-    if ((errKind === "network" || errKind === "busy") && photo) {
+    if (
+      (errKind === "network" ||
+        errKind === "busy" ||
+        errKind === "generation_timeout" ||
+        errKind === "generation_failed" ||
+        errKind === "storage") &&
+      photo
+    ) {
       setResult(null);
       setRegistered(false);
       setPhase("reveal");
@@ -98,23 +111,57 @@ function Scan() {
   // 保険：万一 onGenerated が呼ばれていなくても、result 到着時に必ず保存する
   useEffect(() => {
     if (result && !registered) {
-      addToDex(result);
-      meetMonomon(result.id);
-      setRegistered(true);
+      void (async () => {
+        console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_STARTED" });
+        await addToDex(result);
+        meetMonomon(result.id);
+        setRegistered(true);
+        console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_SUCCEEDED", monomonId: result.id });
+      })().catch((error) => {
+        console.error("[monomon-pipeline]", {
+          failedStage: "MEMORY_SAVE_STARTED",
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorType: error instanceof Error ? error.name : typeof error,
+        });
+      });
     }
   }, [result, registered]);
 
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
     tap();
+    const receivedAt = performance.now();
+    console.info("[monomon-pipeline]", {
+      stage: "PHOTO_RECEIVED",
+      inputMimeType: file.type || "unknown",
+      inputImageBytes: file.size,
+    });
     try {
-      const raw = await fileToDataUrl(file);
-      const small = await downscaleDataUrl(raw, 720);
-      setPhoto(small);
+      const normalized = await normalizeCapturedImage(file);
+      console.info("[monomon-pipeline]", {
+        stage: "PHOTO_CONVERTED",
+        inputMimeType: normalized.mimeType,
+        inputImageBytes: normalized.byteSize,
+        width: normalized.width,
+        height: normalized.height,
+        elapsedMs: Math.round(performance.now() - receivedAt),
+      });
+      setPhoto(normalized.dataUrl);
       setResult(null);
       setRegistered(false);
+      setDiagnostic(undefined);
       setPhase("confirm");
-    } catch {
+    } catch (error) {
+      const nextDiagnostic: PipelineDiagnostic = {
+        failedStage: "PHOTO_CONVERTED",
+        reason: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.name : typeof error,
+        elapsedMs: Math.round(performance.now() - receivedAt),
+        inputMimeType: file.type || "unknown",
+        inputImageBytes: file.size,
+      };
+      console.error("[monomon-pipeline]", nextDiagnostic);
+      setDiagnostic(nextDiagnostic);
       toast.error("もう一度えらんでみてね");
     }
   };
@@ -262,12 +309,13 @@ function Scan() {
         <DiscoveryReveal
           photo={photo}
           generate={() => generateMonomon(photo)}
-          onGenerated={(m) => {
-            // 演出を待たずに即保存。以降ユーザーがどこへ離脱しても記録は残る
+          onGenerated={async (m) => {
             if (!registered) {
-              addToDex(m);
+              console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_STARTED", monomonId: m.id });
+              await addToDex(m);
               meetMonomon(m.id);
               setRegistered(true);
+              console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_SUCCEEDED", monomonId: m.id });
             }
             setResult(m);
           }}
@@ -277,6 +325,7 @@ function Scan() {
           }}
           onError={(kind) => {
             setErrKind(kind);
+            // generateMonomon の診断は下のラッパーで設定される
             setPhase("error");
           }}
           onCancel={reset}
@@ -288,6 +337,14 @@ function Scan() {
           kind={errKind}
           cameraInputId="monomon-camera-input"
           onRetry={retry}
+          onChooseAnother={() => {
+            if (cameraRef.current) cameraRef.current.value = "";
+            setResult(null);
+            setPhoto(null);
+            setRegistered(false);
+            setDiagnostic(undefined);
+          }}
+          diagnostic={diagnostic}
         />
       )}
 

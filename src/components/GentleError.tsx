@@ -1,4 +1,4 @@
-import type { DiscoveryErrorKind } from "@/lib/monomon";
+import type { DiscoveryErrorKind, PipelineDiagnostic } from "@/lib/monomon";
 
 export type GentleErrorKind = "permission" | DiscoveryErrorKind;
 
@@ -12,6 +12,8 @@ interface GentleErrorProps {
    */
   cameraInputId?: string;
   onRetry: () => void;
+  onChooseAnother?: () => void;
+  diagnostic?: PipelineDiagnostic;
 }
 
 interface ErrorContent {
@@ -71,13 +73,37 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
     action: "もう一度撮る",
     reopenCamera: true,
   },
+  generation_timeout: {
+    title: "出会う準備に時間がかかったみたい",
+    lines: ["写真はそのまま残っているよ"],
+    action: "同じ写真でもう一度会う",
+    reopenCamera: false,
+  },
+  generation_failed: {
+    title: "出会う準備が止まってしまったみたい",
+    lines: ["写真はそのまま残っているよ"],
+    action: "同じ写真でもう一度会う",
+    reopenCamera: false,
+  },
+  storage: {
+    title: "思い出を残せなかったみたい",
+    lines: ["写真はそのまま残っているよ"],
+    action: "同じ写真でもう一度会う",
+    reopenCamera: false,
+  },
 };
 
 const BUTTON_CLASS =
   "mt-10 inline-block cursor-pointer rounded-full bg-foreground px-8 py-4 text-[14px] font-semibold tracking-[0.12em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]";
 
 /** 絵本のような静かな案内。アイコンや派手な色は使わない。 */
-export function GentleError({ kind, onRetry, cameraInputId }: GentleErrorProps) {
+export function GentleError({
+  kind,
+  onRetry,
+  onChooseAnother,
+  cameraInputId,
+  diagnostic,
+}: GentleErrorProps) {
   const { title, lines, action, reopenCamera } = CONTENT[kind];
 
   return (
@@ -102,6 +128,25 @@ export function GentleError({ kind, onRetry, cameraInputId }: GentleErrorProps) 
         <button onClick={onRetry} className={BUTTON_CLASS}>
           {action}
         </button>
+      )}
+
+      {!reopenCamera && onChooseAnother && cameraInputId && (
+        <label
+          htmlFor={cameraInputId}
+          className="mt-6 inline-block cursor-pointer text-[13px] font-medium tracking-[0.06em] text-foreground/50 active:opacity-70"
+          onClick={onChooseAnother}
+        >
+          別のモノを撮る
+        </label>
+      )}
+
+      {import.meta.env.DEV && diagnostic && (
+        <p className="mt-8 max-w-xs text-left font-mono text-[10px] leading-relaxed text-foreground/35">
+          生成に失敗しました<br />
+          段階：{diagnostic.failedStage}<br />
+          {diagnostic.status != null && <>状態：{diagnostic.status}<br /></>}
+          {diagnostic.reason && <>理由：{diagnostic.reason}</>}
+        </p>
       )}
 
       {kind === "permission" && (

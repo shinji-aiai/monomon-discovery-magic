@@ -26,7 +26,7 @@ export function useNewDex() {
   return newDexStore.useValue();
 }
 
-export function addToDex(monomon: Monomon) {
+export async function addToDex(monomon: Monomon): Promise<{ added: boolean; monomon: Monomon }> {
   let added = true;
   // 合成写真は IndexedDB に分離保管（localStorage を汚さない）
   const composedDataUrl = monomon.composedPhoto;
@@ -34,16 +34,18 @@ export function addToDex(monomon: Monomon) {
   const { composedPhoto: _drop, ...persistable } = monomon;
   void _drop;
 
+  const duplicate = dexStore.get().find(
+    (m) => m.id === persistable.id || (!!m.photo && m.photo === persistable.photo),
+  );
+  if (duplicate) return { added: false, monomon: duplicate };
+
+  // 合成画像の保存完了後にだけメタデータを公開し、Memories の空画像を防ぐ。
+  if (!composedDataUrl) throw new Error("COMPOSED_IMAGE_REQUIRED");
+  await saveComposedPhoto(monomon.id, dataUrlToBlob(composedDataUrl));
+
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
     // （同じ1枚をつづけて解析／連続タップ）。既存の記録を使い回して重複登録を防ぐ。
-    const duplicate = prev.find(
-      (m) => m.id === persistable.id || (!!m.photo && m.photo === persistable.photo),
-    );
-    if (duplicate) {
-      added = false;
-      return prev;
-    }
     // 同じ種族の先住モノモンがいれば「また会えた」と喜ぶ（なかよし度 +rediscover）
     const rediscovered = prev.some((m) => m.speciesId === persistable.speciesId);
     const next = rediscovered
@@ -60,11 +62,8 @@ export function addToDex(monomon: Monomon) {
     newDexStore.set((prev) =>
       prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
     );
-    // 合成写真があれば Blob として保存（一度きり・上書きしない）
-    if (composedDataUrl) {
-      void saveComposedPhoto(monomon.id, dataUrlToBlob(composedDataUrl));
-    }
   }
+  return { added, monomon };
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */

@@ -25,14 +25,12 @@ export async function saveComposedPhoto(
   monomonId: string,
   blob: Blob,
 ): Promise<void> {
-  if (!store) return;
-  try {
-    const existing = await get<Blob>(monomonId, store);
-    if (existing) return; // 一度生まれた姿は変えない
-    await set(monomonId, blob, store);
-  } catch (e) {
-    console.error("[monomon] 合成写真の保存に失敗", e);
-  }
+  if (!store) throw new Error("INDEXEDDB_UNAVAILABLE");
+  const existing = await get<Blob>(monomonId, store);
+  if (existing) return; // 一度生まれた姿は変えない
+  await set(monomonId, blob, store);
+  const saved = await get<Blob>(monomonId, store);
+  if (!saved || saved.size !== blob.size) throw new Error("COMPOSED_IMAGE_SAVE_VERIFICATION_FAILED");
 }
 
 /** 合成PNGを取り出す。無ければ null。 */
