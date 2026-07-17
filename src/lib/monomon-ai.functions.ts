@@ -338,6 +338,8 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       description,
       placement,
       anchor,
+      placementNote,
+
       poseHint,
       scale,
     };
