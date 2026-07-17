@@ -71,26 +71,28 @@ function Scan() {
     cameraRef.current?.click();
   };
 
+  /**
+   * GentleError の「もう一度撮る」からの復帰。
+   * iOS Safari のユーザージェスチャー要件を守るため、実際のカメラ起動は
+   * <label htmlFor="monomon-camera-input"> のネイティブ挙動に任せ、
+   * ここでは同期的に state をリセットするだけにする。
+   */
   const retry = () => {
     tap();
-    if (errKind === "permission") {
-      openCamera();
-      return;
-    }
-    // ネットワーク／混雑 → 同じ写真でもう一度出会いにいく
+    // ネットワーク／混雑 → 同じ写真でもう一度出会いにいく（label なしの通常ボタン経由）
     if ((errKind === "network" || errKind === "busy") && photo) {
       setResult(null);
       setRegistered(false);
       setPhase("reveal");
       return;
     }
-    // それ以外（写真が不鮮明・不明・タイムアウトなど）→ 状態をリセットして即カメラを開く
+    // それ以外は state をリセット。カメラ input は label が同ジェスチャーで開く。
+    // 次の change に備えて input.value もクリアしておく。
+    if (cameraRef.current) cameraRef.current.value = "";
     setResult(null);
     setPhoto(null);
     setRegistered(false);
     setPhase("choose");
-    // ユーザー操作の同一ジェスチャー内で input.click() を呼ぶ必要がある
-    openCamera();
   };
 
   // 保険：万一 onGenerated が呼ばれていなくても、result 到着時に必ず保存する
@@ -179,6 +181,7 @@ function Scan() {
 
       <input
         ref={cameraRef}
+        id="monomon-camera-input"
         type="file"
         accept="image/*"
         capture="environment"
@@ -280,7 +283,13 @@ function Scan() {
         />
       )}
 
-      {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
+      {phase === "error" && (
+        <GentleError
+          kind={errKind}
+          cameraInputId="monomon-camera-input"
+          onRetry={retry}
+        />
+      )}
 
       {/* ─── result ─── 出会えた余韻。写真が主役。モノモンは端から覗くだけ */}
       {phase === "result" && result && (
