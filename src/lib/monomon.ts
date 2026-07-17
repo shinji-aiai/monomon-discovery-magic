@@ -177,6 +177,37 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
   spec.mouth = result.mouth;
   spec.accessory = result.accessory;
 
+  // 合成パス：極小のモノモンを元写真に自然に溶け込ませる。
+  // 失敗しても発見体験は元写真だけで完結する（体験を絶対に壊さない）。
+  let composedPhoto: string | undefined;
+  try {
+    const composed = await composeMonomonScene({
+      data: {
+        photo,
+        spirit: {
+          object: result.object,
+          speciesName: species.name,
+          palette: {
+            body: spec.palette.c2,
+            accent: spec.palette.c3,
+          },
+          eyes: result.eyes,
+          mouth: result.mouth,
+          accessory: result.accessory,
+          scale: result.scale,
+          placement: result.placement as never,
+          anchor: result.anchor as never,
+          poseHint: result.poseHint as never,
+        },
+      },
+    });
+    if (composed.ok) composedPhoto = composed.dataUrl;
+    else console.warn("[monomon] 合成スキップ:", composed.reason);
+  } catch (e) {
+    // 合成失敗は致命ではない
+    console.warn("[monomon] 合成に失敗（元写真で継続）", e);
+  }
+
   return {
     ...spec,
     id: makeId(seed),
@@ -190,6 +221,8 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     photo,
     favorite: false,
     friendship: 0,
+    hasComposed: !!composedPhoto,
+    composedPhoto,
   };
 }
 
