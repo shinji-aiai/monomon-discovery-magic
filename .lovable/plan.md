@@ -1,182 +1,65 @@
+# 方針：v1.0の挙動に戻し、Design System v3.0の見た目だけを残す
 
-# モノモン自然合成 — 本番実装アーキテクチャ
+「作り直す」ではなく「巻き戻す」作業として行います。新しい視覚（アイボリー背景・余白・詩的コピー・柔らかいUI）はそのまま残し、それ以外の“動きを不安定にした変更”を最小の範囲で v1.0 の実装に戻します。
 
-## 目的
-撮影した実物写真の中に、極小のモノモンが「最初からそこに住んでいた」ように溶け込む1枚を生成する。ステッカー・オーバーレイ・浮遊マスコットは絶対に作らない。
+## 何を残す（そのまま）
 
-## 判断基準
-「初めて見た人が『この写真の中に本当にいた』と信じるか？」
+- `src/styles.css` のトークン・アニメーション・タイポグラフィ
+- `src/routes/index.tsx` のホーム見た目（ウェルカム／お気に入り表示）
+- `src/routes/zukan.tsx` の「思い出の日記」レイアウト
+- `src/components/DiscoveryReveal.tsx` の静かなリビール表現
+- `GentleError.tsx` の文言と質感
+- モノモンのアート（`monomon-art.ts`）と種族データ
 
----
+## 何を v1.0 の挙動に戻す（機能面のみ）
 
-## 全体アーキテクチャ
+1. **画像の保存方式**
+   - 現状：IndexedDB + localStorage 二重化（`photo-storage.ts` + `useComposedPhoto.ts`）。iOS 実機で不安定・空表示の原因になっていた。
+   - 戻し先：v1.0 と同じ「Monomon オブジェクトに `composedPhoto` を data URL のまま持たせて `dexStore`（localStorage 永続）に保存」する単純方式。`saveComposedPhoto` / `getComposedPhotoRef` / `useComposedPhoto` フックを撤去し、`<img src={m.composedPhoto} />` で直接描画。
+   - 効果：ナビ・リロード・再起動を跨いで確実に表示。「Memories に写真が出ない」問題の根治。
 
-```text
-[scan.tsx] 撮影 → 720px dataURL
-    │
-    ▼
-[DiscoveryReveal] 「光が集まる…」の演出中に並列で↓
-    │
-    ├── analyzeSpirit (既存)  ← 種族/名前/性格/hue/eyes/mouth/描画パラメタ
-    │        └─ AIビジョン (google/gemini-3.5-flash) 認識のみ
-    │
-    └── composeMonomonScene (新規) ← 元写真＋モノモンspecを渡し、
-             合成済み写真(image/png dataURL)を返す
-             └─ google/gemini-3-pro-image (image editing)
-                 ・入力: 元写真 + 「配置戦略」テキスト
-                 ・出力: 元画像とほぼ同一・微小な合成のみ許可
-    │
-    ▼
-[Monomon] .composedPhoto を新規フィールドで保持（元 .photo は不変）
-    │
-    ▼
-[dex に保存] IndexedDB Blob として合成PNGを別テーブルへ
-    │
-    ▼
-[結果画面 / 思い出] composedPhoto があれば表示、なければ photo にフォールバック
-```
+2. **保存フロー（`dex.ts`）**
+   - `verifyImageDecodes` の事前検証・多段ログ・`COMPOSED_IMAGE_REQUIRED` throw を撤去。
+   - v1.0 と同じく「与えられた Monomon をそのまま dexStore に unshift」する素直な `addToDex` に戻す。
+   - お気に入り／NEW／再会（friendship）ロジックは v1.0 と同じなので維持。
 
-キーポイント：**元写真は絶対に上書きしない**。合成結果は追加フィールド。失敗時は元写真だけで完結して壊れない。
+3. **スキャン画面（`scan.tsx`）**
+   - カメラ input を永続マウントする v1.0 の実装は維持（iOS ジェスチャー対策として v1.0 でも入っていた分）。
+   - 診断（`PipelineDiagnostic`）配線・`onGenerated` の非同期保存待ち・result 差し替えを外し、v1.0 の「生成完了→addToDex→リビール表示」の直線フローに戻す。
 
----
+4. **生成関数（`monomon-compose.functions.ts`）**
+   - モデル・呼び出し形は v1.0 と同じ `google/gemini-3-pro-image` のまま。
+   - 診断オブジェクトを返す拡張・120秒タイムアウト・詳細エラーハンドリングを、v1.0 の「成功時は base64、失敗時は throw」に戻す。
+   - 直前に強化した「共有DNAプロンプト」の文面自体は残す（見た目の質＝視覚レイヤー扱い）。
 
-## モデル選定
+5. **Memories（`zukan.tsx`）**
+   - 診断用の `onError` ログ配線と `useComposedPhoto` 呼び出しを撤去し、`<img src={m.composedPhoto ?? m.photo}>` の v1.0 描画に戻す。レイアウト／文面はそのまま。
 
-| 用途 | モデル | 理由 |
-|---|---|---|
-| 認識（既存） | `google/gemini-3.5-flash` | 高速・多言語・JSON安定 |
-| **合成（新規）** | **`google/gemini-3-pro-image`** | Lovable AI Gateway 上で編集品質最高。元画像の光/影/被写界深度の再現力が現行最強。ストリーミング partial_image 対応で発見演出と親和 |
+6. **ホーム（`index.tsx`）**
+   - `useComposedPhoto` を撤去して同じく直接描画。ウェルカム／お気に入りロジックはそのまま。
 
-`google/gemini-3.1-flash-image` は速度用フォールバックとして保持（コスト超過・レート時のみ）。GPT-Image-2 はキャラ合成でモデレーション拒否が多いため使わない。
+## 触らないもの
 
----
+- `capacitor.config.ts` / `ios/` / `codemagic.yaml`
+- Supabase / server function の構造
+- ルーティング（TanStack Router の構成）
+- 友情度・種族・分類・音・イントロ
 
-## 合成プロンプト設計（品質のかなめ）
+## 実装順（1ターンで）
 
-構造化した「配置戦略」を LLM に別途生成させ、合成モデルに手渡す2段構え。
+1. `src/lib/dex.ts` を v1.0 相当に戻す（photo-storage 依存を除去）
+2. `src/hooks/useComposedPhoto.ts` を削除
+3. `src/lib/photo-storage.ts` を削除
+4. `src/routes/scan.tsx` から診断配線を除去し onGenerated を同期化
+5. `src/components/DiscoveryReveal.tsx` から診断／二重生成防止 useRef を撤去（見た目は据え置き）
+6. `src/routes/zukan.tsx` と `src/routes/index.tsx` の画像参照を `m.composedPhoto` 直参照に戻す
+7. `src/lib/monomon-compose.functions.ts` の戻り値を v1.0 のシンプル形に戻す（プロンプト文言は維持）
+8. `src/components/GentleError.tsx` から `diagnostic` prop を除去（文言・スタイルは維持）
+9. tsgo で通ることを確認
 
-1. **配置戦略の決定**（認識と同じ呼び出しに追加フィールド）
-   - `placement`: `inside | peek_edge | behind | between | under_rim | in_fold | on_handle` 等（物体カテゴリから語彙選択）
-   - `scale`: 0.05〜0.20（元画像の短辺に対する割合、非常に小さく）
-   - `anchor`: `top-left | ... | center-right` 等、9マス位置
-   - `pose_hint`: `peeking | curled_sleeping | hanging | tucked` 等
+## リスクと確認
 
-2. **合成プロンプト（英語で厳密に指示）**
-   ```
-   Edit this photograph. Insert a tiny creature described as:
-   "{species silhouette}, size ~{scale*100}% of image short edge,
-    matte {palette.body} body with soft {palette.accent} accents,
-    {eyes} eyes, {mouth} mouth, {accessory}".
-   Placement: {placement} of the main object, anchored {anchor}.
-   Pose: {pose_hint}.
-   MUST match the photograph's existing:
-   - light source direction and color temperature
-   - shadow softness and direction (cast a matching contact shadow)
-   - depth of field and lens blur at that depth
-   - film grain and noise pattern
-   - perspective and vanishing lines
-   The creature must appear physically present in the scene,
-   as if photographed together. Do NOT alter anything else in the image.
-   Do NOT add stickers, outlines, glow, sparkles, or cartoon effects.
-   Output the entire original photograph unchanged except for the
-   inserted creature and its own contact shadow.
-   ```
+- 「localStorage 5MB 上限」を理由に IDB を導入していた経緯があるため、v1.0 の直保存でも大量に貯めるとやがて満杯になる可能性は残る（=元々の v1.0 の性質）。今回はそこは触らず、まず「確実に出る」ことを優先。将来的な圧縮／リサイズは別タスク扱い。
+- 生成失敗時の UX は v1.0 の「もう一度撮る」に戻る（詳細診断表示は開発モード含め廃止）。
 
-「モノモン自体のビジュアルアイデンティティ」は、種族×パレット×表情の言語化で担保。手続き型SVG(`monomon-art.ts`)はカード/図鑑アイコン用に残し、写真合成は「言葉で記述された同じ個体」を毎回描画する（生成AIは同一性を厳密には保てないので、後述の一貫性戦略で補う）。
-
----
-
-## 一貫性戦略（同じ個体を「同じ子」に保つ）
-
-生成AIは種族・色・表情が言語一致していれば「同じ子っぽさ」は出るが、ピクセル一致は不可能。これを設計で受け止める：
-
-- **合成写真は「発見の瞬間」の記録**として1回生成し、Blobで固定保存 → 以後は再生成しない
-- 図鑑・思い出の一覧は、常にその**固定された1枚**を表示 → 同じ子を見る限り常に同じ姿
-- 手続きSVGは「アイコン用の記号」として補助的に残す（カード裏面、共有画像など）
-
-これにより「毎回顔が違う」問題を設計で回避。
-
----
-
-## ストレージ戦略
-
-合成PNG(概ね 200–500KB)を localStorage に入れると即座に枯れる。専用ストア：
-
-- `src/lib/photo-storage.ts` (新規)
-  - IndexedDB（`idb-keyval` 使用、既存依存に無ければ追加）
-  - キー: `monomon.id`、値: `{ composed: Blob, original: Blob }`
-  - 読み出しは `URL.createObjectURL` でメモリ内 blob URL 化
-  - `removeFromDex` 時に対応 blob を削除
-  - `clearDex` で全削除
-- `Monomon` 型からは大きな dataURL を外し、`hasComposed: boolean` フラグのみ保持
-- 既存の `photo: string`（dataURL）は後方互換のため残し、新規発見からは IndexedDB 側に格納する移行方針
-
-これでストレージ枯渇と localStorage 5MB制限を根本回避。
-
----
-
-## キャッシュ / 冪等性
-
-- 発見1回 = 合成1回。**同じ個体で再生成しない**（コストと一貫性の両立）
-- スキャン中に前後で「同じ写真ハッシュ」なら既存 Monomon を返す（既に `dex.ts` で実装済）
-- 合成失敗時は Monomon を保存しつつ `hasComposed=false` で運用継続。詳細画面に「もう一度この子を写真に描き直す」導線（明示的再試行のみ）を将来追加できる余地
-
----
-
-## コスト管理
-
-- 合成は「思い出に残す」タイミングではなく「発見時1回のみ」
-- 失敗はカウントしない（ユーザーには元写真で成立）
-- 将来のレート制限UI（1日N回）に備え、`composeMonomonScene` に軽い呼び出しカウンタ（localStorage 日次）を仕込むフックだけ用意（デフォルト無効）
-
----
-
-## エラーハンドリング（絶対に体験を壊さない）
-
-| ケース | 挙動 |
-|---|---|
-| 合成モデルが429/402 | 元写真のみで発見成立、`hasComposed=false` |
-| モデレーション拒否 | 同上 |
-| タイムアウト(20s) | 同上 |
-| 出力サイズ異常 | 破棄、元写真で成立 |
-
-**発見演出は元写真だけでも完成する**設計。合成は「叶えば嬉しい」ボーナス層。
-
----
-
-## ファイル変更
-
-### 新規
-- `src/lib/monomon-compose.functions.ts` — `composeMonomonScene` サーバー関数
-- `src/lib/photo-storage.ts` — IndexedDB による合成写真ストア
-- `src/hooks/useComposedPhoto.ts` — Monomon から blob URL を購読
-
-### 変更
-- `src/lib/monomon-ai.functions.ts` — SpiritAnalysis に `placement/scale/anchor/pose_hint` を追加
-- `src/lib/monomon.ts` — `generateMonomon` から合成呼び出し、`Monomon` に `hasComposed` 追加
-- `src/lib/dex.ts` — 削除時に blob も破棄
-- `src/components/DiscoveryReveal.tsx` — 合成が返るまでもう少し待つ（既存の GATHER 段階を伸ばす）＋合成写真があればそちらを最終フレームに使用
-- `src/routes/scan.tsx` (result) — composedPhoto 優先表示
-- `src/routes/zukan.tsx` — 思い出ページで composedPhoto 優先表示、なければ元写真
-
-### 触らない
-- `monomon-art.ts` / SVG系（補助用途で残置）
-- Design System v3.0 の全画面レイアウト・トーン
-
----
-
-## 依存追加
-- `idb-keyval` (数KB、IndexedDB 薄ラッパ)
-
----
-
-## 完了判定チェックリスト
-1. ✅ 元写真は保存済みで、上書きされない
-2. ✅ 合成失敗しても発見体験が完結する
-3. ✅ 同じ個体を後から見ても顔が変わらない（Blob固定）
-4. ✅ 合成写真に「ステッカー枠・光・キラキラ」等のオーバーレイ効果が付いていない（プロンプトで明示除外）
-5. ✅ モノモンは元画像の光源方向・DoF・粒子と整合
-6. ✅ localStorage を汚さない（合成PNGはIndexedDB）
-7. ✅ 全画面が Design System v3.0 のトーンを維持
-
-問題なければこの通り実装します。修正指示があれば教えてください。
+進めてよろしければ実装します。
