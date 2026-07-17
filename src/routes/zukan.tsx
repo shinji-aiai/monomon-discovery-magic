@@ -193,6 +193,8 @@ function MemorySheet({
   }, []);
 
   const noun = live.objectLabel?.trim() || live.name;
+  const composed = useComposedPhoto(live.id, live.hasComposed);
+  const displaySrc = composed ?? live.photo;
 
   return (
     <div
