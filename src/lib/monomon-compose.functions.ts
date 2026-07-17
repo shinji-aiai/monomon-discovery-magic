@@ -79,6 +79,8 @@ const ComposeInput = z.object({
     placement: z.enum(PLACEMENT_VOCAB),
     anchor: z.enum(ANCHOR_VOCAB),
     poseHint: z.enum(POSE_HINT_VOCAB),
+    /** AIが決めた「この物との具体的な触れ合い方」（英語短文）。最優先で従う。 */
+    placementNote: z.string().optional().default(""),
   }),
 });
 
@@ -89,43 +91,92 @@ export type ComposeResult =
 /** モデル呼び出しの最大待ち時間（ミリ秒）。超えたら諦めて元写真で成立。 */
 const COMPOSE_TIMEOUT_MS = 28_000;
 
+/**
+ * 物の種類から「自然な住処」の英語ヒントを返す。AIの placementNote が空でも
+ * ステッカー配置に落ちないよう、確実に物と物理的に触れ合うガイドを与える。
+ */
+function fallbackHomeHint(object: string): string {
+  const o = object.toLowerCase();
+  const has = (...ks: string[]) => ks.some((k) => o.includes(k));
+  const jp = object;
+  const jhas = (...ks: string[]) => ks.some((k) => jp.includes(k));
+  if (has("mug", "cup") || jhas("マグ", "カップ", "コップ", "湯呑"))
+    return "peeking over the rim from inside the cup, tiny hands gripping the ceramic edge, most of the body hidden inside";
+  if (has("plate", "dish", "bowl") || jhas("皿", "ボウル", "器"))
+    return "if food remains, hiding behind or peeking from the food; if the plate is empty, curled up asleep on the inner rim of the plate, half tucked against the porcelain — never in a corner of the photo";
+  if (has("book") || jhas("本", "ノート"))
+    return "poking out from between two pages of the book, only eyes and the top of the head visible";
+  if (has("remote") || jhas("リモコン"))
+    return "tucked between the buttons of the remote, leaning against a button as if resting";
+  if (has("keyboard") || jhas("キーボード"))
+    return "peeking up from the gap between two keys, tiny hands on the keycap edges";
+  if (has("pot", "plant") || jhas("鉢", "植木", "観葉"))
+    return "peeking over the rim of the pot from the soil side, small hands on the pot edge";
+  if (has("bag", "backpack") || jhas("鞄", "バッグ", "リュック"))
+    return "peeking out from an open pocket or the top opening of the bag";
+  if (has("shoe", "sneaker") || jhas("靴", "スニーカー"))
+    return "peeking out from the opening of the shoe, resting on the inner edge";
+  if (has("blanket", "towel") || jhas("布", "毛布", "タオル", "布団"))
+    return "curled up asleep inside a soft fold of the fabric, only the top of the head visible";
+  if (has("pillow") || jhas("枕", "クッション"))
+    return "hiding beneath a corner of the pillow, only eyes peeking out";
+  if (has("tissue") || jhas("ティッシュ"))
+    return "peeking out from the tissue box opening, tiny hands on the plastic edge";
+  return "tucked into or peeking from a natural nook of the object itself, physically touching the object, with most of the body hidden — never floating and never in a corner of the photo";
+}
+
 function buildInstruction(
   spirit: z.infer<typeof ComposeInput>["spirit"],
 ): string {
   const pct = Math.round(spirit.scale * 100);
+  const home = spirit.placementNote?.trim() || fallbackHomeHint(spirit.object);
   return [
-    "Edit the attached photograph. Insert a single tiny living creature into the scene.",
+    `Edit the attached photograph of a ${spirit.object}. The photograph is the world — do not redraw it, do not restyle it, do not change composition, exposure, colors, or any other object. Reveal a single tiny living creature that has always lived inside this specific ${spirit.object}.`,
     "",
-    `Creature description:`,
-    `- Silhouette family: ${spirit.speciesName} — small round soft-bodied character with subtle nods to a ${spirit.object}.`,
-    `- Size: approximately ${pct}% of the image's short edge. Very small — a quiet discovery, never dominant.`,
-    `- Body: soft matte finish, main color ${spirit.palette.body}, gentle accent ${spirit.palette.accent}.`,
-    `- Face: ${spirit.eyes} eyes, ${spirit.mouth} mouth, expression calm and warm.`,
+    `THE OBJECT IS THE HERO. The ${spirit.object} must remain the visual main subject. The creature is a quiet secondary discovery a viewer notices only after seeing the object.`,
+    "",
+    `WHERE THE CREATURE LIVES (follow this exactly):`,
+    `- ${home}`,
+    `- The creature MUST be physically touching or contained inside the ${spirit.object}. The ${spirit.object} is its home.`,
+    `- Do NOT place the creature in a corner of the frame, on the background surface (table, floor, wall), or floating anywhere unrelated to the ${spirit.object}.`,
+    `- Anchor guidance: near the ${spirit.anchor} of the frame ONLY IF that is where the ${spirit.object} actually is; otherwise ignore the anchor and follow the object.`,
+    `- Visibility: usually reveal ONLY the eyes, tiny hands, top of the head, and a faint smile. Hide most of the body inside/behind the object. Mystery beats full visibility.`,
+    "",
+    `Creature appearance:`,
+    `- Size: approximately ${pct}% of the image's short edge — very small, a quiet discovery.`,
+    `- Family silhouette: ${spirit.speciesName}, a small round soft-bodied being that feels born from a ${spirit.object} — inheriting its material feeling, color and texture.`,
+    `- Body: soft matte finish, main color ${spirit.palette.body}, gentle accent ${spirit.palette.accent}, subtly tuned to sit inside this photograph's color temperature.`,
+    `- Face: ${spirit.eyes} eyes, ${spirit.mouth} mouth, calm and warm expression.`,
     `- Accessory: ${spirit.accessory === "none" ? "none" : spirit.accessory}.`,
-    `- Pose: ${spirit.poseHint}.`,
+    `- Pose: ${spirit.poseHint}, oriented so it clearly interacts with the ${spirit.object}.`,
     "",
-    `Placement in the scene:`,
-    `- Position it "${spirit.placement}" relative to the main ${spirit.object}, anchored toward the ${spirit.anchor} of the frame.`,
-    `- It must appear to genuinely occupy that spot in three-dimensional space (inside, behind, tucked into, or peeking from the real object — never floating in front of it).`,
+    "MANDATORY photo integration — the creature must match the photograph's:",
+    "- Light source direction and color temperature",
+    "- Shadow softness/direction, casting a matching soft contact shadow onto the surface it touches",
+    "- Depth of field and lens blur at the creature's depth plane (blur it if that plane is out of focus)",
+    "- Film grain, sensor noise, micro-contrast",
+    "- Perspective, vanishing lines, and scale relative to the object",
+    "- Material response: subtle reflections, occlusions, or contact where the creature meets the object",
     "",
-    "MANDATORY physical integration — the creature must match the photograph's:",
-    "- Existing light source direction and color temperature",
-    "- Shadow softness and direction (cast a matching soft contact shadow onto the surface it touches)",
-    "- Depth of field and lens blur at the creature's depth plane",
-    "- Film grain, sensor noise, and micro-contrast",
-    "- Perspective, vanishing lines, and scale relative to nearby objects",
-    "- Material response: subtle reflections or occlusions where the creature meets the object",
+    "STRICT prohibitions — the output is a failure if any of these are present:",
+    "- Sticker, icon, cartoon outline, cel-shading, glow, halo, sparkles, drop shadow, 2D pasted look",
+    "- A creature floating in front of the object with no contact",
+    "- A creature placed in the corner of the photograph or on the background, not touching the object",
+    "- The creature being the visual main subject or larger than the object",
+    "- Changing crop, framing, exposure, color grade, background, or any other object",
+    "- Text, logos, watermarks, borders, frames, vignettes",
     "",
-    "STRICT prohibitions — reject any of the following:",
-    "- Stickers, cartoon outlines, glowing halos, sparkles, cel-shading, drop shadows, or 2D pasted look",
-    "- A mascot floating in front of the object with no contact or shadow",
-    "- Any change to the rest of the image (crop, color grade, exposure, other objects, background)",
-    "- Text, logos, watermarks, borders, frames",
-    "- Adding or altering any object other than the single tiny creature and its own contact shadow",
+    "SELF-CHECK before returning the image, silently ask:",
+    `1. Does the creature look like it has always lived inside this ${spirit.object}?`,
+    `2. Does the ${spirit.object} remain the main subject?`,
+    "3. Is the creature physically contained by or touching the object (not in a corner, not floating)?",
+    "4. Would a first-time viewer believe this is one single real photograph?",
+    "If any answer is no, recompose before returning.",
     "",
-    "Output the ENTIRE original photograph unchanged, at the same aspect ratio and framing, with only the tiny creature (and its own soft contact shadow) newly present as if it had always lived there. The photograph must still look like a single real photograph.",
+    "Output: the ENTIRE original photograph unchanged, same aspect ratio and framing, with only the tiny creature (and its own soft contact shadow) newly present as if it has always lived inside the object. It must still look like one real photograph.",
   ].join("\n");
 }
+
 
 export const composeMonomonScene = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ComposeInput.parse(input))

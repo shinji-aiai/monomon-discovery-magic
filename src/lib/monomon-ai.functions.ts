@@ -60,6 +60,9 @@ export interface SpiritAnalysis {
   poseHint: string;
   /** 合成用：画面短辺に対するモノモンの大きさ（0.05–0.20） */
   scale: number;
+  /** 合成用：物との具体的な触れ合い方（英語・短文）。例: "peeking over the mug rim, tiny hands gripping the ceramic edge" */
+  placementNote: string;
+
 }
 
 const EYE_SET = new Set<string>(EYE_POOL);
@@ -103,12 +106,33 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 目・口・飾りは、その物・性格に合うものを選ぶ（迷ったら none / smile / round）。
 
 写真合成のための「宿る場所」判定：
-物の形と使い方をふまえ、モノモンがどこに宿るのが自然かを4つの語彙で返します。
+物の形と使い方をよく観察し、その物の中や上に「本当に住んでいる」ように配置します。
+写真の隅にステッカーのように置くのは絶対に禁止。必ず物そのものと物理的に触れ合わせること。
+
+物ごとの自然な住処（可能なら必ずこれに沿う）：
+- カップ/マグ：カップの内側から縁ごしに覗く / 縁を小さな手でつかむ
+- 皿/ボウル：残った食べ物と関わる / ソースの陰から覗く / 空の皿なら縁の内側で丸まって眠る
+- リモコン：ボタンの間 / 電池ぶたの縁
+- 本：ページの間 / 表紙の下 / しおりの位置
+- キーボード：キーとキーの間
+- 鉢植え：土の中 / 縁ごしに覗く
+- リュック：開いたポケットの中
+- 引き出し：引き出しの中
+- 靴：靴の中
+- ブランケット：布のひだの中で眠る
+- 枕：角の下から覗く
+- ティッシュ箱：取り出し口から覗く
+未知の物のときも、その物が「小さな命の家」になるような場所を選ぶ。写真の隅は選ばない。
+
 - placement（宿り方）：inside, peek_edge, behind, between, under_rim, in_fold, on_handle, on_lid, in_pocket, along_spine, in_shadow のいずれか1つ。
-  例) コップ→inside, 本→along_spine or between, リモコン→on_handle, 鉢植え→peek_edge, 布→in_fold
-- anchor（画面のどこに寄せるか）：top-left, top, top-right, left, center, right, bottom-left, bottom, bottom-right のいずれか。実際に主役のモノが写っているあたりを選ぶ。
+- anchor（画面のどこに寄せるか）：top-left, top, top-right, left, center, right, bottom-left, bottom, bottom-right のいずれか。**必ず主役のモノが実際に写っている位置**に合わせる。モノから離れた隅は禁止。
 - poseHint（ポーズ）：peeking, curled_sleeping, hanging, tucked, leaning, sitting, hiding のいずれか。
-- scale（大きさ）：画面短辺に対する割合。0.05〜0.20の小数。とても小さな存在にすること（0.10前後を推奨）。
+- scale（大きさ）：画面短辺に対する割合。0.05〜0.20の小数。とても小さな存在にすること（0.08前後を推奨）。
+- placementNote（英語・自由記述・短く）：その物と具体的にどう触れ合うか。例:
+    "peeking over the mug rim from inside the cup, tiny hands gripping the ceramic edge"
+    "curled up asleep on the inner rim of the empty plate, half tucked against the porcelain"
+    "poking out between the second and third page of the open book"
+  部位はふつう「目・小さな手・頭のてっぺん・かすかな笑み」だけを見せ、体の大部分は物に隠す。
 
 文章ルール（name・personality・description に必ず適用）：
 - 絵本のようにやさしく、モノモンがそっと語りかける文章にする。
@@ -133,8 +157,10 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "placement": "宿り方の語彙のいずれか",
   "anchor": "9マス位置の語彙のいずれか",
   "poseHint": "ポーズ語彙のいずれか",
-  "scale": 0.05〜0.20の小数
+  "scale": 0.05〜0.20の小数,
+  "placementNote": "その物と具体的にどう触れ合うかの英語短文"
 }`;
+
 
 function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -290,6 +316,12 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!Number.isFinite(scale)) scale = 0.10;
     scale = Math.max(0.05, Math.min(0.20, scale));
 
+    const placementNote =
+      (typeof parsed.placementNote === "string" ? parsed.placementNote : "")
+        .slice(0, 240)
+        .trim();
+
+
     return {
       object,
       category,
@@ -306,6 +338,8 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       description,
       placement,
       anchor,
+      placementNote,
+
       poseHint,
       scale,
     };
