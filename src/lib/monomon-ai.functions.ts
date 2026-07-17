@@ -52,6 +52,14 @@ export interface SpiritAnalysis {
   personality: string;
   /** 物の役割・特徴を反映した一言説明（短くてよい） */
   description: string;
+  /** 合成用：モノモンをどこに配置するか（例：inside, peek_edge, in_fold） */
+  placement: string;
+  /** 合成用：画面上のどこに寄せるか（9マス） */
+  anchor: string;
+  /** 合成用：ポーズ（例：peeking, curled_sleeping, hanging） */
+  poseHint: string;
+  /** 合成用：画面短辺に対するモノモンの大きさ（0.05–0.20） */
+  scale: number;
 }
 
 const EYE_SET = new Set<string>(EYE_POOL);
