@@ -123,10 +123,24 @@ function MemoryPage({
             src={displaySrc}
             alt=""
             className="h-full w-full object-cover transition-transform duration-700 group-active:scale-[0.985]"
+            onError={() => {
+              console.error("[monomon-pipeline]", {
+                stage: "MEMORY_IMAGE_RENDER_FAILED",
+                monomonId: monomon.id,
+                hasComposed: !!monomon.hasComposed,
+                usedComposed: !!composed,
+                urlPrefix: (displaySrc ?? "").slice(0, 24),
+                urlLength: (displaySrc ?? "").length,
+                startsWithBlob: (displaySrc ?? "").startsWith("blob:"),
+                startsWithDataImage: (displaySrc ?? "").startsWith("data:image/"),
+                startsWithHttp: (displaySrc ?? "").startsWith("http"),
+              });
+            }}
           />
         ) : (
           <div className="h-full w-full bg-white/60" />
         )}
+
 
         {/* 合成が無いときだけ、控えめなSVGモノモンを添える */}
         {!composed && (
