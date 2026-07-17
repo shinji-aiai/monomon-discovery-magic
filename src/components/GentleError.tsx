@@ -62,14 +62,14 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
     reopenCamera: true,
   },
   unclear: {
-    title: "今日はうまく会えなかったみたい",
-    lines: ["また別のモノを撮ってみよう"],
+    title: "モノの姿が見つけにくかったみたい",
+    lines: ["全体が写るように撮ってみよう"],
     action: "もう一度撮る",
     reopenCamera: true,
   },
   unknown: {
-    title: "今日はうまく会えなかったみたい",
-    lines: ["また別のモノを撮ってみよう"],
+    title: "出会う準備が止まってしまったみたい",
+    lines: ["もう一度試してみよう"],
     action: "もう一度撮る",
     reopenCamera: true,
   },

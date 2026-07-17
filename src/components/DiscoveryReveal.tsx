@@ -11,7 +11,7 @@ interface DiscoveryRevealProps {
   photo: string;
   generate: () => Promise<Monomon>;
   /** 生成が成功した直後に一度だけ呼ばれる（演出を待たずに保存するため）。 */
-  onGenerated?: (m: Monomon) => void | Promise<void>;
+  onGenerated?: (m: Monomon) => void | Monomon | Promise<void | Monomon>;
   onDone: (m: Monomon) => void;
   onError: (kind: DiscoveryErrorKind, error?: DiscoveryError) => void;
 }
@@ -47,6 +47,9 @@ export function DiscoveryReveal({
   const [monomon, setMonomon] = useState<Monomon | null>(null);
 
   const skipResolve = useRef<(() => void) | null>(null);
+  // React StrictMode は開発時に Effect を再実行するため、生成Promiseを再利用して
+  // 同じ写真の認識・合成が二重送信されないようにする。
+  const generationPromise = useRef<Promise<Monomon> | null>(null);
   const wait = (ms: number) =>
     new Promise<void>((resolve) => {
       const t = setTimeout(() => {
@@ -68,7 +71,8 @@ export function DiscoveryReveal({
     setStage(STAGE.HUSH);
     setMonomon(null);
 
-    const genPromise = generate();
+    const genPromise = generationPromise.current ?? generate();
+    generationPromise.current = genPromise;
 
     (async () => {
       // 1. 写真がそっと沈む
@@ -89,7 +93,11 @@ export function DiscoveryReveal({
       setMonomon(found);
       // 保存完了を確認してから成功演出へ進む
       try {
-        await onGenerated?.(found);
+        const persisted = await onGenerated?.(found);
+        if (persisted) {
+          found = persisted;
+          setMonomon(persisted);
+        }
       } catch (err) {
         console.error("[monomon-pipeline]", {
           failedStage: "MEMORY_SAVE_STARTED",
