@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { getComposedPhoto } from "@/lib/photo-storage";
+import { getComposedPhotoRef } from "@/lib/photo-storage";
 
 /**
- * Monomon に紐づく合成写真（IndexedDB Blob）を Object URL として購読します。
+ * Monomon に紐づく合成写真を、耐久ストレージから引いて <img> に渡せるURLとして返す。
  *
- * hasComposed が false のときは null を返し、呼び出し側は元写真にフォールバック。
- * アンマウント時に URL を revoke してメモリを解放します。
+ * 由来（IDB / localStorage）に応じた URL を返し、blob: URL の場合はアンマウント時に
+ * revoke してメモリを解放する。data: URL の場合は revoke しない。
  */
 export function useComposedPhoto(
   monomonId: string,
@@ -15,7 +15,7 @@ export function useComposedPhoto(
 
   useEffect(() => {
     let alive = true;
-    let created: string | null = null;
+    let revoke: (() => void) | null = null;
 
     if (!hasComposed) {
       setUrl(null);
@@ -23,19 +23,22 @@ export function useComposedPhoto(
     }
 
     (async () => {
-      const blob = await getComposedPhoto(monomonId);
-      if (!alive) return;
-      if (!blob) {
+      const ref = await getComposedPhotoRef(monomonId);
+      if (!alive) {
+        ref?.revoke?.();
+        return;
+      }
+      if (!ref) {
         setUrl(null);
         return;
       }
-      created = URL.createObjectURL(blob);
-      setUrl(created);
+      revoke = ref.revoke ?? null;
+      setUrl(ref.url);
     })();
 
     return () => {
       alive = false;
-      if (created) URL.revokeObjectURL(created);
+      if (revoke) revoke();
     };
   }, [monomonId, hasComposed]);
 
