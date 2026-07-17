@@ -102,6 +102,14 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 飾り(accessory)は次から1つ: none, leaf, bow, star, antenna, flower, crown, halo, hat
 目・口・飾りは、その物・性格に合うものを選ぶ（迷ったら none / smile / round）。
 
+写真合成のための「宿る場所」判定：
+物の形と使い方をふまえ、モノモンがどこに宿るのが自然かを4つの語彙で返します。
+- placement（宿り方）：inside, peek_edge, behind, between, under_rim, in_fold, on_handle, on_lid, in_pocket, along_spine, in_shadow のいずれか1つ。
+  例) コップ→inside, 本→along_spine or between, リモコン→on_handle, 鉢植え→peek_edge, 布→in_fold
+- anchor（画面のどこに寄せるか）：top-left, top, top-right, left, center, right, bottom-left, bottom, bottom-right のいずれか。実際に主役のモノが写っているあたりを選ぶ。
+- poseHint（ポーズ）：peeking, curled_sleeping, hanging, tucked, leaning, sitting, hiding のいずれか。
+- scale（大きさ）：画面短辺に対する割合。0.05〜0.20の小数。とても小さな存在にすること（0.10前後を推奨）。
+
 文章ルール（name・personality・description に必ず適用）：
 - 絵本のようにやさしく、モノモンがそっと語りかける文章にする。
 - 読点（、）と句点（。）は使わない。
@@ -121,7 +129,11 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
-  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）"
+  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）",
+  "placement": "宿り方の語彙のいずれか",
+  "anchor": "9マス位置の語彙のいずれか",
+  "poseHint": "ポーズ語彙のいずれか",
+  "scale": 0.05〜0.20の小数
 }`;
 
 function extractJson(text: string): unknown {
