@@ -102,7 +102,32 @@ export type DiscoveryErrorKind =
   | "too_dark"
   | "blurry"
   | "unclear"
+  | "generation_timeout"
+  | "generation_failed"
+  | "storage"
   | "unknown";
+
+export type PipelineStage =
+  | "PHOTO_RECEIVED"
+  | "PHOTO_CONVERTED"
+  | "RECOGNITION_STARTED"
+  | "RECOGNITION_SUCCEEDED"
+  | "COMPOSITION_REQUEST_STARTED"
+  | "COMPOSITION_RESPONSE_RECEIVED"
+  | "GENERATED_IMAGE_PARSED"
+  | "MEMORY_SAVE_STARTED"
+  | "MEMORY_SAVE_SUCCEEDED";
+
+export interface PipelineDiagnostic {
+  failedStage: PipelineStage;
+  status?: number;
+  model?: string;
+  reason?: string;
+  errorType?: string;
+  elapsedMs?: number;
+  inputMimeType?: string;
+  inputImageBytes?: number;
+}
 
 /** 認識に十分な自信があるとみなす下限（これ未満は撮り直しを促す）。 */
 const MIN_CONFIDENCE = 0.35;
@@ -110,10 +135,12 @@ const MIN_CONFIDENCE = 0.35;
 /** モノモンとの出会いに失敗したことを表す（怖い画面ではなくやさしく案内するため）。 */
 export class DiscoveryError extends Error {
   kind: DiscoveryErrorKind;
-  constructor(kind: DiscoveryErrorKind) {
-    super(kind);
+  diagnostic?: PipelineDiagnostic;
+  constructor(kind: DiscoveryErrorKind, message: string = kind, diagnostic?: PipelineDiagnostic) {
+    super(message);
     this.name = "DiscoveryError";
     this.kind = kind;
+    this.diagnostic = diagnostic;
   }
 }
 
@@ -128,6 +155,9 @@ export class DiscoveryError extends Error {
  * うまく出会えなかったときは DiscoveryError を投げ、UI 側でやさしく案内します。
  */
 export async function generateMonomon(photo: string): Promise<Monomon> {
+  const startedAt = performance.now();
+  const inputMimeType = /^data:([^;,]+);base64,/.exec(photo)?.[1] ?? "unknown";
+  const inputImageBytes = Math.floor(((photo.split(",")[1]?.length ?? 0) * 3) / 4);
   // 写真の指紋＋撮影の瞬間で、姿の細部（模様・ポーズ等）に多様性を持たせる seed
   const base = hashString(photo.slice(0, 2048));
   const moment = Math.floor(Date.now() / 1000);
@@ -135,10 +165,23 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
 
   let result: Awaited<ReturnType<typeof analyzeSpirit>>;
   try {
+    console.info("[monomon-pipeline]", {
+      stage: "RECOGNITION_STARTED",
+      inputMimeType,
+      inputImageBytes,
+    });
     result = await analyzeSpirit({ data: { photo } });
   } catch (e) {
-    console.error("analyzeSpirit failed", e);
-    throw new DiscoveryError("network");
+    const diagnostic: PipelineDiagnostic = {
+      failedStage: "RECOGNITION_STARTED",
+      reason: e instanceof Error ? e.message : String(e),
+      errorType: e instanceof Error ? e.name : typeof e,
+      elapsedMs: Math.round(performance.now() - startedAt),
+      inputMimeType,
+      inputImageBytes,
+    };
+    console.error("[monomon-pipeline]", diagnostic);
+    throw new DiscoveryError("network", "Object recognition request failed", diagnostic);
   }
 
   if ("error" in result) {
@@ -150,6 +193,12 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     }
     throw new DiscoveryError("unknown");
   }
+
+  console.info("[monomon-pipeline]", {
+    stage: "RECOGNITION_SUCCEEDED",
+    elapsedMs: Math.round(performance.now() - startedAt),
+    object: result.object,
+  });
 
   // 写真がうまく見えないとき：想像で決めず、やさしく撮り直しを促す
   switch (result.quality) {
@@ -177,10 +226,14 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
   spec.mouth = result.mouth;
   spec.accessory = result.accessory;
 
-  // 合成パス：極小のモノモンを元写真に自然に溶け込ませる。
-  // 失敗しても発見体験は元写真だけで完結する（体験を絶対に壊さない）。
-  let composedPhoto: string | undefined;
+  // 合成パス：有効な合成写真が返るまで出会いを成功扱いしない。
+  let composedPhoto: string;
   try {
+    console.info("[monomon-pipeline]", {
+      stage: "COMPOSITION_REQUEST_STARTED",
+      inputMimeType,
+      inputImageBytes,
+    });
     const composed = await composeMonomonScene({
       data: {
         photo,
@@ -203,11 +256,53 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
         },
       },
     });
-    if (composed.ok) composedPhoto = composed.dataUrl;
-    else console.warn("[monomon] 合成スキップ:", composed.reason);
+    if (!composed.ok) {
+      const diagnostic: PipelineDiagnostic = {
+        failedStage:
+          composed.reason === "empty_image" || composed.reason === "response_parse"
+            ? "GENERATED_IMAGE_PARSED"
+            : "COMPOSITION_RESPONSE_RECEIVED",
+        status: composed.status,
+        model: composed.model,
+        reason: composed.reason,
+        errorType: composed.errorType,
+        elapsedMs: composed.elapsedMs,
+        inputMimeType,
+        inputImageBytes,
+      };
+      console.error("[monomon-pipeline]", diagnostic);
+      throw new DiscoveryError(
+        composed.reason === "timeout" ? "generation_timeout" : "generation_failed",
+        composed.reason,
+        diagnostic,
+      );
+    }
+    composedPhoto = composed.dataUrl;
+    if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(composedPhoto)) {
+      const diagnostic: PipelineDiagnostic = {
+        failedStage: "GENERATED_IMAGE_PARSED",
+        model: composed.model,
+        reason: "Generated image source is not a supported data URL",
+        errorType: "invalid_image_source",
+        elapsedMs: composed.elapsedMs,
+        inputMimeType,
+        inputImageBytes,
+      };
+      console.error("[monomon-pipeline]", diagnostic);
+      throw new DiscoveryError("generation_failed", diagnostic.reason, diagnostic);
+    }
   } catch (e) {
-    // 合成失敗は致命ではない
-    console.warn("[monomon] 合成に失敗（元写真で継続）", e);
+    if (e instanceof DiscoveryError) throw e;
+    const diagnostic: PipelineDiagnostic = {
+      failedStage: "COMPOSITION_REQUEST_STARTED",
+      reason: e instanceof Error ? e.message : String(e),
+      errorType: e instanceof Error ? e.name : typeof e,
+      elapsedMs: Math.round(performance.now() - startedAt),
+      inputMimeType,
+      inputImageBytes,
+    };
+    console.error("[monomon-pipeline]", diagnostic);
+    throw new DiscoveryError("generation_failed", "Composition request failed", diagnostic);
   }
 
   return {
@@ -223,7 +318,7 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     photo,
     favorite: false,
     friendship: 0,
-    hasComposed: !!composedPhoto,
+    hasComposed: true,
     composedPhoto,
   };
 }
