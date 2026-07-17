@@ -60,6 +60,9 @@ export interface SpiritAnalysis {
   poseHint: string;
   /** 合成用：画面短辺に対するモノモンの大きさ（0.05–0.20） */
   scale: number;
+  /** 合成用：物との具体的な触れ合い方（英語・短文）。例: "peeking over the mug rim, tiny hands gripping the ceramic edge" */
+  placementNote: string;
+
 }
 
 const EYE_SET = new Set<string>(EYE_POOL);
