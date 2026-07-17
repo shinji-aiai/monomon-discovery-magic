@@ -15,7 +15,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "モノモンは身近なモノを撮影すると小さな精霊「モノモン」と出会えるコレクションゲーム　お問い合わせ・プライバシーポリシー・利用規約はこちら",
+          "身の回りのモノを そっと撮ると そのモノに宿る小さな精霊と出会えます　お問い合わせ・プライバシーポリシー・利用規約はこちら",
       },
       { property: "og:title", content: "モノモン公式サイト" },
       {
