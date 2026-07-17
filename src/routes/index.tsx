@@ -7,7 +7,6 @@ import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex } from "@/lib/dex";
 import { trackFindClick } from "@/lib/analytics";
-import { SPECIES } from "@/lib/species";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
 import type { Monomon } from "@/lib/monomon";
 
@@ -18,7 +17,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "身の回りのモノを撮るとそのモノに宿る小さな精霊が見つかる　さあ次は何を撮ってみよう",
+          "身の回りのモノを撮るとそのモノに宿る小さな精霊が見つかる",
       },
       { property: "og:title", content: "モノモン｜モノに宿る小さな精霊たち" },
       {
@@ -38,26 +37,22 @@ function greeting(): string {
   return "こんばんは";
 }
 
-/** その日のモノ（相棒）を主役にした一文。句点なしのやわらかい語り。 */
-const AMBIENT_MESSAGES = [
-  "今日は窓辺が\nすこし嬉しそうです",
-  "今日は本棚のあたりが\n落ち着いています",
-  "今日は机の上が\nあたたかい気配です",
-  "今日は植物のそばが\nすこし賑やかです",
-  "今日はカップから\n優しい気配がします",
+const AMBIENT_LINES = [
+  "きょうも\nすてきな出会いが\nまっています",
+  "身の回りに\nそっと目を向けてみて",
+  "小さな気配が\nあなたを待っています",
 ];
 
-function messageForCompanion(m: Monomon | undefined): string {
-  if (!m) {
+function lineFor(companion: Monomon | undefined): string {
+  if (!companion) {
     const day = Math.floor(Date.now() / 86_400_000);
-    return AMBIENT_MESSAGES[day % AMBIENT_MESSAGES.length];
+    return AMBIENT_LINES[day % AMBIENT_LINES.length];
   }
-  const noun = m.objectLabel?.trim() || FAMILY_STYLES[m.family].label;
+  const noun = companion.objectLabel?.trim() || FAMILY_STYLES[companion.family].label;
   const templates = [
-    `今日は${noun}から\n優しい気配がします`,
     `今日は${noun}が\nすこし嬉しそうです`,
-    `今日は${noun}のそばが\n落ち着くみたいです`,
-    `今日は${noun}が\n静かに息をしています`,
+    `今日は${noun}のそばが\nあたたかい気配です`,
+    `${noun}が\n静かに息をしています`,
   ];
   const day = Math.floor(Date.now() / 86_400_000);
   return templates[day % templates.length];
@@ -71,112 +66,74 @@ function Home() {
     () => dex.find((m) => m.favorite) ?? dex[0],
     [dex],
   );
-  // 昨日の出会い＝直近の1件（厳密な昨日ではなく「一番最近の思い出」）
   const latest = useMemo(() => dex[0], [dex]);
 
-  const [heroSeed, setHeroSeed] = useState(0);
-  const [heroSpecies, setHeroSpecies] = useState<string | null>(null);
   const [greet, setGreet] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [line, setLine] = useState<string | null>(null);
 
   useEffect(() => {
-    setHeroSeed(Math.floor(Math.random() * 1_000_000));
-    setHeroSpecies(SPECIES[Math.floor(Math.random() * SPECIES.length)].id);
     setGreet(greeting());
-    setMessage(messageForCompanion(companion));
+    setLine(lineFor(companion));
   }, [companion]);
 
   return (
     <div
-      className="relative flex min-h-[100svh] flex-col px-8 pb-32 pt-[max(1.75rem,env(safe-area-inset-top))]"
+      className="relative flex min-h-[100svh] flex-col px-7 pb-32 pt-[max(1.75rem,env(safe-area-inset-top))]"
       style={{ backgroundColor: "#FAF8F3" }}
     >
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
 
-      {/* Header — 時刻に応じた静かな挨拶 */}
+      {/* 挨拶：時刻に応じた静かな一言 */}
       <header className="pt-2">
-        <p className="text-[13px] font-medium tracking-[0.02em] text-foreground/55">
+        <p className="text-[13px] font-medium tracking-[0.02em] text-foreground/50">
           {greet ?? "\u00A0"}
         </p>
       </header>
 
-      {/* Main — モノは主役ではない。相棒はそっと佇む */}
-      <main className="flex flex-1 flex-col items-center justify-center">
-        <div className="relative">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-6 rounded-full"
-            style={{
-              background:
-                "radial-gradient(closest-side, rgba(210,180,130,0.14), rgba(210,180,130,0) 70%)",
-            }}
-          />
-          {/* 呼吸 → 見回し → 姿。ふわっと生きている感じを重ねる */}
-          <div className="animate-idle-breathe">
-            <div className="animate-idle-gaze">
-              <div className="h-64 w-64 sm:h-72 sm:w-72 flex items-center justify-center">
-                {companion ? (
-                  <MonomonArt monomon={companion} />
-                ) : (
-                  <img
-                    src={homeCompanion}
-                    alt=""
-                    width={1024}
-                    height={1024}
-                    className="h-full w-full object-contain drop-shadow-[0_18px_28px_rgba(90,65,35,0.18)]"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* 主役：実物のモノ。モノモンは端からそっと覗く */}
+      <main className="flex flex-1 flex-col items-center justify-center pt-4">
+        <HeroCard companion={companion} />
 
-        {/* 実物（モノ）を主語にした一文 */}
-        <p className="mt-8 min-h-[3rem] max-w-[18rem] whitespace-pre-line text-center text-[15px] font-medium leading-[1.9] text-foreground/70">
-          {message ?? "\u00A0"}
+        {/* 詩：短く、余韻を残す */}
+        <p className="mt-9 min-h-[3.5rem] max-w-[19rem] whitespace-pre-line text-center text-[15px] font-medium leading-[2] tracking-[0.02em] text-foreground/70">
+          {line ?? "\u00A0"}
         </p>
       </main>
 
-      {/* Primary action */}
-      <div className="pb-4">
+      {/* 静かな CTA */}
+      <div className="pb-4 pt-2">
         <Link
           to="/scan"
           onClick={() => trackFindClick()}
-          className="flex w-full items-center justify-center rounded-full bg-foreground py-[18px] text-[16px] font-bold tracking-[0.08em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] transition-transform duration-200 active:scale-[0.985]"
+          className="flex w-full items-center justify-center rounded-full bg-[#3d2f24] py-[18px] text-[15px] font-semibold tracking-[0.14em] text-[#FAF8F3] shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] transition-transform duration-500 active:scale-[0.985]"
         >
           探してみる
         </Link>
       </div>
 
-      {/* 昨日の出会い — 一枚だけ、静かに */}
+      {/* 昨日の出会い：小さな余韻。実物写真だけ */}
       {latest && (
         <Link
           to="/zukan"
-          className="mx-auto flex items-center gap-3 rounded-2xl px-2 py-2 transition-opacity active:opacity-70"
+          className="mx-auto mt-1 flex items-center gap-3 rounded-2xl px-2 py-2 transition-opacity active:opacity-70"
         >
           <div
-            className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-white/60"
-            style={{
-              boxShadow: "0 4px 12px -6px rgba(60,45,25,0.2)",
-            }}
+            className="h-11 w-11 flex-shrink-0 overflow-hidden rounded-full bg-white/60"
+            style={{ boxShadow: "0 4px 14px -6px rgba(60,45,25,0.28)" }}
           >
             {latest.photo ? (
-              <img
-                src={latest.photo}
-                alt=""
-                className="h-full w-full object-cover"
-              />
+              <img src={latest.photo} alt="" className="h-full w-full object-cover" />
             ) : (
               <MonomonArt monomon={latest} />
             )}
           </div>
           <div className="text-left">
-            <p className="text-[11px] font-medium tracking-[0.08em] text-foreground/45">
-              昨日の出会い
+            <p className="text-[10.5px] font-medium tracking-[0.12em] text-foreground/40">
+              きのうの出会い
             </p>
-            <p className="text-[13px] font-medium text-foreground/70">
+            <p className="mt-0.5 text-[13px] font-medium text-foreground/70">
               {latest.objectLabel || FAMILY_STYLES[latest.family].label}
             </p>
           </div>
@@ -184,6 +141,86 @@ function Home() {
       )}
 
       <BottomNav />
+    </div>
+  );
+}
+
+/**
+ * ヒーロー：実物のモノを大きく、モノモンは端から静かに覗くだけ。
+ * - 相棒がいる → その子の実物写真を大きく + 小さな SVG が右下から覗く
+ * - まだいない → 手描きイラスト（マグに宿る精霊）
+ * 決して中央にキャラを鎮座させない（マスコット化しない）。
+ */
+function HeroCard({ companion }: { companion: Monomon | undefined }) {
+  if (!companion) {
+    return (
+      <div className="relative w-[16rem] sm:w-[17.5rem]">
+        {/* やわらかい光の輪 */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -inset-4 rounded-[40px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(210,180,130,0.20), rgba(210,180,130,0) 72%)",
+          }}
+        />
+        <div className="animate-idle-breathe">
+          <img
+            src={homeCompanion}
+            alt=""
+            width={1024}
+            height={1024}
+            className="relative h-auto w-full object-contain drop-shadow-[0_20px_36px_rgba(90,65,35,0.20)]"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 相棒あり：実物写真が主役。モノモンは右下からそっと覗く小さな存在
+  return (
+    <div className="relative">
+      {/* 光の輪 */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -inset-6 rounded-[40px]"
+        style={{
+          background:
+            "radial-gradient(closest-side, rgba(210,180,130,0.20), rgba(210,180,130,0) 72%)",
+        }}
+      />
+      <div className="animate-idle-breathe">
+        <div
+          className="relative h-64 w-64 overflow-hidden rounded-[32px] sm:h-72 sm:w-72"
+          style={{ boxShadow: "0 24px 44px -20px rgba(60,45,25,0.34)" }}
+        >
+          {companion.photo ? (
+            <img
+              src={companion.photo}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-white/60" />
+          )}
+          {/* ふわっと重なる光 */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,240,210,0.10) 0%, rgba(255,240,210,0) 40%, rgba(90,65,35,0.10) 100%)",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* モノモンは端から覗く（マスコット化しない） */}
+      <div className="pointer-events-none absolute -bottom-3 -right-2 h-24 w-24 sm:h-28 sm:w-28">
+        <div className="animate-idle-gaze h-full w-full drop-shadow-[0_10px_18px_rgba(60,45,25,0.30)]">
+          <MonomonArt monomon={companion} />
+        </div>
+      </div>
     </div>
   );
 }

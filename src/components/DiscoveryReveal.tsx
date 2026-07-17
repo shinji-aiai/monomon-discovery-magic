@@ -1,62 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, Moon, RefreshCw } from "lucide-react";
 import { MonomonArt } from "./MonomonArt";
-import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/monomon";
-import { playSound, haptic } from "@/lib/sound";
-import { greetingFor } from "@/lib/greetings";
-import { discoveryPresentation } from "@/lib/discovery";
+import {
+  DiscoveryError,
+  type DiscoveryErrorKind,
+  type Monomon,
+} from "@/lib/monomon";
+import { haptic } from "@/lib/sound";
 
 interface DiscoveryRevealProps {
   photo: string;
-  /** モノモン生成（解析と並行して実行） */
   generate: () => Promise<Monomon>;
   onDone: (m: Monomon) => void;
-  /** うまく出会えなかったとき（通信・混雑・見つからない） */
   onError: (kind: DiscoveryErrorKind) => void;
-  /** 演出をやめて前の画面へそっと戻る（長時間の待ちからの退避） */
   onCancel: () => void;
 }
 
 /**
- * 「モノモンとの出会い」の演出（7段階）。
- *  SCAN  : そっと見つめる導入（写真）
- *  ① GATHER     : 光が集まる
- *  ② SILHOUETTE : シルエットが現れる
- *  ③ PAUSE      : 0.5〜1秒、静かに間を置く
- *  ④ EYES       : 目だけ先に光る
- *  ⑤ APPEAR     : 姿がゆっくり現れる
- *  ⑥ NAME       : 名前が表示される
- *  ⑦ QUOTE      : その子が一言話す
+ * 出会いの演出。
  *
- * 派手にせず、やさしく・少し不思議で・思わず微笑む“出会い”を目指す。
- * AI認識が長引いても閉じ込めないよう、一定時間でやさしい退避画面を出す。
+ * v3.0：技術語・キラキラ演出・紙吹雪・銅鑼のような音は撤去。
+ * 呼吸するようなゆっくりした一連のシーケンスで、最後に「出会えた。」だけを残す。
+ *
+ *  1. HUSH       — 写真がそっと沈む
+ *  2. GATHER     — 柔らかな光の粒がゆっくり集まる
+ *  3. PEEK       — モノモンが端から静かに覗く（実物写真の中に）
+ *  4. GREETING   — 「出会えた。」の一文
+ *  5. NAME       — モノとその子の名前が控えめに現れる
  */
 const STAGE = {
-  SCAN: 0,
+  HUSH: 0,
   GATHER: 1,
-  SILHOUETTE: 2,
-  PAUSE: 3,
-  EYES: 4,
-  APPEAR: 5,
-  NAME: 6,
-  QUOTE: 7,
+  PEEK: 2,
+  GREETING: 3,
+  NAME: 4,
 } as const;
 
-/** これ以上待つと無言になってしまう、やさしい退避のめやす。 */
-const STUCK_MS = 8000;
-
-/** 探している間に数秒ごとにランダムで切り替わる、そっと寄り添うメッセージ。 */
-const SEARCH_MSGS = [
-  "モノモンを探してるよ…",
-  "小さな精霊を探しています…",
-  "どこかにいるみたい…",
-  "どこにいるかな…",
-  "あと少し…",
-];
-
-/** SEARCH_MSGS からランダムに1つ選ぶ index。 */
-const randomMsgIdx = () => Math.floor(Math.random() * SEARCH_MSGS.length);
-
+const STUCK_MS = 10_000;
 
 export function DiscoveryReveal({
   photo,
@@ -65,135 +44,79 @@ export function DiscoveryReveal({
   onError,
   onCancel,
 }: DiscoveryRevealProps) {
-  const [stage, setStage] = useState<number>(STAGE.SCAN);
+  const [stage, setStage] = useState<number>(STAGE.HUSH);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
-  /** AI認識が長引いているか（無反応に見せないための優しいメッセージ） */
-  const [searching, setSearching] = useState(false);
-  /** 探している間のメッセージを数秒ごとに切り替えるための index */
-  const [searchIdx, setSearchIdx] = useState(0);
-  /** さらに長引いたとき：閉じ込めないためのやさしい退避画面 */
   const [timedOut, setTimedOut] = useState(false);
-  /** 「もう一度ためす」で演出をやり直すための試行カウント */
   const [attempt, setAttempt] = useState(0);
-  /** 発見成功の紙吹雪（少しだけ舞う） */
-  const [showConfetti, setShowConfetti] = useState(false);
-  /** タップ送り用：現在の待機を即座に切り上げるフラグ */
-  const skipRef = useRef(false);
+
   const skipResolve = useRef<(() => void) | null>(null);
-
-  /** タップで次の段へ。待機中ならその待機を即終了する。 */
-  const advance = () => {
-    if (timedOut) return;
-    skipRef.current = true;
-    if (skipResolve.current) {
-      skipResolve.current();
-      skipResolve.current = null;
-    }
-  };
-
-  /** 中断（タップ）で早送りできる待機。 */
-  const waitOrSkip = (ms: number) =>
+  const wait = (ms: number) =>
     new Promise<void>((resolve) => {
-      skipRef.current = false;
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         skipResolve.current = null;
         resolve();
       }, ms);
       skipResolve.current = () => {
-        clearTimeout(timer);
+        clearTimeout(t);
         resolve();
       };
     });
 
+  const advance = () => {
+    if (timedOut) return;
+    skipResolve.current?.();
+  };
+
   useEffect(() => {
     let alive = true;
-    setStage(STAGE.SCAN);
+    setStage(STAGE.HUSH);
     setMonomon(null);
-    setSearching(false);
     setTimedOut(false);
-    setShowConfetti(false);
 
     const genPromise = generate();
-    let slowTimer: ReturnType<typeof setTimeout> | undefined;
     let stuckTimer: ReturnType<typeof setTimeout> | undefined;
 
     (async () => {
-      // 導入：そっと見つめる
-      playSound("scan");
-      await waitOrSkip(900);
+      // 1. 写真がそっと沈む
+      await wait(1100);
       if (!alive) return;
 
-      // ① 光が集まる
+      // 2. 光が集まる（AIの完了を待つ）
       setStage(STAGE.GATHER);
-      await waitOrSkip(900);
-      if (!alive) return;
-
-      // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
-      // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
-      // さらに長引くときは、やさしい退避画面を出して閉じ込めない。
-      slowTimer = setTimeout(() => {
-        if (alive) setSearching(true);
-      }, 600);
-      stuckTimer = setTimeout(() => {
-        if (alive) setTimedOut(true);
-      }, STUCK_MS);
+      stuckTimer = setTimeout(() => alive && setTimedOut(true), STUCK_MS);
 
       let found: Monomon;
       try {
         found = await genPromise;
       } catch (e) {
-        clearTimeout(slowTimer);
         clearTimeout(stuckTimer);
-        setSearching(false);
         if (!alive) return;
         onError(e instanceof DiscoveryError ? e.kind : "unknown");
         return;
       }
-      clearTimeout(slowTimer);
       clearTimeout(stuckTimer);
-      setSearching(false);
       if (!alive) return;
-      // 退避画面を出していても、ようやく見つかったらそのまま出会いへ。
       setTimedOut(false);
       setMonomon(found);
 
-      // ② シルエットが現れる
-      setStage(STAGE.SILHOUETTE);
-      haptic(12);
-      await waitOrSkip(650);
+      // 光がしばらく集まり続ける余韻
+      await wait(1400);
       if (!alive) return;
 
-      // ③ 静かに間を置く（0.5〜1秒）「なにかいる…」小さな鼓動
-      setStage(STAGE.PAUSE);
-      playSound("heartbeat");
-      haptic([0, 14, 90, 14]);
-      await waitOrSkip(750);
-      if (!alive) return;
-
-      // ④ 目だけ先に光る
-      setStage(STAGE.EYES);
+      // 3. モノモンが覗く
+      setStage(STAGE.PEEK);
       haptic(10);
-      await waitOrSkip(650);
+      await wait(1500);
       if (!alive) return;
 
-      // ⑤ 姿がゆっくり現れる → 紙吹雪とキラキラでお祝い
-      setStage(STAGE.APPEAR);
-      playSound("discover");
-      setShowConfetti(true);
-      haptic([0, 16, 40, 24]);
-      await waitOrSkip(1200);
+      // 4. 出会えた。
+      setStage(STAGE.GREETING);
+      await wait(1800);
       if (!alive) return;
 
-      // ⑥ 名前（大きく・キラキラ）
+      // 5. 名前
       setStage(STAGE.NAME);
-      playSound("sparkle");
-      playSound("fanfare");
-      await waitOrSkip(950);
-      if (!alive) return;
-
-      // ⑦ 一言
-      setStage(STAGE.QUOTE);
-      await waitOrSkip(1400);
+      await wait(2000);
       if (!alive) return;
 
       onDone(found);
@@ -201,295 +124,149 @@ export function DiscoveryReveal({
 
     return () => {
       alive = false;
-      clearTimeout(slowTimer);
       clearTimeout(stuckTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
-  // 探している間だけ、数秒ごとにメッセージをランダムでそっと切り替える
-  useEffect(() => {
-    if (!searching) {
-      setSearchIdx(0);
-      return;
-    }
-    setSearchIdx(randomMsgIdx());
-    const t = setInterval(() => setSearchIdx(randomMsgIdx()), 2400);
-    return () => clearInterval(t);
-  }, [searching]);
-
-
-
-  // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
-  const greeting = useMemo(
-    () => (monomon ? greetingFor(monomon) : ""),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [monomon?.id],
-  );
-
-  // 発見の種類（新規／再会）ごとの見出し。将来の演出拡張の入り口。
-  const presentation = useMemo(
-    () => (monomon ? discoveryPresentation(monomon) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [monomon?.id],
-  );
-
-  // 少しだけ舞う紙吹雪（発見成功のお祝い）
-  const confetti = useMemo(
+  // 光の粒（ゆっくり集まり続ける）
+  const particles = useMemo(
     () =>
-      Array.from({ length: 16 }, (_, i) => {
-        const colors = [
-          "bg-primary",
-          "bg-amber-300",
-          "bg-rose-300",
-          "bg-sky-300",
-          "bg-emerald-300",
-        ];
+      Array.from({ length: 10 }, (_, i) => {
+        const ang = (i / 10) * Math.PI * 2 + 0.3;
+        const dist = 130 + (i % 3) * 22;
         return {
-          left: `${6 + (i * 6.1) % 88}%`,
-          delay: `${(i % 8) * 0.07}s`,
-          duration: `${1.3 + (i % 4) * 0.22}s`,
-          spin: `${((i % 3) - 1) * 360 + 540}deg`,
-          size: 6 + (i % 3) * 2,
-          round: i % 2 === 0,
-          color: colors[i % colors.length],
+          tx: `${Math.cos(ang) * dist}px`,
+          ty: `${Math.sin(ang) * dist}px`,
+          delay: `${(i % 5) * 0.4}s`,
+          size: 4 + (i % 3) * 2,
         };
       }),
     [],
   );
 
-  // 長く待っても見つからないとき：閉じ込めないやさしい退避画面
+  // タイムアウト時：閉じ込めないやさしい退避
   if (timedOut) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-          <Moon className="h-12 w-12 text-card" strokeWidth={1.6} />
-        </div>
-        <h2 className="text-xl font-extrabold text-foreground">
-          まだ見つからないみたい
-        </h2>
-        <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
-          <span className="block">モノモンはゆっくり探しているよ</span>
-          <span className="block">もう一度ためすか そっと戻ってね</span>
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center"
+        style={{ backgroundColor: "#FAF8F3" }}
+      >
+        <p className="whitespace-pre-line text-[15px] font-medium leading-[2] text-foreground/60">
+          {"今日はうまく\n会えなかったみたい"}
         </p>
-
         <button
           onClick={() => {
-            haptic(12);
+            haptic(10);
             setAttempt((a) => a + 1);
           }}
-          className="mt-10 flex items-center justify-center gap-2.5 rounded-full gradient-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+          className="mt-10 rounded-full bg-foreground px-8 py-4 text-[14px] font-semibold tracking-[0.12em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
         >
-          <RefreshCw className="h-5 w-5" />
-          もう一度ためす
+          もう一度
         </button>
         <button
           onClick={onCancel}
-          className="mt-5 text-sm font-bold text-muted-foreground active:scale-95"
+          className="mt-6 text-[13px] font-medium tracking-[0.06em] text-foreground/45 active:opacity-70"
         >
-          とじる
+          そっと戻る
         </button>
       </div>
     );
   }
 
-  // 収束する光の粒
-  const particles = Array.from({ length: 12 }, (_, i) => {
-    const ang = (i / 12) * Math.PI * 2;
-    const dist = 120 + (i % 3) * 26;
-    return {
-      tx: `${Math.cos(ang) * dist}px`,
-      ty: `${Math.sin(ang) * dist}px`,
-      delay: `${(i % 6) * 0.06}s`,
-      size: 5 + (i % 3) * 3,
-    };
-  });
-
-  const showSilhouette = stage >= STAGE.SILHOUETTE && stage < STAGE.APPEAR;
-  const showEyes = stage >= STAGE.EYES && stage < STAGE.APPEAR;
-  const showColor = stage >= STAGE.APPEAR;
-
-  const captions: Record<number, string> = {
-    [STAGE.SCAN]: "この子をそっと見つめている…",
-    [STAGE.GATHER]: "光が集まってきた…",
-    [STAGE.SILHOUETTE]: "なにかがそこにいる…",
-    [STAGE.PAUSE]: "…",
-    [STAGE.EYES]: "ふと目が合った",
-  };
-  const isSearching = searching && stage === STAGE.GATHER;
-  const caption = isSearching
-    ? SEARCH_MSGS[searchIdx % SEARCH_MSGS.length]
-    : captions[stage];
-
+  const showMonomon = stage >= STAGE.PEEK && monomon;
   const objectLabel = monomon?.objectLabel?.trim();
-
 
   return (
     <div
       onClick={advance}
-      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+      className="fixed inset-0 z-50 flex cursor-pointer select-none flex-col items-center justify-center px-8"
+      style={{ backgroundColor: "#FAF8F3" }}
     >
-      {/* 紙吹雪（少しだけ・発見成功のお祝い） */}
-      {showConfetti && (
-        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-          {confetti.map((c, i) => (
-            <span
-              key={i}
-              className={`animate-confetti absolute top-0 ${c.color} ${
-                c.round ? "rounded-full" : "rounded-[2px]"
-              }`}
-              style={{
-                left: c.left,
-                width: c.size,
-                height: c.size,
-                animationDelay: c.delay,
-                animationDuration: c.duration,
-                // @ts-expect-error custom prop
-                "--spin": c.spin,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* 出会いの舞台（写真 → 光 → シルエット → 姿） */}
-      <div className="relative h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
-        {/* 写真（進むほど静かに沈む） */}
-        <img
-          src={photo}
-          alt=""
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ${
-            stage >= STAGE.GATHER ? "scale-110 blur-[3px] brightness-[0.35]" : ""
-          } ${showColor ? "opacity-0" : "opacity-100"}`}
+      {/* 出会いの舞台：実物写真は主役のまま。少しだけ沈む */}
+      <div className="relative">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -inset-8 rounded-[40px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, rgba(255,225,175,0.28), rgba(255,225,175,0) 72%)",
+          }}
         />
+        <div
+          className="relative h-72 w-72 overflow-hidden rounded-[32px] sm:h-80 sm:w-80"
+          style={{ boxShadow: "0 24px 48px -22px rgba(60,45,25,0.34)" }}
+        >
+          <img
+            src={photo}
+            alt=""
+            className={`h-full w-full object-cover transition-all duration-[1400ms] ease-out ${
+              stage >= STAGE.GATHER ? "scale-[1.04] brightness-[0.82]" : ""
+            }`}
+          />
 
-        {/* 暗がり */}
-        {stage >= STAGE.GATHER && !showColor && (
-          <div className="absolute inset-0 bg-foreground/55 transition-opacity duration-700" />
-        )}
-
-        {/* ① 光が集まる */}
-        {stage === STAGE.GATHER && (
-          <div className="absolute inset-0">
-            {particles.map((p, i) => (
-              <span
-                key={i}
-                className="animate-converge absolute left-1/2 top-1/2 rounded-full bg-amber-100 shadow-glow"
-                style={{
-                  width: p.size,
-                  height: p.size,
-                  marginLeft: -p.size / 2,
-                  marginTop: -p.size / 2,
-                  // @ts-expect-error custom props
-                  "--tx": p.tx,
-                  "--ty": p.ty,
-                  animationDelay: p.delay,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* ②③④ シルエット（目は④で先に光る） */}
-        {showSilhouette && monomon && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className={`relative h-52 w-52 ${
-                stage === STAGE.SILHOUETTE
-                  ? "animate-silhouette"
-                  : stage === STAGE.PAUSE
-                    ? "animate-heartbeat"
-                    : ""
-              }`}
-            >
-              <div className="h-full w-full opacity-90 [filter:brightness(0)_drop-shadow(0_0_18px_rgba(255,245,210,0.55))]">
-                <MonomonArt monomon={monomon} />
-              </div>
-              {showEyes && (
-                <>
-                  <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
-                  <span className="animate-eye-glow absolute right-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
-                </>
-              )}
+          {/* 光の粒がゆっくり内側に集まる */}
+          {stage >= STAGE.GATHER && (
+            <div className="pointer-events-none absolute inset-0">
+              {particles.map((p, i) => (
+                <span
+                  key={i}
+                  className="animate-slow-converge absolute left-1/2 top-1/2 rounded-full bg-amber-100/95 shadow-[0_0_18px_6px_rgba(255,235,190,0.55)]"
+                  style={{
+                    width: p.size,
+                    height: p.size,
+                    marginLeft: -p.size / 2,
+                    marginTop: -p.size / 2,
+                    // @ts-expect-error custom props
+                    "--tx": p.tx,
+                    "--ty": p.ty,
+                    animationDelay: p.delay,
+                  }}
+                />
+              ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ⑤ 姿がゆっくり現れる → 少し嬉しそうに跳ねて、そっと浮き続ける */}
-        {showColor && monomon && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            {/* やわらかい光のにじみ（フラッシュの代わり） */}
-            <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
-            <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.25)]">
-              {/* 出会えた喜びのひと跳ね（一度だけ） */}
-              <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
-                {/* 生命を感じる、ふわっとした浮遊（ずっと） */}
-                <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
-                  <MonomonArt monomon={monomon} />
-                </div>
+          {/* モノモンが端から覗く */}
+          {showMonomon && (
+            <div className="pointer-events-none absolute -bottom-2 -right-1 h-28 w-28 sm:h-32 sm:w-32">
+              <div className="animate-soft-peek h-full w-full drop-shadow-[0_10px_18px_rgba(60,45,25,0.32)]">
+                <MonomonArt monomon={monomon!} />
               </div>
             </div>
-          </div>
+          )}
+        </div>
+      </div>
+
+      {/* 「出会えた。」— たった一言 */}
+      <div className="mt-10 min-h-[3.5rem] text-center">
+        {stage >= STAGE.GREETING && (
+          <p
+            key="greeting"
+            className="animate-quiet-in text-[22px] font-semibold tracking-[0.14em] text-foreground/80"
+          >
+            出会えた。
+          </p>
         )}
       </div>
 
-      {/* 導入〜出会いのことば */}
-      {caption && (
-        <p
-          key={isSearching ? `s${searchIdx % SEARCH_MSGS.length}` : `stage${stage}`}
-          className="mt-10 min-h-[1.75rem] animate-rise-in text-lg font-bold text-foreground"
-        >
-          {caption}
-        </p>
-      )}
-
-      {/* ⑥ 発見の見出し（新規／再会）＋名前（大きく・キラキラ） */}
-      {stage >= STAGE.NAME && monomon && presentation && (
-        <div
-          key="banner"
-          className={`mt-8 animate-pop-in rounded-full px-5 py-2 text-sm font-bold shadow-soft ${
-            presentation.kind === "reunion"
-              ? "bg-amber-100 text-amber-700"
-              : "bg-primary/15 text-primary"
-          }`}
-        >
-          {presentation.banner}
-        </div>
-      )}
-      {stage >= STAGE.NAME && monomon && (
-        <div key="name" className="mt-4 animate-pop-in text-center">
-          {objectLabel && (
-            <p className="text-xs font-bold text-muted-foreground">
-              {monomon.uncertain
-                ? `${objectLabel}の仲間かもしれない`
-                : `${objectLabel}に宿る`}
+      {/* 名前は少し遅れて、小さく */}
+      <div className="mt-2 min-h-[3rem] text-center">
+        {stage >= STAGE.NAME && monomon && (
+          <div key="name" className="animate-quiet-in">
+            {objectLabel && (
+              <p className="text-[11px] font-medium tracking-[0.16em] text-foreground/40">
+                {monomon.uncertain
+                  ? `${objectLabel}のなかまかもしれない`
+                  : `${objectLabel}にやどる`}
+              </p>
+            )}
+            <p className="mt-2 text-[16px] font-medium tracking-[0.06em] text-foreground/75">
+              {monomon.name}
             </p>
-          )}
-          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-foreground drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]">
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
-            {monomon.name}
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
-          </h2>
-        </div>
-      )}
-
-      {/* ⑦ 一言（その物の気持ち・ランダム） */}
-      {stage >= STAGE.QUOTE && monomon && (
-        <div
-          key="quote"
-          className="mt-4 max-w-xs animate-pop-in rounded-3xl bg-card px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft"
-        >
-          「{greeting}」
-        </div>
-      )}
-
-
-      {/* タップ送りのヒント（最後の段までそっと表示） */}
-      {stage < STAGE.QUOTE && (
-        <p className="mt-8 animate-fade-in text-xs font-medium text-muted-foreground/70">
-          タップで進む
-        </p>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
