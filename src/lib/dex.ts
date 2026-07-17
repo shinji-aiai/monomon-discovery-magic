@@ -7,6 +7,32 @@ import {
   clearAllComposedPhotos,
 } from "./photo-storage";
 
+/**
+ * 保存前に「この dataUrl は本当に画像として復号できるか」を確認する。
+ * naturalWidth/Height が 0 なら壊れた base64。IDB へ書く前にここで例外を投げる。
+ */
+async function verifyImageDecodes(dataUrl: string, monomonId: string): Promise<void> {
+  if (typeof Image === "undefined") return; // SSR 経路では検証をスキップ
+  await new Promise<void>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        console.info("[monomon-pipeline]", {
+          stage: "COMPOSED_IMAGE_VERIFIED",
+          monomonId,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+        resolve();
+      } else {
+        reject(new Error("COMPOSED_IMAGE_ZERO_DIMENSION"));
+      }
+    };
+    img.onerror = () => reject(new Error("COMPOSED_IMAGE_DECODE_FAILED"));
+    img.src = dataUrl;
+  });
+}
+
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
