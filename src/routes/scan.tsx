@@ -259,6 +259,15 @@ function Scan() {
         <DiscoveryReveal
           photo={photo}
           generate={() => generateMonomon(photo)}
+          onGenerated={(m) => {
+            // 演出を待たずに即保存。以降ユーザーがどこへ離脱しても記録は残る
+            if (!registered) {
+              addToDex(m);
+              meetMonomon(m.id);
+              setRegistered(true);
+            }
+            setResult(m);
+          }}
           onDone={(m) => {
             setResult(m);
             setPhase("result");
