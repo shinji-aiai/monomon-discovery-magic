@@ -283,7 +283,13 @@ function Scan() {
         />
       )}
 
-      {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
+      {phase === "error" && (
+        <GentleError
+          kind={errKind}
+          cameraInputId="monomon-camera-input"
+          onRetry={retry}
+        />
+      )}
 
       {/* ─── result ─── 出会えた余韻。写真が主役。モノモンは端から覗くだけ */}
       {phase === "result" && result && (
