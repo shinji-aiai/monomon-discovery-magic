@@ -17,7 +17,7 @@ import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
 import { tap, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
-import { useComposedPhoto } from "@/hooks/useComposedPhoto";
+
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
@@ -103,7 +103,7 @@ function MemoryPage({
   onOpen: () => void;
 }) {
   const noun = monomon.objectLabel?.trim() || monomon.name;
-  const composed = useComposedPhoto(monomon.id, monomon.hasComposed);
+  const composed = monomon.composedPhoto;
   const displaySrc = composed ?? monomon.photo;
   return (
     <button
@@ -123,19 +123,6 @@ function MemoryPage({
             src={displaySrc}
             alt=""
             className="h-full w-full object-cover transition-transform duration-700 group-active:scale-[0.985]"
-            onError={() => {
-              console.error("[monomon-pipeline]", {
-                stage: "MEMORY_IMAGE_RENDER_FAILED",
-                monomonId: monomon.id,
-                hasComposed: !!monomon.hasComposed,
-                usedComposed: !!composed,
-                urlPrefix: (displaySrc ?? "").slice(0, 24),
-                urlLength: (displaySrc ?? "").length,
-                startsWithBlob: (displaySrc ?? "").startsWith("blob:"),
-                startsWithDataImage: (displaySrc ?? "").startsWith("data:image/"),
-                startsWithHttp: (displaySrc ?? "").startsWith("http"),
-              });
-            }}
           />
         ) : (
           <div className="h-full w-full bg-white/60" />
@@ -207,8 +194,7 @@ function MemorySheet({
   }, []);
 
   const noun = live.objectLabel?.trim() || live.name;
-  const composed = useComposedPhoto(live.id, live.hasComposed);
-  const displaySrc = composed ?? live.photo;
+  const displaySrc = live.composedPhoto ?? live.photo;
 
   return (
     <div
