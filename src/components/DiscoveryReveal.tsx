@@ -13,8 +13,7 @@ interface DiscoveryRevealProps {
   /** 生成が成功した直後に一度だけ呼ばれる（演出を待たずに保存するため）。 */
   onGenerated?: (m: Monomon) => void | Promise<void>;
   onDone: (m: Monomon) => void;
-  onError: (kind: DiscoveryErrorKind) => void;
-  onCancel: () => void;
+  onError: (kind: DiscoveryErrorKind, error?: DiscoveryError) => void;
 }
 
 /**
@@ -43,11 +42,9 @@ export function DiscoveryReveal({
   onGenerated,
   onDone,
   onError,
-  onCancel,
 }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.HUSH);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
-  const [attempt, setAttempt] = useState(0);
 
   const skipResolve = useRef<(() => void) | null>(null);
   const wait = (ms: number) =>
@@ -85,7 +82,7 @@ export function DiscoveryReveal({
         found = await genPromise;
       } catch (e) {
         if (!alive) return;
-        onError(e instanceof DiscoveryError ? e.kind : "unknown");
+        onError(e instanceof DiscoveryError ? e.kind : "unknown", e instanceof DiscoveryError ? e : undefined);
         return;
       }
       if (!alive) return;
@@ -130,7 +127,7 @@ export function DiscoveryReveal({
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  }, []);
 
   // 光の粒（ゆっくり集まり続ける）
   const particles = useMemo(

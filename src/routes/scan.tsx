@@ -108,25 +108,6 @@ function Scan() {
     setPhase("choose");
   };
 
-  // 保険：万一 onGenerated が呼ばれていなくても、result 到着時に必ず保存する
-  useEffect(() => {
-    if (result && !registered) {
-      void (async () => {
-        console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_STARTED" });
-        await addToDex(result);
-        meetMonomon(result.id);
-        setRegistered(true);
-        console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_SUCCEEDED", monomonId: result.id });
-      })().catch((error) => {
-        console.error("[monomon-pipeline]", {
-          failedStage: "MEMORY_SAVE_STARTED",
-          errorMessage: error instanceof Error ? error.message : String(error),
-          errorType: error instanceof Error ? error.name : typeof error,
-        });
-      });
-    }
-  }, [result, registered]);
-
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
     tap();
@@ -323,12 +304,11 @@ function Scan() {
             setResult(m);
             setPhase("result");
           }}
-          onError={(kind) => {
+          onError={(kind, error) => {
             setErrKind(kind);
-            // generateMonomon の診断は下のラッパーで設定される
+            setDiagnostic(error?.diagnostic);
             setPhase("error");
           }}
-          onCancel={reset}
         />
       )}
 

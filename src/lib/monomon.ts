@@ -136,7 +136,7 @@ const MIN_CONFIDENCE = 0.35;
 export class DiscoveryError extends Error {
   kind: DiscoveryErrorKind;
   diagnostic?: PipelineDiagnostic;
-  constructor(kind: DiscoveryErrorKind, message = kind, diagnostic?: PipelineDiagnostic) {
+  constructor(kind: DiscoveryErrorKind, message: string = kind, diagnostic?: PipelineDiagnostic) {
     super(message);
     this.name = "DiscoveryError";
     this.kind = kind;
@@ -278,6 +278,19 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
       );
     }
     composedPhoto = composed.dataUrl;
+    if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(composedPhoto)) {
+      const diagnostic: PipelineDiagnostic = {
+        failedStage: "GENERATED_IMAGE_PARSED",
+        model: composed.model,
+        reason: "Generated image source is not a supported data URL",
+        errorType: "invalid_image_source",
+        elapsedMs: composed.elapsedMs,
+        inputMimeType,
+        inputImageBytes,
+      };
+      console.error("[monomon-pipeline]", diagnostic);
+      throw new DiscoveryError("generation_failed", diagnostic.reason, diagnostic);
+    }
   } catch (e) {
     if (e instanceof DiscoveryError) throw e;
     const diagnostic: PipelineDiagnostic = {

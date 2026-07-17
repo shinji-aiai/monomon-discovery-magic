@@ -27,7 +27,6 @@ export function useNewDex() {
 }
 
 export async function addToDex(monomon: Monomon): Promise<{ added: boolean; monomon: Monomon }> {
-  let added = true;
   // 合成写真は IndexedDB に分離保管（localStorage を汚さない）
   const composedDataUrl = monomon.composedPhoto;
   // 永続化するオブジェクトからは in-memory の composedPhoto を必ず剥がす
@@ -58,12 +57,10 @@ export async function addToDex(monomon: Monomon): Promise<{ added: boolean; mono
     return [{ ...persistable, friendship: persistable.friendship ?? 0 }, ...next];
   });
   // 新しく登録された子だけ「NEW!」の印を付ける（うっかり重複では付けない）
-  if (added) {
-    newDexStore.set((prev) =>
-      prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
-    );
-  }
-  return { added, monomon };
+  newDexStore.set((prev) =>
+    prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
+  );
+  return { added: true, monomon };
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */
