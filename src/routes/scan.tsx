@@ -181,6 +181,7 @@ function Scan() {
 
       <input
         ref={cameraRef}
+        id="monomon-camera-input"
         type="file"
         accept="image/*"
         capture="environment"
