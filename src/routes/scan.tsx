@@ -10,7 +10,6 @@ import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { normalizeCapturedImage } from "@/lib/image-utils";
 import {
-  DiscoveryError,
   generateMonomon,
   type Monomon,
   type PipelineDiagnostic,
@@ -85,6 +84,7 @@ function Scan() {
    */
   const retry = () => {
     tap();
+    setDiagnostic(undefined);
     // ネットワーク／混雑 → 同じ写真でもう一度出会いにいく（label なしの通常ボタン経由）
     if (
       (errKind === "network" ||
@@ -293,12 +293,15 @@ function Scan() {
           onGenerated={async (m) => {
             if (!registered) {
               console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_STARTED", monomonId: m.id });
-              await addToDex(m);
-              meetMonomon(m.id);
+              const saved = await addToDex(m);
+              meetMonomon(saved.monomon.id);
               setRegistered(true);
-              console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_SUCCEEDED", monomonId: m.id });
+              console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_SUCCEEDED", monomonId: saved.monomon.id });
+              setResult(saved.monomon);
+              return saved.monomon;
             }
             setResult(m);
+            return m;
           }}
           onDone={(m) => {
             setResult(m);
