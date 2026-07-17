@@ -102,6 +102,12 @@ export function DiscoveryReveal({
       if (!alive) return;
       setTimedOut(false);
       setMonomon(found);
+      // 演出を待たずに即保存（体験の途中で戻られても記録は残す）
+      try {
+        onGenerated?.(found);
+      } catch (err) {
+        console.error("[monomon] onGenerated failed", err);
+      }
 
       // 光がしばらく集まり続ける余韻
       await wait(1400);
