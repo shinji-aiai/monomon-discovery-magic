@@ -52,6 +52,14 @@ export interface SpiritAnalysis {
   personality: string;
   /** 物の役割・特徴を反映した一言説明（短くてよい） */
   description: string;
+  /** 合成用：モノモンをどこに配置するか（例：inside, peek_edge, in_fold） */
+  placement: string;
+  /** 合成用：画面上のどこに寄せるか（9マス） */
+  anchor: string;
+  /** 合成用：ポーズ（例：peeking, curled_sleeping, hanging） */
+  poseHint: string;
+  /** 合成用：画面短辺に対するモノモンの大きさ（0.05–0.20） */
+  scale: number;
 }
 
 const EYE_SET = new Set<string>(EYE_POOL);
@@ -94,6 +102,14 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 飾り(accessory)は次から1つ: none, leaf, bow, star, antenna, flower, crown, halo, hat
 目・口・飾りは、その物・性格に合うものを選ぶ（迷ったら none / smile / round）。
 
+写真合成のための「宿る場所」判定：
+物の形と使い方をふまえ、モノモンがどこに宿るのが自然かを4つの語彙で返します。
+- placement（宿り方）：inside, peek_edge, behind, between, under_rim, in_fold, on_handle, on_lid, in_pocket, along_spine, in_shadow のいずれか1つ。
+  例) コップ→inside, 本→along_spine or between, リモコン→on_handle, 鉢植え→peek_edge, 布→in_fold
+- anchor（画面のどこに寄せるか）：top-left, top, top-right, left, center, right, bottom-left, bottom, bottom-right のいずれか。実際に主役のモノが写っているあたりを選ぶ。
+- poseHint（ポーズ）：peeking, curled_sleeping, hanging, tucked, leaning, sitting, hiding のいずれか。
+- scale（大きさ）：画面短辺に対する割合。0.05〜0.20の小数。とても小さな存在にすること（0.10前後を推奨）。
+
 文章ルール（name・personality・description に必ず適用）：
 - 絵本のようにやさしく、モノモンがそっと語りかける文章にする。
 - 読点（、）と句点（。）は使わない。
@@ -113,7 +129,11 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
-  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）"
+  "description": "出会えたプレイヤーへそっと語りかける一言（句読点なし・全角20文字程度）",
+  "placement": "宿り方の語彙のいずれか",
+  "anchor": "9マス位置の語彙のいずれか",
+  "poseHint": "ポーズ語彙のいずれか",
+  "scale": 0.05〜0.20の小数
 }`;
 
 function extractJson(text: string): unknown {
@@ -242,6 +262,34 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     // 「自信あり＝推定表示にしない」条件：種族が既知で、写りが良く、自信が高い
     const confident = speciesKnown && quality === "ok" && confidence >= 0.6;
 
+    // 合成用フィールド
+    const PLACEMENT_SET = new Set([
+      "inside","peek_edge","behind","between","under_rim","in_fold",
+      "on_handle","on_lid","in_pocket","along_spine","in_shadow",
+    ]);
+    const ANCHOR_SET = new Set([
+      "top-left","top","top-right","left","center","right",
+      "bottom-left","bottom","bottom-right",
+    ]);
+    const POSE_SET = new Set([
+      "peeking","curled_sleeping","hanging","tucked","leaning","sitting","hiding",
+    ]);
+    const placement =
+      typeof parsed.placement === "string" && PLACEMENT_SET.has(parsed.placement)
+        ? parsed.placement
+        : "peek_edge";
+    const anchor =
+      typeof parsed.anchor === "string" && ANCHOR_SET.has(parsed.anchor)
+        ? parsed.anchor
+        : "center";
+    const poseHint =
+      typeof parsed.poseHint === "string" && POSE_SET.has(parsed.poseHint)
+        ? parsed.poseHint
+        : "peeking";
+    let scale = Number(parsed.scale);
+    if (!Number.isFinite(scale)) scale = 0.10;
+    scale = Math.max(0.05, Math.min(0.20, scale));
+
     return {
       object,
       category,
@@ -256,5 +304,9 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       name,
       personality,
       description,
+      placement,
+      anchor,
+      poseHint,
+      scale,
     };
   });

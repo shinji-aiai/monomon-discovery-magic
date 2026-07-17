@@ -35,7 +35,8 @@ const STAGE = {
   NAME: 4,
 } as const;
 
-const STUCK_MS = 10_000;
+/** 合成モデルの応答を含めた最大待ち時間。超えたら「今日はうまく会えなかった」表示。 */
+const STUCK_MS = 35_000;
 
 export function DiscoveryReveal({
   photo,
@@ -197,16 +198,28 @@ export function DiscoveryReveal({
           className="relative h-72 w-72 overflow-hidden rounded-[32px] sm:h-80 sm:w-80"
           style={{ boxShadow: "0 24px 48px -22px rgba(60,45,25,0.34)" }}
         >
+          {/* 元写真：常に下敷き（合成が失敗しても体験が完結） */}
           <img
             src={photo}
             alt=""
-            className={`h-full w-full object-cover transition-all duration-[1400ms] ease-out ${
+            className={`absolute inset-0 h-full w-full object-cover transition-all duration-[1400ms] ease-out ${
               stage >= STAGE.GATHER ? "scale-[1.04] brightness-[0.82]" : ""
             }`}
           />
 
+          {/* 合成写真：PEEK 以降にゆっくり浮かび上がる（あるときだけ） */}
+          {monomon?.composedPhoto && (
+            <img
+              src={monomon.composedPhoto}
+              alt=""
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1600ms] ease-out ${
+                stage >= STAGE.PEEK ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          )}
+
           {/* 光の粒がゆっくり内側に集まる */}
-          {stage >= STAGE.GATHER && (
+          {stage >= STAGE.GATHER && stage < STAGE.PEEK && (
             <div className="pointer-events-none absolute inset-0">
               {particles.map((p, i) => (
                 <span
@@ -227,8 +240,8 @@ export function DiscoveryReveal({
             </div>
           )}
 
-          {/* モノモンが端から覗く */}
-          {showMonomon && (
+          {/* 合成が無いときの控えめなSVGモノモン（フォールバック） */}
+          {showMonomon && !monomon?.composedPhoto && (
             <div className="pointer-events-none absolute -bottom-2 -right-1 h-28 w-28 sm:h-32 sm:w-32">
               <div className="animate-soft-peek h-full w-full drop-shadow-[0_10px_18px_rgba(60,45,25,0.32)]">
                 <MonomonArt monomon={monomon!} />

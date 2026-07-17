@@ -17,6 +17,7 @@ import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
 import { tap, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
+import { useComposedPhoto } from "@/hooks/useComposedPhoto";
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
@@ -102,22 +103,24 @@ function MemoryPage({
   onOpen: () => void;
 }) {
   const noun = monomon.objectLabel?.trim() || monomon.name;
+  const composed = useComposedPhoto(monomon.id, monomon.hasComposed);
+  const displaySrc = composed ?? monomon.photo;
   return (
     <button
       onClick={onOpen}
       className="group block w-full text-left"
       aria-label={`${noun}の思い出を開く`}
     >
-      {/* 写真：主役。モノモンは端に小さく寄り添うだけ */}
+      {/* 写真：主役（合成があれば「宿った1枚」を表示） */}
       <div
         className="relative aspect-[4/5] w-full overflow-hidden rounded-[28px]"
         style={{
           boxShadow: "0 20px 40px -22px rgba(60,45,25,0.30)",
         }}
       >
-        {monomon.photo ? (
+        {displaySrc ? (
           <img
-            src={monomon.photo}
+            src={displaySrc}
             alt=""
             className="h-full w-full object-cover transition-transform duration-700 group-active:scale-[0.985]"
           />
@@ -125,10 +128,12 @@ function MemoryPage({
           <div className="h-full w-full bg-white/60" />
         )}
 
-        {/* 小さなモノモンが右下から覗く */}
-        <div className="pointer-events-none absolute -bottom-2 right-3 h-20 w-20 drop-shadow-[0_10px_14px_rgba(60,45,25,0.28)]">
-          <MonomonArt monomon={monomon} />
-        </div>
+        {/* 合成が無いときだけ、控えめなSVGモノモンを添える */}
+        {!composed && (
+          <div className="pointer-events-none absolute -bottom-2 right-3 h-20 w-20 drop-shadow-[0_10px_14px_rgba(60,45,25,0.28)]">
+            <MonomonArt monomon={monomon} />
+          </div>
+        )}
 
         {/* NEW は静かなドット1つ */}
         {isNew && (
@@ -188,6 +193,8 @@ function MemorySheet({
   }, []);
 
   const noun = live.objectLabel?.trim() || live.name;
+  const composed = useComposedPhoto(live.id, live.hasComposed);
+  const displaySrc = composed ?? live.photo;
 
   return (
     <div
@@ -253,8 +260,8 @@ function MemorySheet({
             boxShadow: "0 24px 48px -22px rgba(60,45,25,0.30)",
           }}
         >
-          {live.photo && (
-            <img src={live.photo} alt="" className="h-full w-full object-cover" />
+          {displaySrc && (
+            <img src={displaySrc} alt="" className="h-full w-full object-cover" />
           )}
           {/* お気に入りはハートだけ、静かに */}
           <button
