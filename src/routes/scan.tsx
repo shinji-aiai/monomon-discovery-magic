@@ -291,6 +291,17 @@ function Scan() {
           photo={photo}
           generate={() => generateMonomon(photo)}
           onGenerated={async (m) => {
+            const cp = m.composedPhoto ?? "";
+            console.info("[monomon-pipeline]", {
+              stage: "COMPOSED_IMAGE_RECEIVED",
+              monomonId: m.id,
+              urlPrefix: cp.slice(0, 24),
+              urlLength: cp.length,
+              startsWithBlob: cp.startsWith("blob:"),
+              startsWithDataImage: cp.startsWith("data:image/"),
+              startsWithHttp: cp.startsWith("http"),
+              isEmpty: cp.length === 0,
+            });
             if (!registered) {
               console.info("[monomon-pipeline]", { stage: "MEMORY_SAVE_STARTED", monomonId: m.id });
               const saved = await addToDex(m);
@@ -303,6 +314,7 @@ function Scan() {
             setResult(m);
             return m;
           }}
+
           onDone={(m) => {
             setResult(m);
             setPhase("result");

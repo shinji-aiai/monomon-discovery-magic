@@ -5,8 +5,34 @@ import {
   saveComposedPhoto,
   deleteComposedPhoto,
   clearAllComposedPhotos,
-  dataUrlToBlob,
 } from "./photo-storage";
+
+/**
+ * 保存前に「この dataUrl は本当に画像として復号できるか」を確認する。
+ * naturalWidth/Height が 0 なら壊れた base64。IDB へ書く前にここで例外を投げる。
+ */
+async function verifyImageDecodes(dataUrl: string, monomonId: string): Promise<void> {
+  if (typeof Image === "undefined") return; // SSR 経路では検証をスキップ
+  await new Promise<void>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        console.info("[monomon-pipeline]", {
+          stage: "COMPOSED_IMAGE_VERIFIED",
+          monomonId,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+        resolve();
+      } else {
+        reject(new Error("COMPOSED_IMAGE_ZERO_DIMENSION"));
+      }
+    };
+    img.onerror = () => reject(new Error("COMPOSED_IMAGE_DECODE_FAILED"));
+    img.src = dataUrl;
+  });
+}
+
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
@@ -40,7 +66,23 @@ export async function addToDex(monomon: Monomon): Promise<{ added: boolean; mono
 
   // 合成画像の保存完了後にだけメタデータを公開し、Memories の空画像を防ぐ。
   if (!composedDataUrl) throw new Error("COMPOSED_IMAGE_REQUIRED");
-  await saveComposedPhoto(monomon.id, dataUrlToBlob(composedDataUrl));
+  console.info("[monomon-pipeline]", {
+    stage: "COMPOSED_IMAGE_PRE_SAVE",
+    monomonId: monomon.id,
+    urlPrefix: composedDataUrl.slice(0, 24),
+    urlLength: composedDataUrl.length,
+    startsWithDataImage: composedDataUrl.startsWith("data:image/"),
+    startsWithBlob: composedDataUrl.startsWith("blob:"),
+  });
+  // 画像として復号できるかを事前検証。壊れた base64 を耐久ストレージに書かない。
+  await verifyImageDecodes(composedDataUrl, monomon.id);
+  const persistResult = await saveComposedPhoto(monomon.id, composedDataUrl);
+  console.info("[monomon-pipeline]", {
+    stage: "COMPOSED_IMAGE_SAVED",
+    monomonId: monomon.id,
+    savedTo: persistResult.savedTo,
+  });
+
 
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
