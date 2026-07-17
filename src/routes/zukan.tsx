@@ -260,8 +260,8 @@ function MemorySheet({
             boxShadow: "0 24px 48px -22px rgba(60,45,25,0.30)",
           }}
         >
-          {live.photo && (
-            <img src={live.photo} alt="" className="h-full w-full object-cover" />
+          {displaySrc && (
+            <img src={displaySrc} alt="" className="h-full w-full object-cover" />
           )}
           {/* お気に入りはハートだけ、静かに */}
           <button
