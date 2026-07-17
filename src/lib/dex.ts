@@ -40,7 +40,23 @@ export async function addToDex(monomon: Monomon): Promise<{ added: boolean; mono
 
   // 合成画像の保存完了後にだけメタデータを公開し、Memories の空画像を防ぐ。
   if (!composedDataUrl) throw new Error("COMPOSED_IMAGE_REQUIRED");
-  await saveComposedPhoto(monomon.id, dataUrlToBlob(composedDataUrl));
+  console.info("[monomon-pipeline]", {
+    stage: "COMPOSED_IMAGE_PRE_SAVE",
+    monomonId: monomon.id,
+    urlPrefix: composedDataUrl.slice(0, 24),
+    urlLength: composedDataUrl.length,
+    startsWithDataImage: composedDataUrl.startsWith("data:image/"),
+    startsWithBlob: composedDataUrl.startsWith("blob:"),
+  });
+  // 画像として復号できるかを事前検証。壊れた base64 を耐久ストレージに書かない。
+  await verifyImageDecodes(composedDataUrl, monomon.id);
+  const persistResult = await saveComposedPhoto(monomon.id, composedDataUrl);
+  console.info("[monomon-pipeline]", {
+    stage: "COMPOSED_IMAGE_SAVED",
+    monomonId: monomon.id,
+    savedTo: persistResult.savedTo,
+  });
+
 
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
