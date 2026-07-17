@@ -198,6 +198,8 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
           placement: result.placement as never,
           anchor: result.anchor as never,
           poseHint: result.poseHint as never,
+          placementNote: result.placementNote,
+
         },
       },
     });
