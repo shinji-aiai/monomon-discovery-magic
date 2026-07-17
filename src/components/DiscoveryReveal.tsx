@@ -43,6 +43,7 @@ const STUCK_MS = 35_000;
 export function DiscoveryReveal({
   photo,
   generate,
+  onGenerated,
   onDone,
   onError,
   onCancel,
