@@ -4,9 +4,9 @@ import { tap } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { to: "/", label: "Home", icon: Home, exact: true },
-  { to: "/scan", label: "Camera", icon: Camera, exact: false },
-  { to: "/zukan", label: "Memories", icon: BookHeart, exact: false },
+  { to: "/", label: "ホーム", icon: Home, exact: true },
+  { to: "/scan", label: "カメラ", icon: Camera, exact: false },
+  { to: "/zukan", label: "思い出", icon: BookHeart, exact: false },
 ] as const;
 
 /**
