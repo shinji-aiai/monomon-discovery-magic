@@ -13,6 +13,7 @@ import {
 import { SPECIES_MAP, getSpecies } from "./species";
 import { resolveSpecies } from "./classification";
 import { analyzeSpirit } from "./monomon-ai.functions";
+import { composeMonomonScene } from "./monomon-compose.functions";
 
 export interface Monomon extends MonomonSpec {
   id: string;
@@ -24,7 +25,7 @@ export interface Monomon extends MonomonSpec {
   description: string;
   /** ISO日時。発見日。 */
   discoveredAt: string;
-  /** 元になった写真（縮小したdata URL） */
+  /** 元になった写真（縮小したdata URL）。元写真は絶対に上書きしない。 */
   photo: string;
   /** お気に入り */
   favorite?: boolean;
@@ -38,6 +39,16 @@ export interface Monomon extends MonomonSpec {
   lastMetAt?: string;
   /** 再会回数（会いに来た日の延べ回数）。詳しくは friendship.ts の reunion */
   reunionCount?: number;
+  /**
+   * 合成写真（極小のモノモンが元写真に自然に溶け込んだ1枚）が
+   * IndexedDB に保存されているか。true のとき useComposedPhoto で読み出せる。
+   */
+  hasComposed?: boolean;
+  /**
+   * 合成直後だけメモリ上に載せる data URL（保存はしない・addToDex で剥がす）。
+   * 発見演出と結果画面の同一セッションで即座に表示するためのもの。
+   */
+  composedPhoto?: string;
 }
 
 function makeId(seed: number): string {
