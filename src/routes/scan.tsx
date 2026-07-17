@@ -287,16 +287,27 @@ function Scan() {
               className="relative aspect-[4/5] w-64 overflow-hidden rounded-[28px] sm:w-72"
               style={{ boxShadow: "0 24px 48px -22px rgba(60,45,25,0.34)" }}
             >
-              {result.photo && (
+              {/* 合成写真があればそちらを主役に。無ければ元写真＋SVGモノモンでフォールバック */}
+              {result.composedPhoto ? (
                 <img
-                  src={result.photo}
+                  src={result.composedPhoto}
                   alt=""
                   className="h-full w-full object-cover"
                 />
+              ) : (
+                <>
+                  {result.photo && (
+                    <img
+                      src={result.photo}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                  <div className="pointer-events-none absolute -bottom-3 -right-2 h-24 w-24 drop-shadow-[0_10px_18px_rgba(60,45,25,0.30)] animate-soft-peek">
+                    <MonomonArt monomon={result} />
+                  </div>
+                </>
               )}
-            </div>
-            <div className="pointer-events-none absolute -bottom-3 -right-2 h-24 w-24 drop-shadow-[0_10px_18px_rgba(60,45,25,0.30)] animate-soft-peek">
-              <MonomonArt monomon={result} />
             </div>
           </div>
 
