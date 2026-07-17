@@ -17,6 +17,7 @@ import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
 import { tap, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
+import { useComposedPhoto } from "@/hooks/useComposedPhoto";
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
