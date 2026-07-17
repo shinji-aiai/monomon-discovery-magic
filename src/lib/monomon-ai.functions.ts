@@ -262,6 +262,34 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     // 「自信あり＝推定表示にしない」条件：種族が既知で、写りが良く、自信が高い
     const confident = speciesKnown && quality === "ok" && confidence >= 0.6;
 
+    // 合成用フィールド
+    const PLACEMENT_SET = new Set([
+      "inside","peek_edge","behind","between","under_rim","in_fold",
+      "on_handle","on_lid","in_pocket","along_spine","in_shadow",
+    ]);
+    const ANCHOR_SET = new Set([
+      "top-left","top","top-right","left","center","right",
+      "bottom-left","bottom","bottom-right",
+    ]);
+    const POSE_SET = new Set([
+      "peeking","curled_sleeping","hanging","tucked","leaning","sitting","hiding",
+    ]);
+    const placement =
+      typeof parsed.placement === "string" && PLACEMENT_SET.has(parsed.placement)
+        ? parsed.placement
+        : "peek_edge";
+    const anchor =
+      typeof parsed.anchor === "string" && ANCHOR_SET.has(parsed.anchor)
+        ? parsed.anchor
+        : "center";
+    const poseHint =
+      typeof parsed.poseHint === "string" && POSE_SET.has(parsed.poseHint)
+        ? parsed.poseHint
+        : "peeking";
+    let scale = Number(parsed.scale);
+    if (!Number.isFinite(scale)) scale = 0.10;
+    scale = Math.max(0.05, Math.min(0.20, scale));
+
     return {
       object,
       category,
@@ -276,5 +304,9 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       name,
       personality,
       description,
+      placement,
+      anchor,
+      poseHint,
+      scale,
     };
   });
