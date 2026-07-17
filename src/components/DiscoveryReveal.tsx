@@ -35,7 +35,8 @@ const STAGE = {
   NAME: 4,
 } as const;
 
-const STUCK_MS = 10_000;
+/** 合成モデルの応答を含めた最大待ち時間。超えたら「今日はうまく会えなかった」表示。 */
+const STUCK_MS = 35_000;
 
 export function DiscoveryReveal({
   photo,
