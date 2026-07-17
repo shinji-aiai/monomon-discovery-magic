@@ -10,6 +10,8 @@ import { haptic } from "@/lib/sound";
 interface DiscoveryRevealProps {
   photo: string;
   generate: () => Promise<Monomon>;
+  /** 生成が成功した直後に一度だけ呼ばれる（演出を待たずに保存するため）。 */
+  onGenerated?: (m: Monomon) => void;
   onDone: (m: Monomon) => void;
   onError: (kind: DiscoveryErrorKind) => void;
   onCancel: () => void;
