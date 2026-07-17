@@ -316,6 +316,12 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!Number.isFinite(scale)) scale = 0.10;
     scale = Math.max(0.05, Math.min(0.20, scale));
 
+    const placementNote =
+      (typeof parsed.placementNote === "string" ? parsed.placementNote : "")
+        .slice(0, 240)
+        .trim();
+
+
     return {
       object,
       category,
