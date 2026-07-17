@@ -1,6 +1,12 @@
 import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
 import { withFriendshipGain, reunion, type ReunionResult } from "./friendship";
+import {
+  saveComposedPhoto,
+  deleteComposedPhoto,
+  clearAllComposedPhotos,
+  dataUrlToBlob,
+} from "./photo-storage";
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
@@ -22,32 +28,42 @@ export function useNewDex() {
 
 export function addToDex(monomon: Monomon) {
   let added = true;
+  // 合成写真は IndexedDB に分離保管（localStorage を汚さない）
+  const composedDataUrl = monomon.composedPhoto;
+  // 永続化するオブジェクトからは in-memory の composedPhoto を必ず剥がす
+  const { composedPhoto: _drop, ...persistable } = monomon;
+  void _drop;
+
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
     // （同じ1枚をつづけて解析／連続タップ）。既存の記録を使い回して重複登録を防ぐ。
     const duplicate = prev.find(
-      (m) => m.id === monomon.id || (!!m.photo && m.photo === monomon.photo),
+      (m) => m.id === persistable.id || (!!m.photo && m.photo === persistable.photo),
     );
     if (duplicate) {
       added = false;
       return prev;
     }
     // 同じ種族の先住モノモンがいれば「また会えた」と喜ぶ（なかよし度 +rediscover）
-    const rediscovered = prev.some((m) => m.speciesId === monomon.speciesId);
+    const rediscovered = prev.some((m) => m.speciesId === persistable.speciesId);
     const next = rediscovered
       ? prev.map((m) =>
-          m.speciesId === monomon.speciesId
+          m.speciesId === persistable.speciesId
             ? withFriendshipGain(m, "rediscover")
             : m,
         )
       : prev;
-    return [{ ...monomon, friendship: monomon.friendship ?? 0 }, ...next];
+    return [{ ...persistable, friendship: persistable.friendship ?? 0 }, ...next];
   });
   // 新しく登録された子だけ「NEW!」の印を付ける（うっかり重複では付けない）
   if (added) {
     newDexStore.set((prev) =>
       prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
     );
+    // 合成写真があれば Blob として保存（一度きり・上書きしない）
+    if (composedDataUrl) {
+      void saveComposedPhoto(monomon.id, dataUrlToBlob(composedDataUrl));
+    }
   }
 }
 
