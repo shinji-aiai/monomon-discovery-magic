@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { MonomonArt } from "@/components/MonomonArt";
+import homeCompanion from "@/assets/home-companion.png";
 import { BottomNav } from "@/components/BottomNav";
 import { useSettings, updateSettings } from "@/lib/settings";
 import { useDex } from "@/lib/dex";
@@ -115,12 +116,18 @@ function Home() {
           {/* 呼吸 → 見回し → 姿。ふわっと生きている感じを重ねる */}
           <div className="animate-idle-breathe">
             <div className="animate-idle-gaze">
-              <div className="h-52 w-52 sm:h-60 sm:w-60">
+              <div className="h-64 w-64 sm:h-72 sm:w-72 flex items-center justify-center">
                 {companion ? (
                   <MonomonArt monomon={companion} />
-                ) : heroSpecies ? (
-                  <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
-                ) : null}
+                ) : (
+                  <img
+                    src={homeCompanion}
+                    alt=""
+                    width={1024}
+                    height={1024}
+                    className="h-full w-full object-contain drop-shadow-[0_18px_28px_rgba(90,65,35,0.18)]"
+                  />
+                )}
               </div>
             </div>
           </div>
