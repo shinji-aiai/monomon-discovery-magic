@@ -10,6 +10,8 @@ import { haptic } from "@/lib/sound";
 interface DiscoveryRevealProps {
   photo: string;
   generate: () => Promise<Monomon>;
+  /** 生成が成功した直後に一度だけ呼ばれる（演出を待たずに保存するため）。 */
+  onGenerated?: (m: Monomon) => void;
   onDone: (m: Monomon) => void;
   onError: (kind: DiscoveryErrorKind) => void;
   onCancel: () => void;
@@ -41,6 +43,7 @@ const STUCK_MS = 35_000;
 export function DiscoveryReveal({
   photo,
   generate,
+  onGenerated,
   onDone,
   onError,
   onCancel,
@@ -99,6 +102,12 @@ export function DiscoveryReveal({
       if (!alive) return;
       setTimedOut(false);
       setMonomon(found);
+      // 演出を待たずに即保存（体験の途中で戻られても記録は残す）
+      try {
+        onGenerated?.(found);
+      } catch (err) {
+        console.error("[monomon] onGenerated failed", err);
+      }
 
       // 光がしばらく集まり続ける余韻
       await wait(1400);

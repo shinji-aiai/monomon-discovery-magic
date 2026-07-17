@@ -66,39 +66,41 @@ function Scan() {
       setPhase("error");
       return;
     }
+    // input.value をクリアして、同じファイルの再選択でも change が発火するようにする
+    if (cameraRef.current) cameraRef.current.value = "";
     cameraRef.current?.click();
   };
 
   const retry = () => {
+    tap();
     if (errKind === "permission") {
       openCamera();
       return;
     }
-    tap();
-    const needsNewPhoto =
-      errKind === "too_far" ||
-      errKind === "too_dark" ||
-      errKind === "blurry" ||
-      errKind === "unclear";
-    if (photo && !needsNewPhoto) {
+    // ネットワーク／混雑 → 同じ写真でもう一度出会いにいく
+    if ((errKind === "network" || errKind === "busy") && photo) {
       setResult(null);
       setRegistered(false);
       setPhase("reveal");
-    } else {
-      setResult(null);
-      setPhoto(null);
-      setRegistered(false);
-      setPhase("choose");
+      return;
     }
+    // それ以外（写真が不鮮明・不明・タイムアウトなど）→ 状態をリセットして即カメラを開く
+    setResult(null);
+    setPhoto(null);
+    setRegistered(false);
+    setPhase("choose");
+    // ユーザー操作の同一ジェスチャー内で input.click() を呼ぶ必要がある
+    openCamera();
   };
 
+  // 保険：万一 onGenerated が呼ばれていなくても、result 到着時に必ず保存する
   useEffect(() => {
-    if (phase === "result" && result && !registered) {
+    if (result && !registered) {
       addToDex(result);
       meetMonomon(result.id);
       setRegistered(true);
     }
-  }, [phase, result, registered]);
+  }, [result, registered]);
 
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
@@ -257,6 +259,15 @@ function Scan() {
         <DiscoveryReveal
           photo={photo}
           generate={() => generateMonomon(photo)}
+          onGenerated={(m) => {
+            // 演出を待たずに即保存。以降ユーザーがどこへ離脱しても記録は残る
+            if (!registered) {
+              addToDex(m);
+              meetMonomon(m.id);
+              setRegistered(true);
+            }
+            setResult(m);
+          }}
           onDone={(m) => {
             setResult(m);
             setPhase("result");
