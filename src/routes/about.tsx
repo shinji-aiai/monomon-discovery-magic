@@ -73,13 +73,13 @@ function AboutPage() {
 
         {/* ③ アプリ紹介 */}
         <p className="mt-10 text-[0.95rem] leading-loose text-muted-foreground">
-          モノモンは
+          身の回りのモノを
           <br />
-          身近なモノを撮影すると
+          そっと撮ると
           <br />
-          小さな精霊「モノモン」と出会える
+          そのモノに宿る
           <br />
-          コレクションゲームです
+          小さな精霊と出会えます
         </p>
 
         {/* ④ App Store */}

@@ -1,1008 +1,343 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import {
-  Camera,
-  X,
-  ArrowLeft,
-  Download,
-  Share2,
-  Loader2,
-  Heart,
-  Star,
-  Lock,
-  Search,
-  Home,
-  Trash2,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Heart, MoreHorizontal, Trash2 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
-import { AutoFitName } from "@/components/AutoFitName";
-import { MonomonCard } from "@/components/MonomonCard";
-import { ShareModal } from "@/components/ShareModal";
 import { BottomNav } from "@/components/BottomNav";
 import { FriendshipMeter } from "@/components/FriendshipMeter";
-import { SupportButton } from "@/components/SupportButton";
 import {
   useDex,
   useNewDex,
-  toggleFavorite,
   clearNew,
   meetMonomon,
   petMonomon,
   removeFromDex,
+  toggleFavorite,
 } from "@/lib/dex";
 import { getReunionDialogue, getFriendship } from "@/lib/friendship";
-import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
-import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
-import { getRarity, getRarityLabel } from "@/lib/rarity";
-import { saveCardImage } from "@/lib/card-image";
-import type { Monomon } from "@/lib/monomon";
-import { tap, playSound, haptic } from "@/lib/sound";
+import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
+import { tap, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
 
 export const Route = createFileRoute("/zukan")({
   head: () => ({
     meta: [
-      { title: "図鑑｜モノモン" },
+      { title: "思い出｜モノモン" },
       {
         name: "description",
-        content: "見つけた種族と出会った個体たちの図鑑　集めてお気に入りを見つけよう",
+        content: "出会ったモノたちの静かな日記",
       },
     ],
   }),
-  component: Zukan,
+  component: Memories,
 });
 
-type Mode = "species" | "album";
-
-/** レア度の星表示（★1〜★5）。 */
-function RarityStars({ speciesId, dim }: { speciesId: string; dim?: boolean }) {
-  const r = getRarity(speciesId);
-  return (
-    <span className="inline-flex items-center gap-[1px]" aria-label={`レア度 ${r}`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${
-            i < r
-              ? dim
-                ? "fill-muted-foreground/40 text-muted-foreground/40"
-                : "fill-amber-400 text-amber-400"
-              : "fill-transparent text-muted-foreground/30"
-          }`}
-        />
-      ))}
-    </span>
-  );
-}
-
-function Zukan() {
+/**
+ * 思い出（旧・図鑑）。
+ *
+ * v3.0：ギャラリーではなく「記憶の日記」。
+ * 1件=1つの見開き。大きな写真・日付・モノの名前・小さなモノモン・一行の詩。
+ * 統計・レア度・収集率・レベルは持たない。
+ */
+function Memories() {
   const dex = useDex();
   const newIds = useNewDex();
   const newSet = useMemo(() => new Set(newIds), [newIds]);
   const [selected, setSelected] = useState<Monomon | null>(null);
-  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
-  const [mode, setMode] = useState<Mode>("species");
-  const [favOnly, setFavOnly] = useState(false);
-  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
 
-  // 図鑑画面を開いた回数を計測
   useEffect(() => {
     trackZukanOpen();
   }, []);
 
-  // 種族ごとに、見つけた個体をまとめる
-  const bySpecies = useMemo(() => {
-    const map = new Map<string, Monomon[]>();
-    for (const m of dex) {
-      const arr = map.get(m.speciesId) ?? [];
-      arr.push(m);
-      map.set(m.speciesId, arr);
-    }
-    return map;
-  }, [dex]);
-
-  const kinds = bySpecies.size;
-
-  // 種族（大分類）ごとの達成率
-  const familyStats = useMemo(() => {
-    const groups = new Map<Family, { total: number; found: number }>();
-    for (const s of SPECIES) {
-      const g = groups.get(s.family) ?? { total: 0, found: 0 };
-      g.total += 1;
-      if (bySpecies.has(s.id)) g.found += 1;
-      groups.set(s.family, g);
-    }
-    return [...groups.entries()].map(([family, v]) => ({ family, ...v }));
-  }, [bySpecies]);
-
-  // 発見順の通し番号（No.001 = 最初の相棒）
-  const numbered = useMemo(() => {
-    const map = new Map<string, number>();
-    [...dex]
-      .sort(
-        (a, b) =>
-          new Date(a.discoveredAt).getTime() - new Date(b.discoveredAt).getTime(),
-      )
-      .forEach((m, i) => map.set(m.id, i + 1));
-    return map;
-  }, [dex]);
-
-  // 検索（種族名・絵文字でしぼり込み）
-  const q = query.trim().toLowerCase();
-  const filteredSpecies = useMemo(() => {
-    if (!q) return SPECIES;
-    return SPECIES.filter(
-      (s) => s.name.toLowerCase().includes(q) || s.emoji.includes(q),
-    );
-  }, [q]);
-
-  let album = dex;
-  if (speciesFilter) album = album.filter((m) => m.speciesId === speciesFilter);
-  if (favOnly) album = album.filter((m) => m.favorite);
-  if (q) {
-    album = album.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) ||
-        getSpecies(m.speciesId).name.toLowerCase().includes(q),
-    );
-  }
-
-  const remaining = SPECIES_COUNT - kinds;
-
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <header className="mb-4">
-        <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
-        <p className="mt-0.5 text-sm font-medium text-muted-foreground">
-          {dex.length} 匹のモノモンと出会えたよ
+    <div
+      className="min-h-[100svh] px-6 pb-32 pt-[max(1.75rem,env(safe-area-inset-top))]"
+      style={{ backgroundColor: "#FAF8F3" }}
+    >
+      <header className="mb-8 pt-2">
+        <p className="text-[13px] font-medium tracking-[0.02em] text-foreground/55">
+          {dex.length === 0 ? "まだ何もない日記" : "出会ったモノたち"}
         </p>
       </header>
 
-      {/* コレクション率 */}
-      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
-        <div className="flex items-end justify-between">
-          <p className="text-sm font-bold text-foreground">コレクション</p>
-          <p className="text-base font-extrabold text-foreground">
-            <span className="text-primary">{kinds}</span>
-            <span className="mx-1 text-muted-foreground">/</span>
-            {SPECIES_COUNT}
-          </p>
-        </div>
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full gradient-primary transition-all"
-            style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
-          />
-        </div>
-        <p className="mt-2 text-xs font-bold text-muted-foreground">
-          {remaining > 0
-            ? `あと ${remaining} 種族で コンプリート`
-            : "🎉 ぜんぶ集めたよ おめでとう"}
-        </p>
-      </div>
-
-      {/* 種族ごとの達成率 */}
-      <FamilyProgress stats={familyStats} />
-
-
-      {/* 検索バー */}
-      <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          inputMode="search"
-          placeholder="モノモンや種族をさがす"
-          className="w-full rounded-2xl border border-white/60 bg-card py-3 pl-11 pr-10 text-sm font-medium text-foreground shadow-soft outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
-        />
-        {query && (
-          <button
-            onClick={() => {
-              tap();
-              setQuery("");
-            }}
-            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
-            aria-label="検索をクリア"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* モード切替 */}
-      <div className="mb-5 flex gap-2">
-        <ModeBtn
-          active={mode === "species"}
-          onClick={() => {
-            setMode("species");
-            setSpeciesFilter(null);
-          }}
-        >
-          種族図鑑
-        </ModeBtn>
-        <ModeBtn active={mode === "album"} onClick={() => setMode("album")}>
-          発見アルバム
-        </ModeBtn>
-      </div>
-
-      {mode === "species" ? (
-        filteredSpecies.length === 0 ? (
-          <NoResult />
-        ) : (
-          <div className="grid grid-cols-3 gap-2.5">
-            {filteredSpecies.map((sp) => {
-              const found = bySpecies.get(sp.id);
-              const isNew = found?.some((f) => newSet.has(f.id)) ?? false;
-              return (
-                <SpeciesCell
-                  key={sp.id}
-                  species={sp}
-                  sample={found?.[0]}
-                  count={found?.length ?? 0}
-                  isNew={isNew}
-                  onOpen={() => {
-                    tap();
-                    if (found) found.forEach((f) => clearNew(f.id));
-                    setSelectedSpecies(sp);
-                  }}
-                />
-              );
-            })}
-          </div>
-        )
-      ) : dex.length === 0 ? (
+      {dex.length === 0 ? (
         <Empty />
       ) : (
-        <>
-          {/* アルバムのサブ操作 */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <ChipBtn active={!favOnly} onClick={() => setFavOnly(false)}>
-              すべて
-            </ChipBtn>
-            <ChipBtn active={favOnly} onClick={() => setFavOnly(true)}>
-              <Star className="h-3.5 w-3.5" /> お気に入り
-            </ChipBtn>
-            {speciesFilter && (
-              <button
-                onClick={() => {
+        <ul className="space-y-10">
+          {dex.map((m) => (
+            <li key={m.id}>
+              <MemoryPage
+                monomon={m}
+                isNew={newSet.has(m.id)}
+                onOpen={() => {
                   tap();
-                  setSpeciesFilter(null);
+                  clearNew(m.id);
+                  setSelected(m);
                 }}
-                className="ml-auto flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary"
-              >
-                {getSpecies(speciesFilter).emoji} {getSpecies(speciesFilter).name}
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          {album.length === 0 ? (
-            <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
-              <Star className="h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-3 text-sm font-bold text-foreground">
-                ここには まだ いません
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                カードの♡で お気に入りに追加できる
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-2.5">
-              {album.map((m) => (
-                <DexCell
-                  key={m.id}
-                  monomon={m}
-                  no={numbered.get(m.id) ?? 0}
-                  isNew={newSet.has(m.id)}
-                  onOpen={() => {
-                    tap();
-                    clearNew(m.id);
-                    setSelected(m);
-                  }}
-                />
-              ))}
-              <Link
-                to="/scan"
-                onClick={tap}
-                className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
-              >
-                <span className="text-2xl opacity-60">＋</span>
-                <span className="text-[0.7rem] font-bold">つぎを さがす</span>
-              </Link>
-            </div>
-          )}
-        </>
-      )}
-
-      {selectedSpecies && (
-        <SpeciesDetailSheet
-          species={selectedSpecies}
-          found={bySpecies.get(selectedSpecies.id) ?? []}
-          onClose={() => setSelectedSpecies(null)}
-          onOpenIndividual={(m) => {
-            setSelectedSpecies(null);
-            setSelected(m);
-          }}
-        />
+              />
+            </li>
+          ))}
+        </ul>
       )}
 
       {selected && (
-        <DetailSheet
-          monomon={selected}
-          no={numbered.get(selected.id) ?? 0}
-          onClose={() => setSelected(null)}
-        />
+        <MemorySheet monomon={selected} onClose={() => setSelected(null)} />
       )}
-
-      {/* 最下部のひとこと */}
-      <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
-        まだ見ぬモノモンが待っているよ
-      </p>
 
       <BottomNav />
     </div>
   );
 }
 
-function ModeBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={() => {
-        tap();
-        onClick();
-      }}
-      className={`flex-1 rounded-2xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
-        active
-          ? "gradient-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ChipBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={() => {
-        tap();
-        onClick();
-      }}
-      className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-all active:scale-95 ${
-        active
-          ? "bg-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** 種族（大分類）ごとの達成率。コンプリートした族はやさしくお祝い。 */
-function FamilyProgress({
-  stats,
-}: {
-  stats: { family: Family; total: number; found: number }[];
-}) {
-  return (
-    <div className="mb-5 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
-      <p className="mb-2.5 text-sm font-bold text-foreground">種族ごとの達成</p>
-      <ul className="space-y-2.5">
-        {stats.map(({ family, total, found }) => {
-          const fam = FAMILY_STYLES[family];
-          const complete = found === total;
-          return (
-            <li key={family} className="flex items-center gap-3">
-              <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-foreground">
-                {fam.emoji} {fam.label}族
-              </span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${(found / total) * 100}%`,
-                    backgroundColor: fam.tint,
-                  }}
-                />
-              </div>
-              {complete ? (
-                <span className="shrink-0 text-xs font-extrabold text-primary">
-                  🎉 コンプリート
-                </span>
-              ) : (
-                <span className="shrink-0 text-xs font-bold text-muted-foreground">
-                  {found} / {total}
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-
-/** 新しく登録された子に付く「NEW!」バッジ（大きく・可愛く） */
-function NewBadge() {
-  return (
-    <span className="animate-new-badge pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 rounded-full bg-primary px-2.5 py-0.5 text-[0.66rem] font-extrabold uppercase tracking-wide text-primary-foreground shadow-float ring-2 ring-card">
-      NEW!
-    </span>
-  );
-}
-
-/** 種族図鑑のセル（見つけた種族＝代表個体、未発見＝？？？シルエット） */
-function SpeciesCell({
-  species,
-  sample,
-  count,
-  isNew,
-  onOpen,
-}: {
-  species: Species;
-  sample?: Monomon;
-  count: number;
-  isNew?: boolean;
-  onOpen: () => void;
-}) {
-  const found = !!sample;
-  return (
-    <button
-      onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
-    >
-      {isNew && <NewBadge />}
-      <div
-        className="relative aspect-square p-2"
-        style={{
-          backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[species.family].bg[0]}, ${FAMILY_STYLES[species.family].bg[1]})`,
-        }}
-      >
-        {found ? (
-          <>
-            <div className="h-full w-full drop-shadow-[0_6px_8px_rgba(90,60,40,0.18)]">
-              <MonomonArt monomon={sample} />
-            </div>
-            {count > 1 && (
-              <span className="absolute bottom-1 right-1.5 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-foreground/70 backdrop-blur">
-                ×{count}
-              </span>
-            )}
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="h-full w-full opacity-25 [filter:brightness(0)]">
-              <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
-            </div>
-            <Lock className="absolute h-4 w-4 text-foreground/30" />
-          </div>
-        )}
-      </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
-          {found ? (
-            <>
-              {species.emoji} {species.name}
-            </>
-          ) : (
-            <span className="text-muted-foreground">？？？</span>
-          )}
-        </AutoFitName>
-        <div className="mt-0.5 flex justify-center">
-          <RarityStars speciesId={species.id} dim={!found} />
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function DexCell({
+/**
+ * 一葉の見開き。
+ * 大きな写真の下に、日付・モノの名前・小さなモノモン・一行の詩。
+ */
+function MemoryPage({
   monomon,
-  no,
   isNew,
   onOpen,
 }: {
   monomon: Monomon;
-  no: number;
-  isNew?: boolean;
+  isNew: boolean;
   onOpen: () => void;
 }) {
-  const fam = FAMILY_STYLES[monomon.family];
-  const species = getSpecies(monomon.speciesId);
+  const noun = monomon.objectLabel?.trim() || monomon.name;
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
       onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group block w-full text-left"
+      aria-label={`${noun}の思い出を開く`}
     >
-      {isNew && <NewBadge />}
-      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
-        No.{String(no).padStart(3, "0")}
-      </span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleFavorite(monomon.id);
-          haptic(12);
-        }}
-        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
-        aria-label="お気に入り"
-      >
-        <Heart
-          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-        />
-      </button>
+      {/* 写真：主役。モノモンは端に小さく寄り添うだけ */}
       <div
-        className="aspect-square p-2"
+        className="relative aspect-[4/5] w-full overflow-hidden rounded-[28px]"
         style={{
-          backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
+          boxShadow: "0 20px 40px -22px rgba(60,45,25,0.30)",
         }}
       >
-        <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
+        {monomon.photo ? (
+          <img
+            src={monomon.photo}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-700 group-active:scale-[0.985]"
+          />
+        ) : (
+          <div className="h-full w-full bg-white/60" />
+        )}
+
+        {/* 小さなモノモンが右下から覗く */}
+        <div className="pointer-events-none absolute -bottom-2 right-3 h-20 w-20 drop-shadow-[0_10px_14px_rgba(60,45,25,0.28)]">
           <MonomonArt monomon={monomon} />
         </div>
+
+        {/* NEW は静かなドット1つ */}
+        {isNew && (
+          <span
+            aria-label="新しい思い出"
+            className="absolute right-4 top-4 h-2 w-2 rounded-full bg-foreground/70"
+          />
+        )}
       </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
-          {monomon.name}
-        </AutoFitName>
-        <div className="mt-0.5 flex justify-center">
-          <RarityStars speciesId={monomon.speciesId} />
-        </div>
+
+      {/* キャプション：日付・モノの名前・一行の詩 */}
+      <div className="mt-4 px-1">
+        <p className="text-[11px] font-medium tracking-[0.08em] text-foreground/45">
+          {formatDiscoveredDate(monomon.discoveredAt)}
+        </p>
+        <p className="mt-1 text-[15px] font-medium leading-relaxed text-foreground/80">
+          {noun}
+        </p>
+        <p className="mt-2 whitespace-pre-line text-[13px] font-medium leading-[1.9] text-foreground/55">
+          {monomon.description}
+        </p>
       </div>
-    </div>
+    </button>
   );
 }
 
-function NoResult() {
+/**
+ * 記憶の一葉を開いた画面。
+ * 写真が支配的。モノモンは静かに脇に佇む。
+ * 削除・お気に入りは低優先で「…」の中に。
+ */
+function MemorySheet({
+  monomon,
+  onClose,
+}: {
+  monomon: Monomon;
+  onClose: () => void;
+}) {
+  const [live, setLive] = useState<Monomon>(monomon);
+  const [reunionLine, setReunionLine] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // 今日はじめての来訪なら再会のセリフをそっと表示
+  useEffect(() => {
+    const r = meetMonomon(monomon.id);
+    if (r) {
+      setLive(r.monomon);
+      setReunionLine(
+        getReunionDialogue({
+          reunionCount: r.reunionCount,
+          daysSinceLastMet: r.daysSinceLastMet,
+          friendship: getFriendship(r.monomon),
+        }),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const noun = live.objectLabel?.trim() || live.name;
+
   return (
-    <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
-      <Search className="h-10 w-10 text-muted-foreground/50" />
-      <p className="mt-3 text-sm font-bold text-foreground">見つからなかった</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        ちがう言葉でさがしてみてね
-      </p>
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      style={{ backgroundColor: "#FAF8F3" }}
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]"
+        style={{ backgroundColor: "rgba(250,248,243,0.85)", backdropFilter: "blur(12px)" }}
+      >
+        <button
+          onClick={() => {
+            tap();
+            onClose();
+          }}
+          className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 active:scale-95"
+          aria-label="閉じる"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => {
+              tap();
+              setMenuOpen((v) => !v);
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/60 active:scale-95"
+            aria-label="その他"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+          {menuOpen && (
+            <div
+              className="absolute right-0 top-11 w-44 overflow-hidden rounded-2xl border border-black/[0.04] bg-white/95 shadow-[0_12px_30px_-14px_rgba(60,45,25,0.28)] backdrop-blur"
+            >
+              <button
+                onClick={() => {
+                  if (
+                    !window.confirm("この思い出を そっと手放してもいい？")
+                  ) {
+                    return;
+                  }
+                  removeFromDex(live.id);
+                  onClose();
+                }}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-[13px] font-medium text-foreground/70 active:bg-black/[0.03]"
+              >
+                <Trash2 className="h-4 w-4" />
+                思い出を手放す
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-6 pb-24">
+        {/* 大きな写真（主役） */}
+        <div
+          className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-md overflow-hidden rounded-[28px]"
+          style={{
+            boxShadow: "0 24px 48px -22px rgba(60,45,25,0.30)",
+          }}
+        >
+          {live.photo && (
+            <img src={live.photo} alt="" className="h-full w-full object-cover" />
+          )}
+          {/* お気に入りはハートだけ、静かに */}
+          <button
+            onClick={() => {
+              haptic(10);
+              toggleFavorite(live.id);
+              setLive({ ...live, favorite: !live.favorite });
+            }}
+            aria-label="お気に入り"
+            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/70 backdrop-blur-md active:scale-95"
+          >
+            <Heart
+              className={`h-5 w-5 transition-colors ${
+                live.favorite
+                  ? "fill-foreground text-foreground"
+                  : "text-foreground/50"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* 日付・モノの名前 */}
+        <div className="mt-8 text-center">
+          <p className="text-[11px] font-medium tracking-[0.14em] text-foreground/45">
+            {formatDiscoveredDate(live.discoveredAt)}
+          </p>
+          <h1 className="mt-2 text-[22px] font-semibold tracking-[0.02em] text-foreground/85">
+            {noun}
+          </h1>
+        </div>
+
+        {/* 一行の詩 */}
+        <p className="mx-auto mt-6 max-w-[20rem] whitespace-pre-line text-center text-[15px] font-medium leading-[2] text-foreground/70">
+          {live.description}
+        </p>
+
+        {/* 小さなモノモンをそっと触れる */}
+        <div className="mt-10 flex flex-col items-center">
+          <button
+            onClick={() => {
+              haptic(8);
+              petMonomon(live.id);
+              setLive({
+                ...live,
+                friendship: Math.min(100, (live.friendship ?? 0) + 1),
+              });
+            }}
+            className="h-28 w-28 transition-transform active:scale-95"
+            aria-label="そっと触れる"
+          >
+            <MonomonArt monomon={live} />
+          </button>
+
+          {/* なかよし度は数値ではなく気配だけ */}
+          <FriendshipMeter monomon={live} className="mt-4" />
+
+          {reunionLine && (
+            <p className="mt-4 text-[13px] font-medium text-foreground/55">
+              「{reunionLine}」
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 function Empty() {
   return (
-    <div className="flex min-h-[45svh] flex-col items-center justify-center text-center">
-      <div className="mb-6 text-6xl opacity-80">🔍</div>
-      <p className="text-lg font-bold text-foreground">まだ だれも いません</p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        モノを撮って最初の精霊を見つけよう
+    <div className="flex min-h-[60svh] flex-col items-center justify-center text-center">
+      <p className="text-[15px] font-medium leading-[2] text-foreground/60">
+        {"まだ何も\n記されていません"}
+      </p>
+      <p className="mt-4 whitespace-pre-line text-[13px] font-medium leading-[1.9] text-foreground/45">
+        {"身の回りのモノを\nそっと撮ってみましょう"}
       </p>
       <Link
         to="/scan"
         onClick={tap}
-        className="mt-8 flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+        className="mt-10 rounded-full bg-foreground px-8 py-4 text-[14px] font-bold tracking-[0.08em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
       >
-        <Camera className="h-5 w-5" />
-        見つける
+        探してみる
       </Link>
-    </div>
-  );
-}
-
-/** 種族の詳細画面（発見済み／未発見の両方に対応） */
-function SpeciesDetailSheet({
-  species,
-  found,
-  onClose,
-  onOpenIndividual,
-}: {
-  species: Species;
-  found: Monomon[];
-  onClose: () => void;
-  onOpenIndividual: (m: Monomon) => void;
-}) {
-  const isFound = found.length > 0;
-  const primary = found[0];
-  const fam = FAMILY_STYLES[species.family];
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                tap();
-                onClose();
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
-              aria-label="戻る"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <span className="whitespace-nowrap rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
-              {fam.emoji} {fam.label}族
-            </span>
-          </div>
-          {primary && (
-            <button
-              onClick={() => {
-                toggleFavorite(primary.id);
-                haptic(12);
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
-              aria-label={primary.favorite ? "お気に入りを解除" : "お気に入り"}
-            >
-              <Heart
-                className={`h-5 w-5 ${primary.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-              />
-            </button>
-          )}
-        </div>
-
-
-        {/* ヒーロー */}
-        <div
-          className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-3xl p-6"
-          style={{
-            backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-          }}
-        >
-          {isFound ? (
-            <div className="h-full w-full drop-shadow-[0_10px_14px_rgba(90,60,40,0.22)]">
-              <MonomonArt monomon={found[0]} />
-            </div>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <div className="h-full w-full opacity-25 [filter:brightness(0)]">
-                <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
-              </div>
-              <Lock className="absolute h-8 w-8 text-foreground/30" />
-            </div>
-          )}
-        </div>
-
-        {/* 見出し */}
-        <div className="mt-4">
-          <h2 className="text-2xl font-extrabold text-foreground">
-            {isFound ? (
-              <>
-                {species.emoji} {species.name}
-              </>
-            ) : (
-              "？？？"
-            )}
-          </h2>
-          <div className="mt-2 flex items-center gap-2">
-            <RarityStars speciesId={species.id} dim={!isFound} />
-            <span className="text-xs font-bold text-muted-foreground">
-              {getRarityLabel(species.id)}
-            </span>
-          </div>
-        </div>
-
-        {isFound ? (
-          <>
-            <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
-              この種族のモノモンを {found.length} 匹 見つけたよ　タップするとそれぞれの子の詳しい情報が見られるよ
-            </p>
-            <div className="mt-4 grid grid-cols-3 gap-2.5">
-              {found.map((m) => (
-                <div
-                  key={m.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    tap();
-                    onOpenIndividual(m);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      tap();
-                      onOpenIndividual(m);
-                    }
-                  }}
-                  className="relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
-                >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(m.id);
-                      haptic(12);
-                    }}
-                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
-                    aria-label={m.favorite ? "お気に入りを解除" : "お気に入り"}
-                  >
-                    <Heart
-                      className={`h-3.5 w-3.5 ${m.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-                    />
-                  </button>
-                  <div
-                    className="aspect-square p-1.5"
-                    style={{
-                      backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-                    }}
-                  >
-                    <div className="h-full w-full drop-shadow-[0_4px_6px_rgba(90,60,40,0.18)]">
-                      <MonomonArt monomon={m} />
-                    </div>
-                  </div>
-                  <AutoFitName
-                    className="px-1 py-1 font-extrabold text-foreground"
-                    maxFontSize={11}
-                    minFontSize={7}
-                  >
-                    {m.name}
-                  </AutoFitName>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
-              まだ見つかっていない種族だよ　身近なモノを撮影してこの子を探してみよう
-            </p>
-            <Link
-              to="/scan"
-              onClick={tap}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-base font-bold text-primary-foreground shadow-float active:scale-95"
-            >
-              <Camera className="h-5 w-5" />
-              さがしに行く
-            </Link>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DetailSheet({
-  monomon,
-  no,
-  onClose,
-}: {
-  monomon: Monomon;
-  no: number;
-  onClose: () => void;
-}) {
-  const [sharing, setSharing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  // なかよし度アップの小さなお祝い（ハートがふわっと舞う）演出のトリガー
-  const [burst, setBurst] = useState(0);
-  const celebrate = (big = false) => {
-    setBurst((n) => n + 1);
-    haptic(big ? [12, 40, 12] : 10);
-  };
-
-  // 詳細を開いたら必ず先頭（キャラのイラスト）から見えるようにする
-  useEffect(() => {
-    overlayRef.current?.scrollTo({ top: 0 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monomon.id]);
-
-  // なかよし度などが変わってもすぐ反映されるよう、常に最新の状態を読む
-  const dex = useDex();
-  const live = dex.find((m) => m.id === monomon.id) ?? monomon;
-
-  // 会いに来たら「今日はじめて」なら再会が成立（なかよし度 +5・再会回数 +1）
-  useEffect(() => {
-    const r = meetMonomon(monomon.id);
-    if (!r) return;
-    // 経過日数・なかよし度・再会回数に応じたセリフ
-    const dialogue = getReunionDialogue({
-      reunionCount: r.reunionCount,
-      daysSinceLastMet: r.daysSinceLastMet,
-      friendship: getFriendship(r.monomon),
-    });
-    if (r.friendshipGained > 0) celebrate(Boolean(r.unlockedThreshold));
-    toast(`「${dialogue}」`);
-    // なかよし度の節目を越えたら、新しいセリフの解放を伝える
-    if (r.unlockedThreshold) {
-      toast(`なかよし度 ${r.unlockedThreshold} をこえたよ　あたらしいセリフが増えた ✨`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monomon.id]);
-
-  // モノモンをなでる → なかよし度 +1（小さなお祝い）
-  const pet = () => {
-    petMonomon(live.id);
-    celebrate();
-  };
-
-  const save = async () => {
-    tap();
-    setSaving(true);
-    try {
-      const where = await saveCardImage(live);
-      playSound("save");
-      toast.success(
-        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
-      );
-    } catch (err) {
-      console.error("[monomon] 画像保存に失敗:", err);
-      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
-    >
-      {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
-      <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
-        {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                tap();
-                onClose();
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
-              aria-label="戻る"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
-              No.{String(no).padStart(3, "0")}
-            </span>
-            <span className="flex items-center gap-1 rounded-full bg-muted px-3 py-1">
-              <RarityStars speciesId={monomon.speciesId} />
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              toggleFavorite(live.id);
-              haptic(12);
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
-            aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
-          >
-            <Heart
-              className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
-            />
-          </button>
-        </div>
-
-        {/* 1. イラスト → 2. 名前 → 3. 説明（MonomonCard が縦に並べて表示） */}
-        <div className="relative">
-          {/* なかよし度アップの小さなお祝い：ハートがふわっと舞う */}
-          {burst > 0 && (
-            <div
-              key={burst}
-              className="pointer-events-none absolute inset-x-0 top-20 z-10 flex justify-center"
-              aria-hidden
-            >
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Heart
-                  key={i}
-                  className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
-                  style={{
-                    left: `${44 + (i - 2) * 7}%`,
-                    animationDelay: `${i * 80}ms`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          <MonomonCard monomon={live} onPet={pet} />
-        </div>
-
-        {/* 4. なかよし度（表情・セリフ・ゲージ） */}
-        <FriendshipMeter monomon={live} className="mt-4" />
-        <p className="mt-1.5 text-center text-xs font-medium text-muted-foreground">
-          モノモンをなでると なかよし度が上がるよ
-        </p>
-
-        {/* 5. 応援セクション */}
-        <SupportButton variant="home" />
-
-        {/* 6. 画像を保存 ／ 7. シェア */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <button
-            onClick={save}
-            disabled={saving}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            画像を保存
-          </button>
-          <button
-            onClick={() => {
-              tap();
-              setSharing(true);
-            }}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
-          >
-            <Share2 className="h-4 w-4" />
-            シェア
-          </button>
-        </div>
-
-        {/* 8. ホームへ戻る ／ 9. もう一度さがす */}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <Link
-            to="/"
-            onClick={tap}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
-          >
-            <Home className="h-4 w-4" />
-            ホームへ戻る
-          </Link>
-          <Link
-            to="/scan"
-            onClick={tap}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-          >
-            <Camera className="h-4 w-4 text-primary" />
-            もう一度さがす
-          </Link>
-        </div>
-
-        {/* 削除（コレクション内だけの、低優先アクション。発見結果には出さない） */}
-        <button
-          onClick={() => {
-            tap();
-            if (
-              typeof window !== "undefined" &&
-              !window.confirm("このモノモンをコレクションから消してもいい？")
-            ) {
-              return;
-            }
-            removeFromDex(live.id);
-            haptic(12);
-            toast("コレクションから消したよ");
-            onClose();
-          }}
-          className="mx-auto mt-8 flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-muted-foreground/70 active:scale-95"
-          aria-label="このモノモンを削除"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          コレクションから消す
-        </button>
-      </div>
-
-
-      {sharing && (
-        <ShareModal monomon={live} onClose={() => setSharing(false)} />
-      )}
     </div>
   );
 }
