@@ -1,18 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Camera,
-  ImagePlus,
-  Check,
-  Download,
-  Share2,
-  Home,
-  Sparkles,
-  Loader2,
-} from "lucide-react";
-import { MonomonCard } from "@/components/MonomonCard";
+import { ArrowLeft, Download, Share2, Loader2 } from "lucide-react";
+import { MonomonArt } from "@/components/MonomonArt";
 import { ShareModal } from "@/components/ShareModal";
 import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { GentleError, type GentleErrorKind } from "@/components/GentleError";
@@ -27,11 +17,8 @@ import { tap } from "@/lib/sound";
 export const Route = createFileRoute("/scan")({
   head: () => ({
     meta: [
-      { title: "見つける｜モノモン" },
-      {
-        name: "description",
-        content: "写真を撮ってモノに宿る小さな精霊を見つけよう",
-      },
+      { title: "出会う｜モノモン" },
+      { name: "description", content: "身の回りのモノに宿る小さな精霊と出会う" },
     ],
   }),
   component: Scan,
@@ -51,7 +38,6 @@ function Scan() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
 
-  // カメラ権限を先に把握しておく（クリック時に await しないための準備）
   const camDenied = useRef(false);
   useEffect(() => {
     const perms = navigator.permissions;
@@ -67,18 +53,14 @@ function Scan() {
         sync();
         s.onchange = sync;
       })
-      .catch(() => {
-        // 権限の問い合わせに未対応な端末はそのまま進む
-      });
+      .catch(() => {});
     return () => {
       if (status) status.onchange = null;
     };
   }, []);
 
-  // カメラを開く（クリックと同じ同期処理で開く＝iOSでも確実に起動する）
   const openCamera = () => {
     tap();
-    // 権限がOFFのときだけやさしく案内する
     if (camDenied.current) {
       setErrKind("permission");
       setPhase("error");
@@ -87,14 +69,12 @@ function Scan() {
     cameraRef.current?.click();
   };
 
-  // 出会いをやり直す
   const retry = () => {
     if (errKind === "permission") {
       openCamera();
       return;
     }
     tap();
-    // 写りが原因のときは、同じ写真ではなく撮り直してもらう
     const needsNewPhoto =
       errKind === "too_far" ||
       errKind === "too_dark" ||
@@ -112,11 +92,9 @@ function Scan() {
     }
   };
 
-  // 結果が出たら自動で図鑑に登録（コレクションが途切れない体験）
   useEffect(() => {
     if (phase === "result" && result && !registered) {
       addToDex(result);
-      // 発見＝その日はじめての出会い → なかよし度 +5
       meetMonomon(result.id);
       setRegistered(true);
     }
@@ -131,14 +109,12 @@ function Scan() {
       setPhoto(small);
       setResult(null);
       setRegistered(false);
-      // Apple標準の確認ではなく、モノモンらしい確認画面でひと呼吸おく
       setPhase("confirm");
     } catch {
       toast.error("もう一度えらんでみてね");
     }
   };
 
-  // 確認画面から「モノモンを探す」→ 出会いの演出＆AI認識をはじめる
   const startSearch = () => {
     tap();
     setResult(null);
@@ -161,25 +137,27 @@ function Scan() {
     try {
       const where = await saveCardImage(result);
       toast.success(
-        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+        where === "photos" ? "写真アプリに保存しました" : "画像を保存しました",
       );
     } catch (err) {
       console.error("[monomon] 画像保存に失敗:", err);
-      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
+      toast.error("うまく保存できなかったよ もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
-      {/* ヘッダー */}
+    <div
+      className="relative flex min-h-[100svh] flex-col px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]"
+      style={{ backgroundColor: "#FAF8F3" }}
+    >
       {phase !== "reveal" && (
         <header className="flex items-center">
           {phase === "result" ? (
             <button
               onClick={reset}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 active:scale-95"
               aria-label="戻る"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -188,7 +166,7 @@ function Scan() {
             <Link
               to="/"
               onClick={tap}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 active:scale-95"
               aria-label="ホームへ"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -197,7 +175,6 @@ function Scan() {
         </header>
       )}
 
-      {/* 隠しファイル入力 */}
       <input
         ref={cameraRef}
         type="file"
@@ -214,35 +191,18 @@ function Scan() {
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
 
+      {/* ─── choose ─── モノに出会いに行く導入。静かに */}
       {phase === "choose" && (
-        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-            <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-foreground">
-            モノを撮ってみよう
-          </h1>
-          <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            身の回りのモノを1枚
-            <br />
-            どんな精霊が出てくるかな？
+        <div className="m-auto flex w-full max-w-sm flex-col items-center justify-center py-6 text-center">
+          <p className="whitespace-pre-line text-[15px] font-medium leading-[2] text-foreground/70">
+            {"身の回りの\n大切にしたいモノを\nそっと撮ってみて"}
           </p>
 
-          <div className="mt-10 w-full max-w-sm space-y-1 text-center">
-            <p className="text-sm font-bold text-foreground/90">
-              モノ全体が入るように撮ってね
-            </p>
-            <p className="text-xs text-muted-foreground">
-              ぬいぐるみ・文房具・植物がおすすめ！
-            </p>
-          </div>
-
-          <div className="mt-4 w-full max-w-sm space-y-3">
+          <div className="mt-12 w-full space-y-3">
             <button
               onClick={openCamera}
-              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+              className="w-full rounded-full bg-foreground py-[18px] text-[15px] font-semibold tracking-[0.14em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
             >
-              <Camera className="h-5 w-5" />
               写真を撮る
             </button>
             <button
@@ -250,57 +210,48 @@ function Scan() {
                 tap();
                 libraryRef.current?.click();
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-card py-4 text-lg font-bold text-foreground shadow-soft active:scale-95"
+              className="w-full rounded-full bg-white/70 py-[18px] text-[14px] font-medium tracking-[0.12em] text-foreground/70 backdrop-blur active:scale-[0.985]"
+              style={{ boxShadow: "0 4px 14px -8px rgba(60,45,25,0.18)" }}
             >
-              <ImagePlus className="h-5 w-5 text-primary" />
-              写真を選ぶ
+              写真から選ぶ
             </button>
           </div>
         </div>
       )}
 
+      {/* ─── confirm ─── 実物写真が主役。ボタンは静かに */}
       {phase === "confirm" && photo && (
-        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="animate-pop-in">
-            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
-              <img
-                src={photo}
-                alt="撮影した写真"
-                className="h-full w-full object-cover"
-              />
-              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
-            </div>
+        <div className="m-auto flex w-full max-w-sm flex-col items-center justify-center py-6 text-center">
+          <div
+            className="relative aspect-[4/5] w-64 overflow-hidden rounded-[28px] sm:w-72"
+            style={{ boxShadow: "0 24px 44px -20px rgba(60,45,25,0.34)" }}
+          >
+            <img src={photo} alt="" className="h-full w-full object-cover" />
           </div>
 
-          <div className="mt-8 space-y-1">
-            <h1 className="text-xl font-extrabold text-foreground">
-              この写真でさがす？
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              モノモンがかくれているかも
-            </p>
-          </div>
+          <p className="mt-8 text-[14px] font-medium tracking-[0.04em] text-foreground/60">
+            この写真で出会いにいく？
+          </p>
 
-          <div className="mt-9 grid w-full max-w-sm grid-cols-2 gap-3">
+          <div className="mt-8 w-full space-y-3">
+            <button
+              onClick={startSearch}
+              className="w-full rounded-full bg-foreground py-[18px] text-[15px] font-semibold tracking-[0.14em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
+            >
+              出会いにいく
+            </button>
             <button
               onClick={() => {
                 tap();
                 openCamera();
               }}
-              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-card py-4 text-[15px] font-bold text-foreground shadow-soft active:scale-95"
+              className="w-full py-3 text-[13px] font-medium tracking-[0.08em] text-foreground/50 active:opacity-70"
             >
-              📷 撮り直す
-            </button>
-            <button
-              onClick={startSearch}
-              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full gradient-primary py-4 text-[15px] font-bold text-primary-foreground shadow-float active:scale-95"
-            >
-              🔍 モノモンを探す
+              撮り直す
             </button>
           </div>
         </div>
       )}
-
 
       {phase === "reveal" && photo && (
         <DiscoveryReveal
@@ -316,74 +267,101 @@ function Scan() {
           }}
           onCancel={reset}
         />
-
       )}
 
       {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
 
-
+      {/* ─── result ─── 出会えた余韻。写真が主役。モノモンは端から覗くだけ */}
       {phase === "result" && result && (
-        <div className="flex flex-1 flex-col">
-          <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
-              <Sparkles className="h-4 w-4" />
-              図鑑に登録しました！
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center">
+          <div className="relative mt-2">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 rounded-[40px]"
+              style={{
+                background:
+                  "radial-gradient(closest-side, rgba(210,180,130,0.20), rgba(210,180,130,0) 72%)",
+              }}
+            />
+            <div
+              className="relative aspect-[4/5] w-64 overflow-hidden rounded-[28px] sm:w-72"
+              style={{ boxShadow: "0 24px 48px -22px rgba(60,45,25,0.34)" }}
+            >
+              {result.photo && (
+                <img
+                  src={result.photo}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+            <div className="pointer-events-none absolute -bottom-3 -right-2 h-24 w-24 drop-shadow-[0_10px_18px_rgba(60,45,25,0.30)] animate-soft-peek">
+              <MonomonArt monomon={result} />
+            </div>
+          </div>
+
+          <div className="mt-10 text-center">
+            {result.objectLabel && (
+              <p className="text-[11px] font-medium tracking-[0.16em] text-foreground/40">
+                {result.uncertain
+                  ? `${result.objectLabel}のなかまかもしれない`
+                  : `${result.objectLabel}にやどる`}
+              </p>
+            )}
+            <p className="mt-2 text-[20px] font-semibold tracking-[0.04em] text-foreground/80">
+              {result.name}
             </p>
           </div>
 
-          <div className="mx-auto w-full max-w-sm">
-            <MonomonCard monomon={result} animate />
+          <p className="mx-auto mt-6 max-w-[18rem] whitespace-pre-line text-center text-[13px] font-medium leading-[2] text-foreground/60">
+            {result.description}
+          </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                onClick={save}
-                disabled={saving}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                画像を保存
-              </button>
-              <button
-                onClick={() => {
-                  tap();
-                  setSharing(true);
-                }}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-              >
-                <Share2 className="h-4 w-4 text-primary" />
-                シェア
-              </button>
-              <Link
-                to="/zukan"
-                onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
-              >
-                <Check className="h-4 w-4" />
-                図鑑を見る
-              </Link>
-              <Link
-                to="/"
-                onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
-              >
-                <Home className="h-4 w-4" />
-                ホーム
-              </Link>
-            </div>
+          <div className="mt-10 w-full space-y-3">
+            <Link
+              to="/zukan"
+              onClick={tap}
+              className="block w-full rounded-full bg-foreground py-[18px] text-center text-[15px] font-semibold tracking-[0.14em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
+            >
+              思い出に残す
+            </Link>
+            <Link
+              to="/"
+              onClick={tap}
+              className="block w-full py-3 text-center text-[13px] font-medium tracking-[0.08em] text-foreground/50 active:opacity-70"
+            >
+              ホームへ戻る
+            </Link>
+          </div>
 
-            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
-            <div className="mt-4 text-center">
-              <SupportButton variant="result" />
-            </div>
+          {/* 保存・シェアは控えめに */}
+          <div className="mt-6 flex items-center gap-6">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex items-center gap-2 text-[12px] font-medium tracking-[0.06em] text-foreground/45 active:opacity-70"
+            >
+              {saving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              画像を保存
+            </button>
+            <button
+              onClick={() => {
+                tap();
+                setSharing(true);
+              }}
+              className="flex items-center gap-2 text-[12px] font-medium tracking-[0.06em] text-foreground/45 active:opacity-70"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              シェア
+            </button>
+          </div>
 
-            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
-              まだ見ぬモノモンが待っているかも
-            </p>
+          <div className="mt-8 text-center">
+            <SupportButton variant="result" />
           </div>
         </div>
       )}
