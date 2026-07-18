@@ -260,21 +260,21 @@ function Scan() {
       {phase === "confirm" && photo && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
           <div className="animate-pop-in">
-            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
+            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[32px] shadow-float">
               <img
                 src={photo}
                 alt="撮影した写真"
                 className="h-full w-full object-cover"
               />
-              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
+              <span className="pointer-events-none absolute inset-0 rounded-[32px] ring-1 ring-inset ring-border/40" />
             </div>
           </div>
 
-          <div className="mt-8 space-y-1">
-            <h1 className="text-xl font-extrabold text-foreground">
-              この写真でさがす？
+          <div className="mt-8 space-y-1.5">
+            <h1 className="text-[1.2rem] font-extrabold tracking-tight text-foreground">
+              この写真でさがす
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[0.82rem] font-medium text-muted-foreground">
               モノモンがかくれているかも
             </p>
           </div>
@@ -285,19 +285,20 @@ function Scan() {
                 tap();
                 openCamera();
               }}
-              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-full border border-border/50 bg-card/80 py-4 text-[0.92rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
             >
-              📷 撮り直す
+              撮り直す
             </button>
             <button
               onClick={startSearch}
-              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-[0.92rem] font-extrabold tracking-wide text-primary-foreground shadow-float active:scale-95"
             >
-              🔍 モノモンを探す
+              さがす
             </button>
           </div>
         </div>
       )}
+
 
 
       {phase === "reveal" && photo && (
