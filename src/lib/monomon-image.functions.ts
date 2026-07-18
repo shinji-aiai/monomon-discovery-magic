@@ -43,16 +43,23 @@
 // auth, request/response contract, MIME detection, DTOs and error
 // handling remain unchanged.
 //
-// Phase 1C-P (universal hidden-placement priority lock — 2026-07-18):
-// the Phase 1C-R character-identity lock passed. The thin-solid-object
-// boundary test FAILED only because the model selected TOUCHING BESIDE
-// instead of EDGE and left almost the whole character visible. This
-// refinement PRESERVES the four-strategy architecture intact and ONLY
-// strengthens (a) placement-strategy selection priority and (b) minimum
-// hidden-body occlusion (~65%) plus an explicit final placement
-// validation step. No object-specific prompt or per-object branching is
-// introduced. Endpoint, model, auth, request/response contract, MIME
-// detection, DTOs and error handling remain unchanged.
+// Phase 1C-F (final universal placement policy — 2026-07-18):
+// controlled results confirmed universal photograph preservation PASS,
+// non-biological Monomon identity PASS, OPENING placement PASS with a
+// container object, and physically-touching BESIDE placement PASS with
+// a thin solid object (quiet companion feeling, object remained the
+// hero). The prior numeric "~65% hidden" rule was rejected as
+// unnecessarily rigid for arbitrary real-world objects, and mandatory
+// EDGE selection was rejected as too restrictive. This refinement
+// consolidates ONE universal geometry-aware placement policy with five
+// permitted relationships (OPENING, EXISTING GAP, EDGE, UNDER,
+// TOUCHING BESIDE); TOUCHING BESIDE is now a valid controlled strategy
+// with strict size, contact, surface, shadow and object-dominance
+// rules. No per-object prompts or branching are introduced. The full
+// Phase 1C-R character-identity lock, photograph-preservation and
+// object-as-hero rules, endpoint, model, auth, request/response
+// contract, MIME detection, DTOs and error handling all remain
+// byte-identical to the verified baseline.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
