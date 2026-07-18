@@ -51,14 +51,49 @@ export type ImmersionResult =
     };
 
 
-const PROMPT_TEXT =
-  "Edit this photograph. Preserve the original mug, table surface, lighting, " +
-  "camera angle, focal length, colors, mug pattern, and background exactly. " +
-  "Do not restyle, recolor, or re-illuminate the scene. Add one small soft " +
-  "round pastel creature (a Monomon) about the size of a grape peeking " +
-  "naturally from inside the mug's opening. The creature must look physically " +
-  "present in the same lighting and cast a soft shadow consistent with the " +
-  "scene. Do not add text, logos, borders, watermarks, or other objects.";
+const PROMPT_TEXT = [
+  "Edit this photograph. Do not regenerate the scene. Preserve the original",
+  "mug exactly — its checked pattern, printed bear graphic and small printed",
+  "text, black rim, handle, ceramic surface, the wooden table, background,",
+  "crop, camera angle, perspective, focal length, color temperature, lighting",
+  "direction, shadow softness, focus and depth of field must all stay",
+  "identical. Do not restyle, recolor or re-illuminate the photograph. The",
+  "real mug must remain the hero of the image.",
+  "",
+  "Add exactly one small original spirit character (a Monomon) peeking from",
+  "inside the mug's opening. A Monomon is an original tiny spirit that",
+  "quietly lives inside a real object. It is NOT an animal, NOT a bear, cat,",
+  "hamster, mouse, rabbit, or any recognizable creature, NOT a teddy bear or",
+  "plush toy, NOT a game mascot, NOT a sticker pasted on the photo, and NOT",
+  "a tiny mug — do not anthropomorphize the mug itself.",
+  "",
+  "Monomon visual DNA (apply all): tiny scale; soft rounded silhouette with a",
+  "simple non-animal form (no ears, no snout, no whiskers, no tail); large",
+  "clear gentle eyes with a soft highlight; a very small restrained mouth;",
+  "two very small short hands; a calm protective expression; refined premium",
+  "3D rendering with a soft matte finish and a subtle ceramic / felt /",
+  "handcrafted texture; very few facial details; quiet presence, not an",
+  "energetic pose.",
+  "",
+  "Derive the Monomon's identity subtly from the photographed mug: use a",
+  "harmonious palette pulled from the mug (warm cream, pale lavender, soft",
+  "muted blue-gray), optionally with faint checked freckles or markings.",
+  "Avoid a default bright blue. One tiny natural motif is allowed at most",
+  "(a single small leaf, sprout, or soft tuft) — never multiple accessories.",
+  "",
+  "Placement: the Monomon peeks naturally from inside the mug, with most of",
+  "its body hidden below the rim. Its two tiny hands gently rest on the real",
+  "mug rim from the inside; the rim must correctly occlude the hidden body.",
+  "Scale is small but clearly visible. Match the photograph's light direction",
+  "and shadow softness so it feels physically present inside the mug,",
+  "casting a soft consistent shadow on the mug's interior wall.",
+  "",
+  "Do not add a second character. Do not show a full standing body. Do not",
+  "place it outside, beside, in front of or on top of the mug, and do not",
+  "make it float. Do not add text, logos, borders, watermarks, extra props,",
+  "sparkles, or any other objects.",
+].join(" ");
+
 
 function detectMimeFromBase64(b64: string): string {
   try {
