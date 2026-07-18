@@ -23,53 +23,53 @@ export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardP
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[32px] border border-border/50 bg-card shadow-float",
+        "relative overflow-hidden rounded-[30px] border border-white/60 bg-card shadow-float",
         animate && "animate-pop-in",
         className,
       )}
     >
-      {/* イラストエリア（静かで奥行きのある背景） */}
+      {/* イラストエリア */}
       <div className="relative h-64">
+        {/* 元写真をうっすら背景に */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* 元写真をとても淡く背景に */}
           <img
             src={monomon.photo}
             alt=""
-            className="h-full w-full scale-110 object-cover blur-[8px]"
+            className="h-full w-full scale-110 object-cover blur-[3px]"
           />
           <div
-            className="absolute inset-0 opacity-[0.94]"
+            className="absolute inset-0 opacity-[0.86]"
             style={{
-              backgroundImage: `linear-gradient(168deg, ${fam.bg[0]}, ${fam.bg[1]})`,
+              backgroundImage: `linear-gradient(165deg, ${fam.bg[0]}, ${fam.bg[1]})`,
             }}
           />
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: `radial-gradient(130% 90% at 50% 22%, ${fam.tint}1f, transparent 62%)`,
+              backgroundImage: `radial-gradient(120% 90% at 50% 18%, ${fam.tint}22, transparent 60%)`,
             }}
           />
-          {/* かすかな光のにじみ */}
-          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/40 to-transparent" />
+          {/* 上質な光沢 */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/55 to-transparent" />
         </div>
 
-        {/* チップ：控えめに、紙のような質感 */}
-        <span className="absolute left-4 top-4 max-w-[60%] truncate rounded-full bg-card/80 px-3 py-1 text-[0.7rem] font-medium tracking-wide text-muted-foreground shadow-soft backdrop-blur">
+        {/* チップ：AIが認識した「モノ」 */}
+        <span className="absolute left-4 top-4 max-w-[60%] truncate rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
           {species.emoji} {monomon.objectLabel ?? species.name}
-          {monomon.uncertain && "の仲間かも"}
+          {monomon.uncertain && "の仲間かも？"}
         </span>
-        <span className="absolute right-4 top-4 rounded-full bg-card/80 px-3 py-1 text-[0.7rem] font-medium tracking-wide text-muted-foreground shadow-soft backdrop-blur">
+        <span className="absolute right-4 top-4 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
           {fam.emoji} {fam.label}
         </span>
 
         {/* モノモン（全身が必ず収まるよう中央に contain 配置） */}
-        <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="absolute inset-0 flex items-center justify-center p-3">
           <div className="relative h-full w-full">
             <span
-              className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-              style={{ backgroundColor: `${accent}33` }}
+              className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{ backgroundColor: `${accent}55` }}
             />
-            <div className="relative h-full w-full animate-float-soft drop-shadow-[0_10px_18px_rgba(80,55,35,0.18)]">
+            <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
               {onPet ? (
                 <button
                   type="button"
@@ -88,36 +88,38 @@ export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardP
       </div>
 
 
-      {/* 情報エリア（余白多め・上質な組版） */}
-      <div className="px-7 pb-7 pt-8 text-center">
-        {/* 名前 */}
-        <AutoFitName maxFontSize={30} minFontSize={16} className="font-extrabold tracking-tight text-foreground">
+      {/* 情報エリア（名前 → 性格 → 一言の順で見せる） */}
+      <div className="px-6 pb-6 pt-9 text-center">
+        {/* 名前：最優先・常に1行・中央。長い名前は自動で少し縮小 */}
+        <AutoFitName maxFontSize={30} minFontSize={16} className="font-extrabold text-foreground">
           {monomon.name}
         </AutoFitName>
 
-        {/* 性格 */}
+        {/* 性格（精神）：名前の下に配置 */}
         <div className="mt-3 flex justify-center">
-          <span className="rounded-full border border-border/60 bg-secondary/60 px-3 py-1 text-[0.72rem] font-medium tracking-wide text-secondary-foreground">
+          <span
+            className="rounded-full px-3 py-1 text-xs font-bold text-white"
+            style={{ backgroundColor: accent }}
+          >
             {monomon.personality}
           </span>
         </div>
 
-        {/* 一言：絵本のような静かな余白で */}
-        <p className="mt-5 rounded-2xl bg-muted/50 px-5 py-4 text-left text-[0.95rem] font-normal leading-[1.9] text-foreground/85">
+        {/* 一言：最後に */}
+        <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-left text-[0.95rem] font-medium leading-relaxed text-foreground">
           「{monomon.description}」
         </p>
 
         {monomon.uncertain && (
-          <p className="mt-3 text-xs font-normal leading-relaxed text-muted-foreground">
-            {monomon.objectLabel ?? "この子"}の仲間かもしれない
+          <p className="mt-2 text-xs font-medium text-muted-foreground">
+            ※ AIは少し自信がないみたい　{monomon.objectLabel ?? "この子"}の仲間かもしれない
           </p>
         )}
 
-        <p className="mt-5 text-right text-[0.7rem] font-medium tracking-wide text-muted-foreground/80">
-          発見　{formatDiscoveredDate(monomon.discoveredAt)}
+        <p className="mt-3 text-right text-xs font-medium text-muted-foreground">
+          発見日　{formatDiscoveredDate(monomon.discoveredAt)}
         </p>
       </div>
     </div>
   );
 }
-

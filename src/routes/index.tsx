@@ -97,36 +97,37 @@ function Home() {
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
 
-      <Sparkles className="absolute left-6 top-20 h-3.5 w-3.5 text-accent/40 animate-twinkle" />
+      <Sparkles className="absolute left-6 top-20 h-4 w-4 text-accent/60 animate-twinkle" />
       <Sparkles
-        className="absolute right-8 top-32 h-4 w-4 text-primary/30 animate-twinkle"
+        className="absolute right-8 top-32 h-5 w-5 text-primary/40 animate-twinkle"
         style={{ animationDelay: "0.8s" }}
       />
 
       {/* あいさつ */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground">{greet ?? "ようこそ"}</p>
-          <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground">
+          <p className="text-sm font-bold text-muted-foreground">{greet ?? "ようこそ"}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             モノモン
           </h1>
         </div>
-        <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[0.68rem] font-medium tracking-wide text-muted-foreground backdrop-blur">
+        <span className="rounded-full bg-card/70 px-3 py-1 text-xs font-bold text-muted-foreground backdrop-blur">
           モノに宿る小さな精霊
         </span>
       </div>
 
-      {/* ヒーロー */}
-      <div className="mt-6 flex flex-1 flex-col items-center justify-center text-center">
+      {/* ヒーロー（さいきん見つけた子 or これから） */}
+      <div className="mt-4 flex flex-1 flex-col items-center justify-center text-center">
+        {/* さいきんの相棒がホームで迎える一言 */}
         {last && companion && (
-          <div className="relative mb-4 animate-pop-in rounded-full border border-border/50 bg-card/90 px-4 py-1.5 text-[0.82rem] font-medium tracking-wide text-foreground/80 shadow-soft backdrop-blur">
+          <div className="relative mb-3 animate-pop-in rounded-full bg-card px-4 py-1.5 text-sm font-bold text-card-foreground shadow-soft">
             「{companion}」
-            <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 border-b border-r border-border/50 bg-card/90" />
+            <span className="absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-card" />
           </div>
         )}
         <div className="relative h-44 w-44">
-          <span className="absolute inset-6 rounded-full bg-primary/10 animate-pulse-ring" />
-          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_12px_20px_rgba(120,80,50,0.14)]">
+          <span className="absolute inset-5 rounded-full bg-primary/15 animate-pulse-ring" />
+          <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
             {last ? (
               <MonomonArt monomon={last} />
             ) : (
@@ -135,15 +136,14 @@ function Home() {
           </div>
         </div>
         {last ? (
-          <p className="mt-2 text-[0.9rem] font-medium tracking-wide text-foreground/85">
-            さいきんの相棒　
-            <span className="font-extrabold">{last.name}</span>
-            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-              {getSpecies(last.speciesId).emoji} {getSpecies(last.speciesId).name}
+          <p className="mt-1 text-sm font-bold text-foreground">
+            さいきんの相棒「{last.name}」
+            <span className="ml-1 font-medium text-muted-foreground">
+              · {getSpecies(last.speciesId).emoji} {getSpecies(last.speciesId).name}
             </span>
           </p>
         ) : (
-          <p className="mt-2 text-sm font-medium tracking-wide text-muted-foreground">
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
             さあ最初の精霊を見つけよう
           </p>
         )}
@@ -151,30 +151,30 @@ function Home() {
 
 
       {isFirstTime ? (
-        <div className="mb-8 text-center">
-          <p className="text-[1.15rem] font-extrabold leading-relaxed tracking-tight text-foreground">
+        /* 初回：空の統計は出さず、歓迎メッセージを主役にする */
+        <div className="mb-6 text-center">
+          <p className="text-lg font-extrabold leading-snug text-foreground">
             最初のモノモンを
             <br />
-            見つけに行こう
+            見つけに行こう！
           </p>
-          <p className="mt-2.5 text-[0.82rem] font-medium leading-relaxed text-muted-foreground">
-            身近なモノを撮ると
-            <br />
-            小さな精霊に出会えるよ
+          <p className="mt-2 text-sm font-medium text-muted-foreground">
+            身近なモノを撮ると小さな精霊に出会えるよ
           </p>
         </div>
       ) : (
         <>
-          {/* 統計：静かに並べる */}
-          <div className="mb-5 grid grid-cols-3 gap-2.5">
+          {/* 統計：個体数・種族数 */}
+          <div className="mb-5 grid grid-cols-3 gap-3">
             <Stat label="きょう" value={today} unit="匹" accent />
             <Stat label="個体" value={dex.length} unit="匹" />
             <Stat label="種族" value={`${kinds}/${SPECIES_COUNT}`} unit="種" />
           </div>
 
+          {/* さいきん見つけた一覧 */}
           <Link
             to="/zukan"
-            className="mb-5 flex items-center gap-3 rounded-3xl border border-border/50 bg-card/70 p-3 shadow-soft backdrop-blur active:scale-[0.98]"
+            className="mb-4 flex items-center gap-3 rounded-3xl bg-card/80 p-3 shadow-soft backdrop-blur active:scale-[0.98]"
           >
             <div className="flex -space-x-3">
               {dex.slice(0, 4).map((m) => (
@@ -189,32 +189,32 @@ function Home() {
                 </div>
               ))}
             </div>
-            <span className="flex-1 text-[0.88rem] font-medium tracking-wide text-foreground/85">
+            <span className="flex-1 text-sm font-bold text-foreground">
               図鑑を見る
             </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </Link>
 
-          <p className="mb-4 min-h-[1.25rem] text-center text-[0.82rem] font-medium tracking-wide text-foreground/80">
+          {/* きょうの一言（毎日そっと変わる・探索へ誘う） */}
+          <p className="mb-3 min-h-[1.25rem] text-center text-sm font-bold text-foreground">
             {daily ?? "今日は何を発見できるかな"}
           </p>
         </>
       )}
 
 
-      {/* メインアクション */}
+      {/* メインアクション（ホームで最も目立つ主役） */}
       <div className="relative">
-        <span className="pointer-events-none absolute -inset-1 rounded-full gradient-primary opacity-25 blur-xl animate-breathe" />
+        <span className="pointer-events-none absolute -inset-1 rounded-full gradient-primary opacity-40 blur-xl animate-breathe" />
         <Link
           to="/scan"
           onClick={() => trackFindClick()}
-          className="relative flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-lg font-extrabold tracking-wide text-primary-foreground shadow-float transition-transform active:scale-95"
+          className="relative flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-5 text-xl font-extrabold text-primary-foreground shadow-float transition-transform active:scale-95"
         >
-          <Camera className="h-5 w-5" />
+          <Camera className="h-6 w-6" />
           さがしにいく
         </Link>
       </div>
-
 
 
       {/* 応援（ホーム下部・小さめカード） */}
@@ -238,22 +238,21 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl p-3 text-center shadow-soft ${
-        accent ? "gradient-magic text-card" : "border border-border/50 bg-card/70 backdrop-blur"
+      className={`rounded-3xl p-3 text-center shadow-soft ${
+        accent ? "gradient-magic text-card" : "bg-card/85 backdrop-blur"
       }`}
     >
       <p
-        className={`text-[0.66rem] font-medium tracking-wide ${accent ? "text-card/80" : "text-muted-foreground"}`}
+        className={`text-[0.7rem] font-bold ${accent ? "text-card/80" : "text-muted-foreground"}`}
       >
         {label}
       </p>
       <p
-        className={`mt-0.5 text-xl font-extrabold leading-none tracking-tight ${accent ? "text-card" : "text-foreground"}`}
+        className={`mt-0.5 text-2xl font-extrabold leading-none ${accent ? "text-card" : "text-foreground"}`}
       >
         {value}
-        <span className="ml-0.5 text-[0.65rem] font-medium">{unit}</span>
+        <span className="ml-0.5 text-xs font-bold">{unit}</span>
       </p>
     </div>
   );
 }
-
