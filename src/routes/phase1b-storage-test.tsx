@@ -22,6 +22,17 @@ export const Route = createFileRoute("/phase1b-storage-test")({
 
 const TEST_ID = "phase1b-storage-test";
 
+type Stage =
+  | "idle"
+  | "open-database"
+  | "read-record"
+  | "transaction-complete"
+  | "detach-blob"
+  | "calculate-hash"
+  | "create-object-url"
+  | "render-image"
+  | "done";
+
 interface OriginalInfo {
   mimeType: string;
   sizeBytes: number;
@@ -29,15 +40,31 @@ interface OriginalInfo {
   height: number;
 }
 
+interface StoredMeta {
+  mimeType: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  createdAt: string;
+}
+
+interface RetrievedInfo {
+  mimeType: string;
+  sizeBytes: number;
+}
+
 interface RunReport {
-  originalHash?: string;
   compressed?: CompressedImmersionImage;
   savedHash?: string;
   retrievedHash?: string;
   hashesMatch?: boolean;
   saveMs?: number;
   loadMs?: number;
-  error?: string;
+  storedMeta?: StoredMeta;
+  retrieved?: RetrievedInfo;
+  errorStage?: Stage;
+  errorName?: string;
+  errorMessage?: string;
 }
 
 async function getDims(blob: Blob): Promise<{ width: number; height: number }> {
@@ -64,14 +91,34 @@ async function getDims(blob: Blob): Promise<{ width: number; height: number }> {
   }
 }
 
-function safeErr(e: unknown): string {
-  if (e instanceof Error) return e.message;
+function safeErr(e: unknown): { name: string; message: string } {
+  if (e instanceof DOMException) return { name: e.name, message: e.message };
+  if (e instanceof Error) return { name: e.name || "Error", message: e.message };
   try {
-    return String(e);
+    return { name: "Unknown", message: String(e) };
   } catch {
-    return "unknown error";
+    return { name: "Unknown", message: "unknown error" };
   }
 }
+
+const btnStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "10px 14px",
+  border: "1px solid #333",
+  borderRadius: 8,
+  background: "#f5f5f5",
+  color: "#111",
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: "pointer",
+  minWidth: 160,
+};
+
+const btnDisabledStyle: React.CSSProperties = {
+  ...btnStyle,
+  opacity: 0.5,
+  cursor: "not-allowed",
+};
 
 function Phase1BStorageTest() {
   const supported = typeof window !== "undefined" ? isImmersionStorageSupported() : false;
@@ -83,13 +130,16 @@ function Phase1BStorageTest() {
   const [count, setCount] = useState<number>(0);
   const [report, setReport] = useState<RunReport>({});
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string>("idle");
+  const [stage, setStage] = useState<Stage>("idle");
+  const [renderError, setRenderError] = useState<string | null>(null);
 
+  // Hold current object URLs in refs so we only revoke on replacement/unmount.
   const originalUrlRef = useRef<string | null>(null);
   const retrievedUrlRef = useRef<string | null>(null);
+  const autoLoadedRef = useRef(false);
 
-  const setOriginalPreview = useCallback((blob: Blob | null) => {
-    if (originalUrlRef.current) URL.revokeObjectURL(originalUrlRef.current);
+  const swapOriginalUrl = useCallback((blob: Blob | null) => {
+    const prev = originalUrlRef.current;
     if (blob) {
       const u = URL.createObjectURL(blob);
       originalUrlRef.current = u;
@@ -98,10 +148,15 @@ function Phase1BStorageTest() {
       originalUrlRef.current = null;
       setOriginalUrl(null);
     }
+    // Revoke previous only AFTER new one is installed, on a later tick so
+    // React Strict Mode's double-invoked effects don't kill a live URL.
+    if (prev) {
+      setTimeout(() => URL.revokeObjectURL(prev), 0);
+    }
   }, []);
 
-  const setRetrievedPreview = useCallback((blob: Blob | null) => {
-    if (retrievedUrlRef.current) URL.revokeObjectURL(retrievedUrlRef.current);
+  const swapRetrievedUrl = useCallback((blob: Blob | null) => {
+    const prev = retrievedUrlRef.current;
     if (blob) {
       const u = URL.createObjectURL(blob);
       retrievedUrlRef.current = u;
@@ -110,52 +165,160 @@ function Phase1BStorageTest() {
       retrievedUrlRef.current = null;
       setRetrievedUrl(null);
     }
+    if (prev) {
+      setTimeout(() => URL.revokeObjectURL(prev), 0);
+    }
   }, []);
 
   const refreshMeta = useCallback(async () => {
-    if (!supported) return;
+    if (!supported) return { exists: false };
     try {
       const existing = await getImmersionImage(TEST_ID);
       setRecordExists(!!existing);
       setCount(await countImmersionImages());
+      return { exists: !!existing, record: existing };
     } catch (e) {
-      setStatus(`meta error: ${safeErr(e)}`);
+      const s = safeErr(e);
+      setStage("read-record");
+      setReport((prev) => ({ ...prev, errorStage: "read-record", errorName: s.name, errorMessage: s.message }));
+      return { exists: false };
     }
   }, [supported]);
 
+  const performReload = useCallback(async () => {
+    if (!supported) return;
+    setBusy(true);
+    setRenderError(null);
+    let currentStage: Stage = "open-database";
+    setStage(currentStage);
+    try {
+      const t0 = performance.now();
+      currentStage = "read-record";
+      setStage(currentStage);
+      const back = await getImmersionImage(TEST_ID);
+      const t1 = performance.now();
+      currentStage = "transaction-complete";
+      setStage(currentStage);
+      if (!back) {
+        setReport((prev) => ({
+          ...prev,
+          retrieved: undefined,
+          loadMs: Math.round(t1 - t0),
+        }));
+        swapRetrievedUrl(null);
+        setStage("idle");
+        return;
+      }
+      currentStage = "detach-blob";
+      setStage(currentStage);
+      if (!(back.blob instanceof Blob) || back.blob.size === 0) {
+        throw new Error(`retrieved blob invalid: type=${back.blob?.type ?? "?"} size=${back.blob?.size ?? 0}`);
+      }
+      const retrieved: RetrievedInfo = { mimeType: back.blob.type, sizeBytes: back.blob.size };
+      const storedMeta: StoredMeta = {
+        mimeType: back.mimeType,
+        sizeBytes: back.sizeBytes,
+        width: back.width,
+        height: back.height,
+        createdAt: back.createdAt,
+      };
+
+      currentStage = "calculate-hash";
+      setStage(currentStage);
+      const h = await sha256Blob(back.blob);
+
+      currentStage = "create-object-url";
+      setStage(currentStage);
+      swapRetrievedUrl(back.blob);
+
+      currentStage = "render-image";
+      setStage(currentStage);
+
+      setReport((prev) => ({
+        ...prev,
+        retrievedHash: h,
+        loadMs: Math.round(t1 - t0),
+        storedMeta,
+        retrieved,
+        hashesMatch: prev.savedHash ? prev.savedHash === h : undefined,
+        errorStage: undefined,
+        errorName: undefined,
+        errorMessage: undefined,
+      }));
+      setStage("done");
+    } catch (e) {
+      const s = safeErr(e);
+      setReport((prev) => ({ ...prev, errorStage: currentStage, errorName: s.name, errorMessage: s.message }));
+      setStage(currentStage);
+    } finally {
+      await refreshMeta();
+      setBusy(false);
+    }
+  }, [supported, swapRetrievedUrl, refreshMeta]);
+
+  // On mount: probe support + record existence, and auto-load if a record
+  // is already there (so a page refresh alone proves durability).
   useEffect(() => {
-    void refreshMeta();
+    if (!supported) return;
+    if (autoLoadedRef.current) return;
+    autoLoadedRef.current = true;
+    (async () => {
+      const meta = await refreshMeta();
+      if (meta.exists) {
+        await performReload();
+      }
+    })();
+  }, [supported, refreshMeta, performReload]);
+
+  // Unmount cleanup only. Do NOT include url state in deps; that would
+  // revoke live URLs on every swap.
+  useEffect(() => {
     return () => {
-      if (originalUrlRef.current) URL.revokeObjectURL(originalUrlRef.current);
-      if (retrievedUrlRef.current) URL.revokeObjectURL(retrievedUrlRef.current);
+      const a = originalUrlRef.current;
+      const b = retrievedUrlRef.current;
+      originalUrlRef.current = null;
+      retrievedUrlRef.current = null;
+      if (a) URL.revokeObjectURL(a);
+      if (b) URL.revokeObjectURL(b);
     };
-  }, [refreshMeta]);
+  }, []);
 
   const onPick = useCallback(
     async (file: File) => {
       setReport({});
-      setStatus("picked");
+      setRenderError(null);
+      setStage("idle");
       setOriginalFile(file);
-      setOriginalPreview(file);
+      swapOriginalUrl(file);
       try {
         const dims = await getDims(file);
         setOriginalInfo({ mimeType: file.type || "application/octet-stream", sizeBytes: file.size, ...dims });
       } catch (e) {
-        setOriginalInfo({ mimeType: file.type || "application/octet-stream", sizeBytes: file.size, width: 0, height: 0 });
-        setStatus(`decode warning: ${safeErr(e)}`);
+        setOriginalInfo({
+          mimeType: file.type || "application/octet-stream",
+          sizeBytes: file.size,
+          width: 0,
+          height: 0,
+        });
+        const s = safeErr(e);
+        setReport((prev) => ({ ...prev, errorStage: "render-image", errorName: s.name, errorMessage: s.message }));
       }
     },
-    [setOriginalPreview],
+    [swapOriginalUrl],
   );
 
   const onCompressAndSave = useCallback(async () => {
     if (!originalFile || !supported) return;
     setBusy(true);
-    setStatus("compressing");
+    setRenderError(null);
+    let currentStage: Stage = "detach-blob";
+    setStage(currentStage);
     const r: RunReport = {};
     try {
       const compressed = await compressImmersionImage(originalFile);
       r.compressed = compressed;
+      currentStage = "calculate-hash";
+      setStage(currentStage);
       const savedHash = await sha256Blob(compressed.blob);
       r.savedHash = savedHash;
       const record: StoredImmersionImage = {
@@ -167,80 +330,47 @@ function Phase1BStorageTest() {
         sizeBytes: compressed.sizeBytes,
         createdAt: new Date().toISOString(),
       };
+      currentStage = "open-database";
+      setStage(currentStage);
       const t0 = performance.now();
       await saveImmersionImage(record);
       const t1 = performance.now();
       r.saveMs = Math.round(t1 - t0);
-
-      setStatus("retrieving");
-      const t2 = performance.now();
-      const back = await getImmersionImage(TEST_ID);
-      const t3 = performance.now();
-      r.loadMs = Math.round(t3 - t2);
-      if (!back) throw new Error("record not found after save");
-      const retrievedHash = await sha256Blob(back.blob);
-      r.retrievedHash = retrievedHash;
-      r.hashesMatch = retrievedHash === savedHash;
-      setRetrievedPreview(back.blob);
-      setStatus("done");
-    } catch (e) {
-      r.error = safeErr(e);
-      setStatus(`error: ${r.error}`);
-    } finally {
       setReport(r);
-      await refreshMeta();
-      setBusy(false);
-    }
-  }, [originalFile, supported, setRetrievedPreview, refreshMeta]);
-
-  const onReload = useCallback(async () => {
-    if (!supported) return;
-    setBusy(true);
-    setStatus("reloading");
-    try {
-      const t0 = performance.now();
-      const back = await getImmersionImage(TEST_ID);
-      const t1 = performance.now();
-      if (!back) {
-        setStatus("no stored record");
-        setRetrievedPreview(null);
-      } else {
-        const h = await sha256Blob(back.blob);
-        setRetrievedPreview(back.blob);
-        setReport((prev) => ({
-          ...prev,
-          retrievedHash: h,
-          loadMs: Math.round(t1 - t0),
-          hashesMatch: prev.savedHash ? prev.savedHash === h : undefined,
-        }));
-        setStatus("reloaded");
-      }
+      await performReload();
     } catch (e) {
-      setStatus(`error: ${safeErr(e)}`);
+      const s = safeErr(e);
+      r.errorStage = currentStage;
+      r.errorName = s.name;
+      r.errorMessage = s.message;
+      setReport(r);
+      setStage(currentStage);
     } finally {
       await refreshMeta();
       setBusy(false);
     }
-  }, [supported, setRetrievedPreview, refreshMeta]);
+  }, [originalFile, supported, performReload, refreshMeta]);
 
   const onDelete = useCallback(async () => {
     if (!supported) return;
     setBusy(true);
-    setStatus("deleting");
+    setRenderError(null);
+    setStage("open-database");
     try {
       await deleteImmersionImage(TEST_ID);
       const back = await getImmersionImage(TEST_ID);
       if (back) throw new Error("record still present after delete");
-      setRetrievedPreview(null);
+      swapRetrievedUrl(null);
       setReport({});
-      setStatus("deleted");
+      setStage("idle");
     } catch (e) {
-      setStatus(`error: ${safeErr(e)}`);
+      const s = safeErr(e);
+      setReport((prev) => ({ ...prev, errorStage: "read-record", errorName: s.name, errorMessage: s.message }));
     } finally {
       await refreshMeta();
       setBusy(false);
     }
-  }, [supported, setRetrievedPreview, refreshMeta]);
+  }, [supported, swapRetrievedUrl, refreshMeta]);
 
   const c = report.compressed;
   const pct =
@@ -249,7 +379,7 @@ function Phase1BStorageTest() {
       : null;
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "0 auto", color: "#111" }}>
       <h1 style={{ fontSize: 18, fontWeight: 600 }}>Phase 1B — Storage Test</h1>
       <p style={{ fontSize: 12, opacity: 0.7 }}>
         Isolated. No AI, no network, no localStorage. IndexedDB only. Fixed id: <code>{TEST_ID}</code>
@@ -259,7 +389,7 @@ function Phase1BStorageTest() {
         <div>IndexedDB supported: <b>{supported ? "yes" : "no"}</b></div>
         <div>Record exists: <b>{recordExists ? "yes" : "no"}</b></div>
         <div>Record count: <b>{count}</b></div>
-        <div>Status: <b>{status}</b></div>
+        <div>Stage: <b>{stage}</b></div>
       </div>
 
       <hr style={{ margin: "16px 0" }} />
@@ -275,14 +405,29 @@ function Phase1BStorageTest() {
         />
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-        <button onClick={onCompressAndSave} disabled={!originalFile || !supported || busy}>
+      <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={onCompressAndSave}
+          disabled={!originalFile || !supported || busy}
+          style={!originalFile || !supported || busy ? btnDisabledStyle : btnStyle}
+        >
           Compress and save
         </button>
-        <button onClick={onReload} disabled={!supported || busy}>
+        <button
+          type="button"
+          onClick={performReload}
+          disabled={!supported || busy}
+          style={!supported || busy ? btnDisabledStyle : btnStyle}
+        >
           Reload stored image
         </button>
-        <button onClick={onDelete} disabled={!supported || busy}>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={!supported || busy}
+          style={!supported || busy ? btnDisabledStyle : btnStyle}
+        >
           Delete test image
         </button>
       </div>
@@ -291,7 +436,11 @@ function Phase1BStorageTest() {
         <div>
           <div style={{ fontSize: 12, fontWeight: 600 }}>Original</div>
           {originalUrl ? (
-            <img src={originalUrl} alt="original" style={{ width: "100%", height: "auto", borderRadius: 6 }} />
+            <img
+              src={originalUrl}
+              alt="original"
+              style={{ width: "100%", height: "auto", borderRadius: 6, background: "#eee" }}
+            />
           ) : (
             <div style={{ fontSize: 12, opacity: 0.6 }}>(none)</div>
           )}
@@ -306,15 +455,35 @@ function Phase1BStorageTest() {
         <div>
           <div style={{ fontSize: 12, fontWeight: 600 }}>Retrieved from IndexedDB</div>
           {retrievedUrl ? (
-            <img src={retrievedUrl} alt="retrieved" style={{ width: "100%", height: "auto", borderRadius: 6 }} />
+            <img
+              src={retrievedUrl}
+              alt="retrieved"
+              style={{ width: "100%", height: "auto", borderRadius: 6, background: "#eee" }}
+              onError={() => setRenderError("<img> failed to render the retrieved Object URL")}
+              onLoad={() => setRenderError(null)}
+            />
           ) : (
             <div style={{ fontSize: 12, opacity: 0.6 }}>(none)</div>
           )}
+          {report.storedMeta && (
+            <div style={{ fontSize: 12, marginTop: 4 }}>
+              <div>Stored MIME: {report.storedMeta.mimeType}</div>
+              <div>Stored size: {report.storedMeta.sizeBytes.toLocaleString()} bytes</div>
+              <div>Stored dim: {report.storedMeta.width}×{report.storedMeta.height}</div>
+              <div>Created: {report.storedMeta.createdAt}</div>
+            </div>
+          )}
+          {report.retrieved && (
+            <div style={{ fontSize: 12, marginTop: 4 }}>
+              <div>Retrieved MIME: {report.retrieved.mimeType || "(empty)"}</div>
+              <div>Retrieved size: {report.retrieved.sizeBytes.toLocaleString()} bytes</div>
+            </div>
+          )}
           {c && (
             <div style={{ fontSize: 12, marginTop: 4 }}>
-              <div>MIME: {c.mimeType}</div>
-              <div>Size: {c.sizeBytes.toLocaleString()} bytes</div>
-              <div>Dim: {c.width}×{c.height}</div>
+              <div>Last compress MIME: {c.mimeType}</div>
+              <div>Last compress size: {c.sizeBytes.toLocaleString()} bytes</div>
+              <div>Last compress dim: {c.width}×{c.height}</div>
               <div>Quality: {c.qualityUsed}</div>
               <div>Format: {c.formatUsed}</div>
               {pct !== null && <div>Compression: {pct}% of original</div>}
@@ -331,7 +500,14 @@ function Phase1BStorageTest() {
         <div>Hashes match: <b>{report.hashesMatch === undefined ? "—" : report.hashesMatch ? "yes" : "no"}</b></div>
         <div>Save duration: {report.saveMs ?? "—"} ms</div>
         <div>Load duration: {report.loadMs ?? "—"} ms</div>
-        {report.error && <div style={{ color: "crimson" }}>Error: {report.error}</div>}
+        {report.errorStage && (
+          <div style={{ color: "crimson" }}>
+            Error stage: <b>{report.errorStage}</b>
+            {report.errorName ? ` — ${report.errorName}` : ""}
+            {report.errorMessage ? `: ${report.errorMessage}` : ""}
+          </div>
+        )}
+        {renderError && <div style={{ color: "crimson" }}>Render: {renderError}</div>}
       </div>
     </div>
   );
