@@ -4,7 +4,21 @@
 // either the generated image (base64 + detected MIME) or a redacted error DTO.
 //
 // No retries, no streaming, no caching. Not imported by any production module.
-// Verified contract: (to be filled in after the Phase 0 test run)
+//
+// Verified contract (Phase 0 — 2026-07-18, PASS):
+//   Endpoint : POST https://ai.gateway.lovable.dev/v1/images/generations
+//   Model    : google/gemini-3.1-flash-image
+//   Auth     : Lovable-API-Key header (server-side LOVABLE_API_KEY)
+//   Request  : chat-shaped { messages:[{ role:"user", content:[text, image_url] }],
+//              modalities:["image","text"] }
+//   Response : JSON, data[0].b64_json (image/png)
+//   Cost     : ~0.27126 Lovable credits per call
+//   Latency  : ~12.1 s
+//   Scene    : original photograph and mug preserved successfully
+//
+// Phase 1A (character style calibration) — only PROMPT_TEXT is modified below.
+// The verified endpoint, model, headers, request structure, response parsing,
+// MIME detection, error handling, and DTO types are intentionally unchanged.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -35,6 +49,7 @@ export type ImmersionResult =
       errorSummary: string;
       durationMs: number;
     };
+
 
 const PROMPT_TEXT =
   "Edit this photograph. Preserve the original mug, table surface, lighting, " +
