@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { X, Download, Share2, Loader2 } from "lucide-react";
 import type { Monomon } from "@/lib/monomon";
-import { renderCardImage } from "@/lib/card-image";
+import { renderCardImage, saveImageBlob } from "@/lib/card-image";
 import { tap, playSound } from "@/lib/sound";
 
 interface ShareModalProps {
@@ -37,17 +37,17 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
 
   const saveImage = async () => {
     tap();
-    const b = blob ?? (await renderCardImage(monomon, "share"));
-    const url = URL.createObjectURL(b);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `monomon-${monomon.name}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    playSound("save");
-    toast.success("画像を保存しました");
+    try {
+      const b = blob ?? (await renderCardImage(monomon, "share"));
+      const where = await saveImageBlob(b, `monomon-${monomon.name}`);
+      playSound("save");
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
+    } catch (err) {
+      console.error("[monomon] 画像保存に失敗:", err);
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
+    }
   };
 
   const systemShare = async () => {

@@ -21,7 +21,7 @@ import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
 import { generateMonomon, type Monomon } from "@/lib/monomon";
 import { addToDex, meetMonomon } from "@/lib/dex";
-import { downloadCardImage } from "@/lib/card-image";
+import { saveCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
 
 export const Route = createFileRoute("/scan")({
@@ -159,10 +159,13 @@ function Scan() {
     tap();
     setSaving(true);
     try {
-      await downloadCardImage(result);
-      toast.success("画像を保存しました");
-    } catch {
-      toast.error("もう一度ためしてみてね");
+      const where = await saveCardImage(result);
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
+    } catch (err) {
+      console.error("[monomon] 画像保存に失敗:", err);
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
@@ -284,13 +287,13 @@ function Scan() {
                 tap();
                 openCamera();
               }}
-              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-card py-4 text-[15px] font-bold text-foreground shadow-soft active:scale-95"
             >
               📷 撮り直す
             </button>
             <button
               onClick={startSearch}
-              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full gradient-primary py-4 text-[15px] font-bold text-primary-foreground shadow-float active:scale-95"
             >
               🔍 モノモンを探す
             </button>
@@ -335,7 +338,7 @@ function Scan() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -349,7 +352,7 @@ function Scan() {
                   tap();
                   setSharing(true);
                 }}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
               >
                 <Share2 className="h-4 w-4 text-primary" />
                 シェア
@@ -357,7 +360,7 @@ function Scan() {
               <Link
                 to="/zukan"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
               >
                 <Check className="h-4 w-4" />
                 図鑑を見る
@@ -365,7 +368,7 @@ function Scan() {
               <Link
                 to="/"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
               >
                 <Home className="h-4 w-4" />
                 ホーム

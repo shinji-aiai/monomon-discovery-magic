@@ -35,7 +35,7 @@ import { getReunionDialogue, getFriendship } from "@/lib/friendship";
 import { FAMILY_STYLES, type Family } from "@/lib/monomon-data";
 import { SPECIES, SPECIES_COUNT, getSpecies, type Species } from "@/lib/species";
 import { getRarity, getRarityLabel } from "@/lib/rarity";
-import { downloadCardImage } from "@/lib/card-image";
+import { saveCardImage } from "@/lib/card-image";
 import type { Monomon } from "@/lib/monomon";
 import { tap, playSound, haptic } from "@/lib/sound";
 import { trackZukanOpen } from "@/lib/analytics";
@@ -413,7 +413,7 @@ function FamilyProgress({
           const complete = found === total;
           return (
             <li key={family} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-sm font-bold text-foreground">
+              <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-foreground">
                 {fam.emoji} {fam.label}族
               </span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -645,8 +645,8 @@ function SpeciesDetailSheet({
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
-              {fam.emoji} {fam.label}
+            <span className="whitespace-nowrap rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
+              {fam.emoji} {fam.label}族
             </span>
           </div>
           {primary && (
@@ -843,11 +843,14 @@ function DetailSheet({
     tap();
     setSaving(true);
     try {
-      await downloadCardImage(live);
+      const where = await saveCardImage(live);
       playSound("save");
-      toast.success("画像を保存しました");
-    } catch {
-      toast.error("もう一度ためしてみてね");
+      toast.success(
+        where === "photos" ? "写真アプリに保存しました📸" : "画像を保存しました",
+      );
+    } catch (err) {
+      console.error("[monomon] 画像保存に失敗:", err);
+      toast.error("うまく保存できなかったよ　もう一度ためしてみてね");
     } finally {
       setSaving(false);
     }
@@ -932,7 +935,7 @@ function DetailSheet({
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -946,7 +949,7 @@ function DetailSheet({
               tap();
               setSharing(true);
             }}
-            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
           >
             <Share2 className="h-4 w-4" />
             シェア
@@ -958,7 +961,7 @@ function DetailSheet({
           <Link
             to="/"
             onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
           >
             <Home className="h-4 w-4" />
             ホームへ戻る
@@ -966,7 +969,7 @@ function DetailSheet({
           <Link
             to="/scan"
             onClick={tap}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
           >
             <Camera className="h-4 w-4 text-primary" />
             もう一度さがす
