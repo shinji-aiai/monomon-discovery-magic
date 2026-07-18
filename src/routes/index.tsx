@@ -238,21 +238,22 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-3xl p-3 text-center shadow-soft ${
-        accent ? "gradient-magic text-card" : "bg-card/85 backdrop-blur"
+      className={`rounded-2xl p-3 text-center shadow-soft ${
+        accent ? "gradient-magic text-card" : "border border-border/50 bg-card/70 backdrop-blur"
       }`}
     >
       <p
-        className={`text-[0.7rem] font-bold ${accent ? "text-card/80" : "text-muted-foreground"}`}
+        className={`text-[0.66rem] font-medium tracking-wide ${accent ? "text-card/80" : "text-muted-foreground"}`}
       >
         {label}
       </p>
       <p
-        className={`mt-0.5 text-2xl font-extrabold leading-none ${accent ? "text-card" : "text-foreground"}`}
+        className={`mt-0.5 text-xl font-extrabold leading-none tracking-tight ${accent ? "text-card" : "text-foreground"}`}
       >
         {value}
-        <span className="ml-0.5 text-xs font-bold">{unit}</span>
+        <span className="ml-0.5 text-[0.65rem] font-medium">{unit}</span>
       </p>
     </div>
   );
 }
+
