@@ -213,31 +213,31 @@ function Scan() {
 
       {phase === "choose" && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-            <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
+          <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-full border border-border/50 bg-card/70 shadow-float backdrop-blur animate-breathe">
+            <Camera className="h-12 w-12 text-primary" strokeWidth={1.4} />
           </div>
-          <h1 className="text-2xl font-extrabold text-foreground">
+          <h1 className="text-[1.35rem] font-extrabold tracking-tight text-foreground">
             モノを撮ってみよう
           </h1>
-          <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+          <p className="mt-2.5 max-w-xs text-[0.86rem] font-medium leading-relaxed text-muted-foreground">
             身の回りのモノを1枚
             <br />
-            どんな精霊が出てくるかな？
+            どんな精霊が出てくるかな
           </p>
 
           <div className="mt-10 w-full max-w-sm space-y-1 text-center">
-            <p className="text-sm font-bold text-foreground/90">
+            <p className="text-[0.82rem] font-medium tracking-wide text-foreground/80">
               モノ全体が入るように撮ってね
             </p>
-            <p className="text-xs text-muted-foreground">
-              ぬいぐるみ・文房具・植物がおすすめ！
+            <p className="text-[0.72rem] font-normal text-muted-foreground">
+              ぬいぐるみ・文房具・植物がおすすめ
             </p>
           </div>
 
-          <div className="mt-4 w-full max-w-sm space-y-3">
+          <div className="mt-5 w-full max-w-sm space-y-3">
             <button
               onClick={openCamera}
-              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-base font-extrabold tracking-wide text-primary-foreground shadow-float active:scale-95"
             >
               <Camera className="h-5 w-5" />
               写真を撮る
@@ -247,33 +247,34 @@ function Scan() {
                 tap();
                 libraryRef.current?.click();
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-card py-4 text-lg font-bold text-foreground shadow-soft active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-border/50 bg-card/80 py-4 text-base font-medium tracking-wide text-foreground shadow-soft active:scale-95"
             >
-              <ImagePlus className="h-5 w-5 text-primary" />
+              <ImagePlus className="h-5 w-5 text-primary/80" />
               写真を選ぶ
             </button>
           </div>
         </div>
+
       )}
 
       {phase === "confirm" && photo && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
           <div className="animate-pop-in">
-            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
+            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[32px] shadow-float">
               <img
                 src={photo}
                 alt="撮影した写真"
                 className="h-full w-full object-cover"
               />
-              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
+              <span className="pointer-events-none absolute inset-0 rounded-[32px] ring-1 ring-inset ring-border/40" />
             </div>
           </div>
 
-          <div className="mt-8 space-y-1">
-            <h1 className="text-xl font-extrabold text-foreground">
-              この写真でさがす？
+          <div className="mt-8 space-y-1.5">
+            <h1 className="text-[1.2rem] font-extrabold tracking-tight text-foreground">
+              この写真でさがす
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[0.82rem] font-medium text-muted-foreground">
               モノモンがかくれているかも
             </p>
           </div>
@@ -284,19 +285,20 @@ function Scan() {
                 tap();
                 openCamera();
               }}
-              className="flex items-center justify-center gap-2 rounded-full bg-card py-4 text-base font-bold text-foreground shadow-soft active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-full border border-border/50 bg-card/80 py-4 text-[0.92rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
             >
-              📷 撮り直す
+              撮り直す
             </button>
             <button
               onClick={startSearch}
-              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-4 text-[0.92rem] font-extrabold tracking-wide text-primary-foreground shadow-float active:scale-95"
             >
-              🔍 モノモンを探す
+              さがす
             </button>
           </div>
         </div>
       )}
+
 
 
       {phase === "reveal" && photo && (
@@ -322,25 +324,25 @@ function Scan() {
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
           <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
-              <Sparkles className="h-4 w-4" />
-              図鑑に登録しました！
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/8 px-4 py-1.5 text-[0.78rem] font-medium tracking-wide text-primary animate-pop-in">
+              <Sparkles className="h-3.5 w-3.5" />
+              図鑑に加わりました
             </p>
           </div>
 
           <div className="mx-auto w-full max-w-sm">
             <MonomonCard monomon={result} animate />
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
               <button
                 onClick={save}
                 disabled={saving}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-border/50 bg-card/80 py-3.5 text-[0.82rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4 text-primary/80" />
                 )}
                 画像を保存
               </button>
@@ -349,15 +351,15 @@ function Scan() {
                   tap();
                   setSharing(true);
                 }}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-border/50 bg-card/80 py-3.5 text-[0.82rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
               >
-                <Share2 className="h-4 w-4 text-primary" />
+                <Share2 className="h-4 w-4 text-primary/80" />
                 シェア
               </button>
               <Link
                 to="/zukan"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-[0.82rem] font-medium tracking-wide text-secondary-foreground active:scale-95"
               >
                 <Check className="h-4 w-4" />
                 図鑑を見る
@@ -365,25 +367,24 @@ function Scan() {
               <Link
                 to="/"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-[0.82rem] font-extrabold tracking-wide text-primary-foreground shadow-soft active:scale-95"
               >
                 <Home className="h-4 w-4" />
                 ホーム
               </Link>
             </div>
 
-            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
-            <div className="mt-4 text-center">
+            <div className="mt-5 text-center">
               <SupportButton variant="result" />
             </div>
 
-            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
+            <p className="mt-8 animate-fade-in text-center text-[0.72rem] font-normal tracking-wide text-muted-foreground/70">
               まだ見ぬモノモンが待っているかも
             </p>
           </div>
         </div>
       )}
+
 
       {sharing && result && (
         <ShareModal monomon={result} onClose={() => setSharing(false)} />

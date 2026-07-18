@@ -32,15 +32,16 @@ export interface FamilyStyle {
 }
 
 export const FAMILY_STYLES: Record<Family, FamilyStyle> = {
-  drink: { label: "のみもの", emoji: "🥤", bg: ["#ECF6FB", "#D3E9F4"], tint: "#7FC4E8" },
-  kitchen: { label: "だいどころ", emoji: "🍳", bg: ["#FBF6EF", "#EBDDC9"], tint: "#FF9F57" },
-  stationery: { label: "ぶんぐ", emoji: "✏️", bg: ["#FBF6EA", "#EEE2C8"], tint: "#E8B45C" },
-  plant: { label: "みどり", emoji: "🌿", bg: ["#EEF8EE", "#D3EBD6"], tint: "#62C99A" },
-  wear: { label: "みのまわり", emoji: "👟", bg: ["#FBEFF3", "#EAD6DF"], tint: "#FF9FBE" },
-  device: { label: "でんき", emoji: "💡", bg: ["#EFF3F8", "#D2DDE9"], tint: "#7FA8E8" },
-  paper: { label: "かみ", emoji: "📄", bg: ["#FBF7EE", "#EEE4D0"], tint: "#E8CFA0" },
-  food: { label: "たべもの", emoji: "🍙", bg: ["#FFF3E8", "#FBDCC6"], tint: "#FF9E7A" },
+  drink: { label: "のみもの", emoji: "🥤", bg: ["#F5F1E8", "#E6DFCF"], tint: "#B8C9D0" },
+  kitchen: { label: "だいどころ", emoji: "🍳", bg: ["#F7F1E5", "#EADFC8"], tint: "#D9A87A" },
+  stationery: { label: "ぶんぐ", emoji: "✏️", bg: ["#F6F0E0", "#EBDFC0"], tint: "#D2B078" },
+  plant: { label: "みどり", emoji: "🌿", bg: ["#F1F0E4", "#DFE3D0"], tint: "#9DBFA3" },
+  wear: { label: "みのまわり", emoji: "👟", bg: ["#F6ECE9", "#EBD8D2"], tint: "#D6A8AE" },
+  device: { label: "でんき", emoji: "💡", bg: ["#EFEEE8", "#DCDBD4"], tint: "#A5A9B2" },
+  paper: { label: "かみ", emoji: "📄", bg: ["#F7F1E3", "#ECE0C7"], tint: "#D6BE94" },
+  food: { label: "たべもの", emoji: "🍙", bg: ["#F7EDE0", "#EFD9C2"], tint: "#D69C86" },
 };
+
 
 /* =========================================================================
  * 乱数ユーティリティ（seed から決定的に生成）
@@ -80,16 +81,17 @@ function hsl(h: number, s: number, l: number): string {
 
 /** 色相をもとに、やさしいパステル配色を作ります。 */
 export function genPalette(rng: () => number, hue: number): Palette {
-  const s = 58 + rng() * 18; // 彩度（落ち着いたパステル域）
+  const s = 46 + rng() * 14; // 彩度をひかえめに（上質でおだやかに）
   return {
-    c1: hsl(hue, s, 85),
-    c2: hsl(hue, s, 71),
-    c3: hsl(hue, s * 0.92, 57),
-    line: hsl(hue, 32, 37),
-    cheek: hsl(350, 78, 80),
+    c1: hsl(hue, s, 88),
+    c2: hsl(hue, s, 74),
+    c3: hsl(hue, s * 0.9, 60),
+    line: hsl(hue, 26, 38),
+    cheek: hsl(352, 62, 82),
     hue,
   };
 }
+
 
 /* =========================================================================
  * 個体のバリエーション語彙

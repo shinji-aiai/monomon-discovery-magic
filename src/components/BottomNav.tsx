@@ -68,7 +68,7 @@ export function BottomNav() {
         hidden ? "translate-y-[140%]" : "translate-y-0",
       )}
     >
-      <div className="pointer-events-auto mx-auto flex max-w-sm items-stretch justify-between gap-1 rounded-[26px] border border-white/60 bg-card/85 p-1.5 shadow-float backdrop-blur-xl">
+      <div className="pointer-events-auto mx-auto flex max-w-sm items-stretch justify-between gap-1 rounded-[28px] border border-border/50 bg-card/90 p-1.5 shadow-float backdrop-blur-xl">
         {ITEMS.map((it) => {
           const active = it.exact
             ? pathname === "/"
@@ -80,21 +80,22 @@ export function BottomNav() {
               to={it.to}
               onClick={tap}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 rounded-[20px] py-2 text-[0.66rem] font-bold transition-all active:scale-95",
+                "flex flex-1 flex-col items-center gap-0.5 rounded-[22px] py-2.5 text-[0.66rem] font-medium tracking-wide transition-all active:scale-95",
                 active
-                  ? "gradient-primary text-primary-foreground shadow-soft"
-                  : "text-muted-foreground",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground/80",
               )}
             >
               <Icon
-                className="h-5 w-5"
-                strokeWidth={active ? 2.6 : 2.2}
+                className="h-[1.15rem] w-[1.15rem]"
+                strokeWidth={active ? 2.2 : 1.8}
               />
               {it.label}
             </Link>
           );
         })}
       </div>
+
     </nav>
   );
 }
