@@ -29,6 +29,19 @@
 // per-object prompts. The endpoint, model, headers, request structure,
 // response parsing, MIME detection, error handling, and DTO types remain
 // intentionally unchanged from the verified Phase 0 contract.
+//
+// Phase 1C-R (universal Monomon character identity lock — 2026-07-18):
+// the universal four-strategy geometry placement system passed the
+// thin-solid-object boundary test (photograph preserved, EDGE strategy
+// correctly selected, natural occlusion, no invented opening, real object
+// remained the hero). Character identity FAILED because the generated
+// character read as a human baby / doll / small monkey. This refinement
+// PRESERVES the four-strategy placement architecture intact and ONLY
+// strengthens the universal, non-biological Monomon morphology rules
+// (silhouette lock, material lock, color lock, negative identity check).
+// No per-object prompt or branching is introduced. Endpoint, model,
+// auth, request/response contract, MIME detection, DTOs and error
+// handling remain unchanged.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
