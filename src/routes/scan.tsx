@@ -213,31 +213,31 @@ function Scan() {
 
       {phase === "choose" && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-            <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
+          <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-full border border-border/50 bg-card/70 shadow-float backdrop-blur animate-breathe">
+            <Camera className="h-12 w-12 text-primary" strokeWidth={1.4} />
           </div>
-          <h1 className="text-2xl font-extrabold text-foreground">
+          <h1 className="text-[1.35rem] font-extrabold tracking-tight text-foreground">
             モノを撮ってみよう
           </h1>
-          <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+          <p className="mt-2.5 max-w-xs text-[0.86rem] font-medium leading-relaxed text-muted-foreground">
             身の回りのモノを1枚
             <br />
-            どんな精霊が出てくるかな？
+            どんな精霊が出てくるかな
           </p>
 
           <div className="mt-10 w-full max-w-sm space-y-1 text-center">
-            <p className="text-sm font-bold text-foreground/90">
+            <p className="text-[0.82rem] font-medium tracking-wide text-foreground/80">
               モノ全体が入るように撮ってね
             </p>
-            <p className="text-xs text-muted-foreground">
-              ぬいぐるみ・文房具・植物がおすすめ！
+            <p className="text-[0.72rem] font-normal text-muted-foreground">
+              ぬいぐるみ・文房具・植物がおすすめ
             </p>
           </div>
 
-          <div className="mt-4 w-full max-w-sm space-y-3">
+          <div className="mt-5 w-full max-w-sm space-y-3">
             <button
               onClick={openCamera}
-              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-base font-extrabold tracking-wide text-primary-foreground shadow-float active:scale-95"
             >
               <Camera className="h-5 w-5" />
               写真を撮る
@@ -247,13 +247,14 @@ function Scan() {
                 tap();
                 libraryRef.current?.click();
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-card py-4 text-lg font-bold text-foreground shadow-soft active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-border/50 bg-card/80 py-4 text-base font-medium tracking-wide text-foreground shadow-soft active:scale-95"
             >
-              <ImagePlus className="h-5 w-5 text-primary" />
+              <ImagePlus className="h-5 w-5 text-primary/80" />
               写真を選ぶ
             </button>
           </div>
         </div>
+
       )}
 
       {phase === "confirm" && photo && (
