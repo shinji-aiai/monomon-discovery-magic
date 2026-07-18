@@ -81,16 +81,17 @@ function hsl(h: number, s: number, l: number): string {
 
 /** 色相をもとに、やさしいパステル配色を作ります。 */
 export function genPalette(rng: () => number, hue: number): Palette {
-  const s = 58 + rng() * 18; // 彩度（落ち着いたパステル域）
+  const s = 46 + rng() * 14; // 彩度をひかえめに（上質でおだやかに）
   return {
-    c1: hsl(hue, s, 85),
-    c2: hsl(hue, s, 71),
-    c3: hsl(hue, s * 0.92, 57),
-    line: hsl(hue, 32, 37),
-    cheek: hsl(350, 78, 80),
+    c1: hsl(hue, s, 88),
+    c2: hsl(hue, s, 74),
+    c3: hsl(hue, s * 0.9, 60),
+    line: hsl(hue, 26, 38),
+    cheek: hsl(352, 62, 82),
     hue,
   };
 }
+
 
 /* =========================================================================
  * 個体のバリエーション語彙
