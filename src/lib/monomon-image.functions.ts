@@ -16,9 +16,19 @@
 //   Latency  : ~12.1 s
 //   Scene    : original photograph and mug preserved successfully
 //
-// Phase 1A (character style calibration) — only PROMPT_TEXT is modified below.
-// The verified endpoint, model, headers, request structure, response parsing,
-// MIME detection, error handling, and DTO types are intentionally unchanged.
+// Phase 1A (character style calibration — 2026-07-18, PASS): a mug-specific
+// prompt established the Monomon visual DNA against a single test photograph.
+//
+// Phase 1C (universal object-geometry placement — 2026-07-18): the Phase 1A
+// mug-specific prompt has been replaced by ONE object-agnostic, geometry-based
+// placement prompt intended to support arbitrary real-world objects. The model
+// inspects the photographed object's real geometry at runtime and picks one of
+// four placement strategies (opening / edge / existing gap / under-or-beside).
+// A thin solid object will be used only as a representative boundary test on
+// the existing /phase0-immersion-test route; this phase does NOT introduce
+// per-object prompts. The endpoint, model, headers, request structure,
+// response parsing, MIME detection, error handling, and DTO types remain
+// intentionally unchanged from the verified Phase 0 contract.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -52,47 +62,72 @@ export type ImmersionResult =
 
 
 const PROMPT_TEXT = [
-  "Edit this photograph. Do not regenerate the scene. Preserve the original",
-  "mug exactly — its checked pattern, printed bear graphic and small printed",
-  "text, black rim, handle, ceramic surface, the wooden table, background,",
-  "crop, camera angle, perspective, focal length, color temperature, lighting",
-  "direction, shadow softness, focus and depth of field must all stay",
-  "identical. Do not restyle, recolor or re-illuminate the photograph. The",
-  "real mug must remain the hero of the image.",
+  "Edit this photograph. Do not regenerate the scene. The photographed real",
+  "object must remain the hero and stay visually dominant. Preserve exactly:",
+  "the main object's shape and proportions, every button, label, logo and",
+  "piece of readable text, all colors and materials, scratches, reflections",
+  "and surface details, every surrounding object, the background, the crop,",
+  "camera angle, perspective, focal length, lighting direction, color",
+  "temperature, shadow softness, focus, depth of field and photographic",
+  "grain. Add to the photograph rather than recreate it. Do not move,",
+  "replace, redesign, restyle or relight the object or the scene. Do not",
+  "alter buttons, labels or readable text. Do not add decorative scenery,",
+  "sparkles, captions, borders, logos or watermarks.",
   "",
-  "Add exactly one small original spirit character (a Monomon) peeking from",
-  "inside the mug's opening. A Monomon is an original tiny spirit that",
-  "quietly lives inside a real object. It is NOT an animal, NOT a bear, cat,",
-  "hamster, mouse, rabbit, or any recognizable creature, NOT a teddy bear or",
-  "plush toy, NOT a game mascot, NOT a sticker pasted on the photo, and NOT",
-  "a tiny mug — do not anthropomorphize the mug itself.",
+  "Add exactly one tiny original spirit character (a Monomon) that quietly",
+  "lives in, behind, beneath or immediately beside the real object. The",
+  "Monomon is NOT the real object transformed into a character and must not",
+  "be a miniature copy of it — do not anthropomorphize the object.",
   "",
-  "Monomon visual DNA (apply all): tiny scale; soft rounded silhouette with a",
-  "simple non-animal form (no ears, no snout, no whiskers, no tail); large",
-  "clear gentle eyes with a soft highlight; a very small restrained mouth;",
-  "two very small short hands; a calm protective expression; refined premium",
-  "3D rendering with a soft matte finish and a subtle ceramic / felt /",
-  "handcrafted texture; very few facial details; quiet presence, not an",
-  "energetic pose.",
+  "Placement — first inspect the real object's actual geometry, then choose",
+  "exactly ONE of the following strategies (only one, whichever hides most",
+  "of the character most naturally while preserving the object completely):",
   "",
-  "Derive the Monomon's identity subtly from the photographed mug: use a",
-  "harmonious palette pulled from the mug (warm cream, pale lavender, soft",
-  "muted blue-gray), optionally with faint checked freckles or markings.",
-  "Avoid a default bright blue. One tiny natural motif is allowed at most",
-  "(a single small leaf, sprout, or soft tuft) — never multiple accessories.",
+  "1. OPENING — only when the object already has a genuine opening or",
+  "cavity. Peek from that existing opening with most of the body hidden",
+  "inside; tiny hands may touch the existing edge; the real edge must",
+  "occlude the hidden body. Never create or enlarge an opening.",
   "",
-  "Placement: the Monomon peeks naturally from inside the mug, with most of",
-  "its body hidden below the rim. Its two tiny hands gently rest on the real",
-  "mug rim from the inside; the rim must correctly occlude the hidden body.",
-  "Scale is small but clearly visible. Match the photograph's light direction",
-  "and shadow softness so it feels physically present inside the mug,",
-  "casting a soft consistent shadow on the mug's interior wall.",
+  "2. EDGE — for thin, flat or solid objects with no usable opening. Peek",
+  "from behind one existing side edge or corner with most of the body",
+  "hidden behind the object; tiny hands may gently touch the existing edge;",
+  "the real object must occlude the hidden body. Do not place the complete",
+  "character on top of the object. Never invent a door, window, crack,",
+  "pocket or hole.",
   "",
-  "Do not add a second character. Do not show a full standing body. Do not",
-  "place it outside, beside, in front of or on top of the mug, and do not",
-  "make it float. Do not add text, logos, borders, watermarks, extra props,",
-  "sparkles, or any other objects.",
+  "3. EXISTING GAP — only when the object already has a real gap, handle,",
+  "frame or structural space. Peek through or from behind that existing",
+  "space, preserving its exact size and geometry. Never reshape the gap.",
+  "",
+  "4. UNDER OR TOUCHING BESIDE — for large objects, furniture or cases",
+  "where the other strategies are physically implausible. Peek from beneath",
+  "or behind a real edge, or remain immediately beside the object while",
+  "visibly touching it. Keep the character very small relative to the",
+  "object, maintain believable surface or floor contact, and never float.",
+  "",
+  "Monomon visual DNA (apply all): tiny scale; soft rounded non-animal",
+  "silhouette; large clear gentle eyes; a very small restrained mouth; two",
+  "tiny short hands only when naturally visible; a calm, protective,",
+  "slightly shy expression; quiet presence; premium soft 3D rendering with",
+  "a matte ceramic, felt or handcrafted texture; minimal facial detail;",
+  "most of the body hidden; no energetic action pose. It must not resemble",
+  "a recognizable animal (no bear, cat, rabbit, mouse, hamster or dog), a",
+  "plush toy, a human baby, a generic mobile-game mascot, a sticker, or a",
+  "miniature copy of the photographed object. At most one subtle natural",
+  "motif is allowed (a single tiny sprout, leaf or soft tuft).",
+  "",
+  "Identity from the object: derive a restrained palette from the real",
+  "object and optionally echo one subtle material, pattern or shape cue so",
+  "the Monomon feels related to it while keeping the same Monomon visual",
+  "family across different objects. Never copy a logo, brand mark or",
+  "readable text onto the character. Never add multiple accessories.",
+  "",
+  "Match the photograph's perspective, focus, grain, lighting direction and",
+  "shadow softness so the Monomon feels physically present. It may cast",
+  "only a subtle, physically consistent contact shadow. Do not add a second",
+  "character.",
 ].join(" ");
+
 
 
 function detectMimeFromBase64(b64: string): string {
