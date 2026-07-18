@@ -1,4 +1,3 @@
-import { Capacitor } from "@capacitor/core";
 import { FAMILY_STYLES } from "./monomon-data";
 import { getSpecies } from "./species";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
@@ -187,7 +186,7 @@ export async function renderCardImage(
     ctx.textAlign = "center";
   };
   chip(`${species.emoji} ${species.name}`, 0, "left");
-  chip(`${fam.emoji} ${fam.label}族`, 0, "right");
+  chip(`${fam.emoji} ${fam.label}`, 0, "right");
 
   // モノモン本体（飛び出す）
   const svg = renderMonomonSVG(specOf(monomon));
@@ -236,66 +235,14 @@ export async function renderCardImage(
   );
 }
 
-/** 保存結果。native では Photos、web ではダウンロード。 */
-export type SaveResult = "photos" | "download";
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const s = typeof reader.result === "string" ? reader.result : "";
-      resolve(s.slice(s.indexOf(",") + 1));
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
-
-/**
- * ネイティブ端末の「写真」アプリへ保存する（権限が無ければ確認が出る）。
- *
- * `@capacitor-community/media` の savePhoto は base64 データURLを直接受け取れる
- * ため、Filesystem への書き出し→読み込み→削除という壊れやすい往復を挟まず、
- * 生成した PNG をそのまま渡す。iOS 14+ で albumIdentifier を省略すると
- * NSPhotoLibraryAddUsageDescription に基づく「追加のみ」の権限確認が出る。
- */
-async function saveBlobToPhotos(blob: Blob): Promise<void> {
-  const { Media } = await import("@capacitor-community/media");
-  const base64 = await blobToBase64(blob);
-  await Media.savePhoto({ path: `data:image/png;base64,${base64}` });
-}
-
-/** web 向け：ブラウザのダウンロードで保存する。 */
-function downloadBlob(blob: Blob, fileBase: string): void {
+export async function downloadCardImage(monomon: Monomon) {
+  const blob = await renderCardImage(monomon, "save");
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${fileBase}.png`;
+  a.download = `monomon-${monomon.name}.png`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-
-/** 生成済みの画像 Blob を保存する（native=写真アプリ / web=ダウンロード）。 */
-export async function saveImageBlob(
-  blob: Blob,
-  fileBase: string,
-): Promise<SaveResult> {
-  if (Capacitor.isNativePlatform()) {
-    await saveBlobToPhotos(blob);
-    return "photos";
-  }
-  downloadBlob(blob, fileBase);
-  return "download";
-}
-
-/** モノモンのカード画像を生成して保存する。 */
-export async function saveCardImage(
-  monomon: Monomon,
-  variant: "save" | "share" = "save",
-): Promise<SaveResult> {
-  const blob = await renderCardImage(monomon, variant);
-  return saveImageBlob(blob, `monomon-${monomon.name}`);
-}
-

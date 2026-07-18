@@ -2,14 +2,7 @@ import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
 import { withFriendshipGain, reunion, type ReunionResult } from "./friendship";
 
-/**
- * 図鑑（発見したモノモン一覧）。新しい順に並びます。
- *
- * v1.0 と同じ「単純な localStorage 永続化」に戻したストアです。
- * 合成写真（`composedPhoto`）は Monomon オブジェクトに data URL のまま
- * 載せて一緒に保存します。IndexedDB を経由しないので、ナビゲーション・
- * リロード・アプリ再起動を跨いで Memories で確実に表示できます。
- */
+/** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
 
 /** まだ図鑑で「見た」ことのない（新しく登録された）モノモンのID一覧。 */
@@ -27,20 +20,19 @@ export function useNewDex() {
   return newDexStore.useValue();
 }
 
-/**
- * 出会えたモノモンを図鑑に登録します。
- * 同じ ID／同じ元写真から生まれた子はうっかり重複として既存を使い回します。
- * 同じ種族の先住モノモンがいれば「また会えた」と喜びます（friendship +rediscover）。
- */
-export async function addToDex(
-  monomon: Monomon,
-): Promise<{ added: boolean; monomon: Monomon }> {
-  const duplicate = dexStore.get().find(
-    (m) => m.id === monomon.id || (!!m.photo && m.photo === monomon.photo),
-  );
-  if (duplicate) return { added: false, monomon: duplicate };
-
+export function addToDex(monomon: Monomon) {
+  let added = true;
   dexStore.set((prev) => {
+    // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
+    // （同じ1枚をつづけて解析／連続タップ）。既存の記録を使い回して重複登録を防ぐ。
+    const duplicate = prev.find(
+      (m) => m.id === monomon.id || (!!m.photo && m.photo === monomon.photo),
+    );
+    if (duplicate) {
+      added = false;
+      return prev;
+    }
+    // 同じ種族の先住モノモンがいれば「また会えた」と喜ぶ（なかよし度 +rediscover）
     const rediscovered = prev.some((m) => m.speciesId === monomon.speciesId);
     const next = rediscovered
       ? prev.map((m) =>
@@ -51,10 +43,12 @@ export async function addToDex(
       : prev;
     return [{ ...monomon, friendship: monomon.friendship ?? 0 }, ...next];
   });
-  newDexStore.set((prev) =>
-    prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
-  );
-  return { added: true, monomon };
+  // 新しく登録された子だけ「NEW!」の印を付ける（うっかり重複では付けない）
+  if (added) {
+    newDexStore.set((prev) =>
+      prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
+    );
+  }
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */
@@ -67,6 +61,8 @@ export function petMonomon(id: string) {
 /**
  * 会いに来た（詳細を開いた／発見した）ときに呼びます。
  * 今日はじめての来訪なら再会が成立し、なかよし度 +5・再会回数 +1 を記録します。
+ * 再会が成立したときは詳しい結果（セリフやお祝い演出に使う）を返します。
+ * 今日すでに会っていれば null を返します。
  */
 export function meetMonomon(id: string): ReunionResult | null {
   let result: ReunionResult | null = null;
@@ -81,7 +77,7 @@ export function meetMonomon(id: string): ReunionResult | null {
   return result;
 }
 
-/** 指定した子の NEW! 表示を消します。 */
+/** 指定した子の NEW! 表示を消します（図鑑で見たとき）。 */
 export function clearNew(id: string) {
   newDexStore.set((prev) => prev.filter((x) => x !== id));
 }

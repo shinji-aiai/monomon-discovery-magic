@@ -528,52 +528,6 @@
   animation: heart-float 1.1s ease-out forwards;
 }
 
-/* --- Home v2: gentle idle motion --------------------------------- */
-@keyframes idle-breathe {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50%      { transform: scale(1.025) translateY(-3px); }
-}
-@utility animate-idle-breathe {
-  animation: idle-breathe 6s ease-in-out infinite;
-  transform-origin: 50% 60%;
-}
-@keyframes idle-gaze {
-  0%, 18%  { transform: rotate(0deg) translateX(0); }
-  30%, 46% { transform: rotate(-2.4deg) translateX(-4px); }
-  58%      { transform: rotate(0deg) translateX(0); }
-  72%, 86% { transform: rotate(2.2deg) translateX(4px); }
-  100%     { transform: rotate(0deg) translateX(0); }
-}
-@utility animate-idle-gaze {
-  animation: idle-gaze 14s ease-in-out infinite;
-  transform-origin: 50% 70%;
-}
 
-/* --- v3.0: gentle discovery motion ------------------------------ */
-@keyframes slow-converge {
-  0%   { transform: translate(var(--tx), var(--ty)) scale(0.4); opacity: 0; }
-  30%  { opacity: 0.9; }
-  100% { transform: translate(0, 0) scale(0.9); opacity: 0; }
-}
-@utility animate-slow-converge {
-  animation: slow-converge 3.2s ease-in-out infinite;
-}
-
-@keyframes soft-peek {
-  0%   { transform: translateY(28px) scale(0.9); opacity: 0; }
-  60%  { transform: translateY(-3px) scale(1.02); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-@utility animate-soft-peek {
-  animation: soft-peek 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-@keyframes quiet-in {
-  0%   { transform: translateY(6px); opacity: 0; filter: blur(4px); }
-  100% { transform: translateY(0);   opacity: 1; filter: blur(0); }
-}
-@utility animate-quiet-in {
-  animation: quiet-in 1.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
 
 

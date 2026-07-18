@@ -1,117 +1,104 @@
-import type { DiscoveryErrorKind, PipelineDiagnostic } from "@/lib/monomon";
+import { Camera, Moon, RefreshCw, Search, Sun, ScanEye } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { DiscoveryErrorKind } from "@/lib/monomon";
 
+/** カメラ権限OFF＋出会いの失敗をまとめてやさしく扱う種類。 */
 export type GentleErrorKind = "permission" | DiscoveryErrorKind;
 
 interface GentleErrorProps {
   kind: GentleErrorKind;
-  /**
-   * 「もう一度撮る」用のカメラ input の id。
-   * これを渡すとボタンは <label htmlFor=...> になり、iOS Safari の
-   * ユーザージェスチャー要件を確実に満たしたままネイティブピッカーを開ける。
-   * 渡さない場合は onRetry のプログラマティック実行にフォールバック。
-   */
-  cameraInputId?: string;
   onRetry: () => void;
-  onChooseAnother?: () => void;
-  diagnostic?: PipelineDiagnostic;
 }
 
 interface ErrorContent {
+  icon: LucideIcon;
   title: string;
   lines: string[];
   action: string;
-  /** true のときは新しく撮り直す（＝カメラ input を開く） */
-  reopenCamera: boolean;
+  actionIcon: LucideIcon;
 }
 
 const CONTENT: Record<GentleErrorKind, ErrorContent> = {
+  // ① カメラ権限がOFF
   permission: {
+    icon: Camera,
     title: "カメラを使わせてね",
     lines: ["モノモンを探すために", "カメラの使用をゆるしてね"],
-    action: "もう一度",
-    reopenCamera: true,
+    action: "もう一度ためす",
+    actionIcon: RefreshCw,
   },
+  // ③ 通信エラー
   network: {
+    icon: Moon,
     title: "少し休憩しているみたい",
     lines: ["うまくつながらなかったみたい", "少し時間をあけて試してね"],
-    action: "もう一度",
-    reopenCamera: false,
+    action: "もう一度ためす",
+    actionIcon: RefreshCw,
   },
+  // ③ 混みあっているとき（少し待ってほしい）
   busy: {
+    icon: Moon,
     title: "少し休憩しているみたい",
     lines: ["たくさんの出会いでちょっと一休み", "少し時間をあけて試してね"],
-    action: "もう一度",
-    reopenCamera: false,
+    action: "もう一度ためす",
+    actionIcon: RefreshCw,
   },
+  // ② 遠すぎる → 近づいてもらう
   too_far: {
+    icon: ScanEye,
     title: "もう少し近づいてね",
-    lines: ["モノが小さく写っているみたい"],
+    lines: ["モノが小さく写っているみたい", "近づいて もう一度撮ってみよう"],
     action: "もう一度撮る",
-    reopenCamera: true,
+    actionIcon: Camera,
   },
+  // ② 暗すぎる → 明るい場所で
   too_dark: {
+    icon: Sun,
     title: "明るい場所で撮ってみよう",
-    lines: ["少し暗くて見えにくいみたい"],
+    lines: ["少し暗くて見えにくいみたい", "光のある場所でもう一度ためそう"],
     action: "もう一度撮る",
-    reopenCamera: true,
+    actionIcon: Camera,
   },
+  // ② ぶれ → モノ全体をゆっくり
   blurry: {
-    title: "ゆっくり撮ってみよう",
-    lines: ["少しぶれてしまったみたい"],
+    icon: ScanEye,
+    title: "モノ全体が入るように撮ってね",
+    lines: ["少しぶれてしまったみたい", "ゆっくり構えてもう一度ためそう"],
     action: "もう一度撮る",
-    reopenCamera: true,
+    actionIcon: Camera,
   },
+  // ②④ 見つけられなかった／写真がうまく見えない
   unclear: {
-    title: "モノの姿が見つけにくかったみたい",
-    lines: ["全体が写るように撮ってみよう"],
+    icon: Search,
+    title: "今日はかくれんぼ中みたい",
+    lines: ["うまく見つけられなかったみたい", "もう一度撮影してみよう！"],
     action: "もう一度撮る",
-    reopenCamera: true,
+    actionIcon: Camera,
   },
+  // ④ そのほか（想定外）
   unknown: {
-    title: "出会う準備が止まってしまったみたい",
-    lines: ["もう一度試してみよう"],
+    icon: Search,
+    title: "今日はかくれんぼ中みたい",
+    lines: ["うまく見つけられなかったみたい", "もう一度撮影してみよう！"],
     action: "もう一度撮る",
-    reopenCamera: true,
-  },
-  generation_timeout: {
-    title: "出会う準備に時間がかかったみたい",
-    lines: ["写真はそのまま残っているよ"],
-    action: "同じ写真でもう一度会う",
-    reopenCamera: false,
-  },
-  generation_failed: {
-    title: "出会う準備が止まってしまったみたい",
-    lines: ["写真はそのまま残っているよ"],
-    action: "同じ写真でもう一度会う",
-    reopenCamera: false,
-  },
-  storage: {
-    title: "思い出を残せなかったみたい",
-    lines: ["写真はそのまま残っているよ"],
-    action: "同じ写真でもう一度会う",
-    reopenCamera: false,
+    actionIcon: Camera,
   },
 };
 
-const BUTTON_CLASS =
-  "mt-10 inline-block cursor-pointer rounded-full bg-foreground px-8 py-4 text-[14px] font-semibold tracking-[0.12em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]";
 
-/** 絵本のような静かな案内。アイコンや派手な色は使わない。 */
-export function GentleError({
-  kind,
-  onRetry,
-  onChooseAnother,
-  cameraInputId,
-  diagnostic,
-}: GentleErrorProps) {
-  const { title, lines, action, reopenCamera } = CONTENT[kind];
+/** 怖いエラー画面ではなく、Monomonらしいやさしい案内を出す。 */
+export function GentleError({ kind, onRetry }: GentleErrorProps) {
+  const { icon: Icon, title, lines, action, actionIcon: ActionIcon } =
+    CONTENT[kind];
 
   return (
-    <div className="m-auto flex w-full flex-col items-center justify-center py-10 text-center">
-      <p className="text-[17px] font-medium tracking-[0.04em] text-foreground/75">
-        {title}
-      </p>
-      <p className="mt-5 max-w-xs text-[13px] font-medium leading-[2] text-foreground/50">
+    <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
+      <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
+        <Icon className="h-14 w-14 text-card" strokeWidth={1.6} />
+      </div>
+
+      <h1 className="text-2xl font-extrabold text-foreground">{title}</h1>
+      <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
         {lines.map((line, i) => (
           <span key={i} className="block">
             {line}
@@ -119,39 +106,20 @@ export function GentleError({
         ))}
       </p>
 
-      {reopenCamera && cameraInputId ? (
-        // iOS Safari 対策：<label htmlFor> でネイティブジェスチャーを維持
-        <label htmlFor={cameraInputId} className={BUTTON_CLASS} onClick={onRetry}>
-          {action}
-        </label>
-      ) : (
-        <button onClick={onRetry} className={BUTTON_CLASS}>
-          {action}
-        </button>
-      )}
-
-      {!reopenCamera && onChooseAnother && cameraInputId && (
-        <label
-          htmlFor={cameraInputId}
-          className="mt-6 inline-block cursor-pointer text-[13px] font-medium tracking-[0.06em] text-foreground/50 active:opacity-70"
-          onClick={onChooseAnother}
-        >
-          別のモノを撮る
-        </label>
-      )}
-
-      {import.meta.env.DEV && diagnostic && (
-        <p className="mt-8 max-w-xs text-left font-mono text-[10px] leading-relaxed text-foreground/35">
-          生成に失敗しました<br />
-          段階：{diagnostic.failedStage}<br />
-          {diagnostic.status != null && <>状態：{diagnostic.status}<br /></>}
-          {diagnostic.reason && <>理由：{diagnostic.reason}</>}
-        </p>
-      )}
+      <button
+        onClick={onRetry}
+        className="mt-10 flex items-center justify-center gap-2.5 rounded-full gradient-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+      >
+        <ActionIcon className="h-5 w-5" />
+        {action}
+      </button>
 
       {kind === "permission" && (
-        <p className="mt-6 max-w-xs text-[11px] leading-[2] tracking-[0.04em] text-foreground/40">
-          ブラウザのカメラ許可を見直してね
+        <p className="mt-6 max-w-xs text-xs leading-relaxed text-muted-foreground/70">
+          <span className="block">カメラがオフのままだと探せないよ</span>
+          <span className="block">
+            ブロックした時は お使いのブラウザのカメラ許可を見直してね
+          </span>
         </p>
       )}
     </div>

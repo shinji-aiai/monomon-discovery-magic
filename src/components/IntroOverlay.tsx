@@ -1,18 +1,51 @@
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import homeCompanion from "@/assets/home-companion.png";
+import { MonomonArt } from "./MonomonArt";
 import { tap } from "@/lib/sound";
 
 interface IntroOverlayProps {
   onStart: () => void;
 }
 
-/**
- * 初回のようこそ画面。
- * v3.0：3枚の説明を廃止。一枚絵と一文だけ。
- * 実物のモノ（マグに宿る精霊のイラスト）を主役にする。
- */
+interface Slide {
+  seed: number;
+  speciesId: string;
+  title: string;
+  lines: string[];
+}
+
+const SLIDES: Slide[] = [
+  {
+    seed: 48127,
+    speciesId: "cushion",
+    title: "ようこそ モノモンへ",
+    lines: ["身近なモノには", "小さな精霊「モノモン」が", "宿っているかもしれません"],
+  },
+  {
+    seed: 90412,
+    speciesId: "cup",
+    title: "さがしてみよう",
+    lines: ["家の中の気になるモノを", "撮ってみよう", "次は何を発見できるかな？"],
+  },
+  {
+    seed: 31578,
+    speciesId: "lamp",
+    title: "モノモンと出会おう",
+    lines: ["モノを大切にすると", "モノモンも喜びます", "さあ", "最初のモノモンを見つけよう"],
+  },
+];
+
+/** 初回だけ表示する3枚のオンボーディング。 */
 export function IntroOverlay({ onStart }: IntroOverlayProps) {
   const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const slide = SLIDES[step];
+  const isLast = step === SLIDES.length - 1;
+
+  const next = () => {
+    tap();
+    setStep((s) => Math.min(s + 1, SLIDES.length - 1));
+  };
 
   const finish = () => {
     tap();
@@ -21,52 +54,79 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col px-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]"
-      style={{ backgroundColor: "#FAF8F3" }}
-    >
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="relative w-[16rem] sm:w-[18rem]">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -inset-4 rounded-[40px]"
-            style={{
-              background:
-                "radial-gradient(closest-side, rgba(210,180,130,0.20), rgba(210,180,130,0) 72%)",
+    <div className="fixed inset-0 z-50 flex flex-col gradient-sky px-7 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+      {/* スキップ（見つけやすいように枠つきで少し大きく） */}
+      <div className="flex justify-end">
+        {!isLast && (
+          <button
+            onClick={() => {
+              tap();
+              setStep(SLIDES.length - 1);
             }}
-          />
-          <div className="animate-idle-breathe">
-            <img
-              src={homeCompanion}
-              alt=""
-              width={1024}
-              height={1024}
-              className="relative h-auto w-full object-contain drop-shadow-[0_20px_36px_rgba(90,65,35,0.20)]"
-            />
+            className="rounded-full border border-primary/30 bg-card/70 px-5 py-2 text-sm font-bold text-foreground/70 shadow-soft backdrop-blur transition-transform active:scale-95"
+          >
+            スキップ
+          </button>
+        )}
+      </div>
+
+      {/* メッセージ（1画面1メッセージ） */}
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="relative mx-auto mb-12 h-40 w-40">
+          <span className="absolute inset-2 rounded-full bg-primary/20 animate-pulse-ring" />
+          <div
+            key={step}
+            className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]"
+          >
+            <MonomonArt seed={slide.seed} speciesId={slide.speciesId} />
           </div>
         </div>
 
-        <p className="mt-12 whitespace-pre-line text-[15px] font-medium leading-[2] tracking-[0.02em] text-foreground/70">
-          {"身のまわりのモノには\n小さな気配が\n宿っているかもしれません"}
+        <h2 key={`t-${step}`} className="text-[1.5rem] font-extrabold leading-snug text-foreground animate-rise-in">
+          {slide.title}
+        </h2>
+        <p
+          key={`b-${step}`}
+          className="mt-6 text-base leading-loose text-muted-foreground animate-rise-in"
+          style={{ animationDelay: "0.1s" }}
+        >
+          {slide.lines.map((line, i) => (
+            <span key={i}>
+              {line}
+              {i < slide.lines.length - 1 && <br />}
+            </span>
+          ))}
         </p>
       </div>
 
-      <button
-        onClick={finish}
-        className="w-full rounded-full bg-foreground py-[18px] text-[15px] font-semibold tracking-[0.14em] text-background shadow-[0_10px_30px_-14px_rgba(60,45,25,0.35)] active:scale-[0.985]"
-      >
-        はじめる
-      </button>
+      {/* ページインジケーター */}
+      <div className="mb-7 flex justify-center gap-2">
+        {SLIDES.map((_, i) => (
+          <span
+            key={i}
+            className={`h-2 rounded-full transition-all ${
+              i === step ? "w-6 bg-primary" : "w-2 bg-primary/25"
+            }`}
+          />
+        ))}
+      </div>
 
-      <button
-        onClick={() => {
-          tap();
-          onStart();
-        }}
-        className="mt-3 py-2 text-[12px] font-medium tracking-[0.08em] text-foreground/40 active:opacity-70"
-      >
-        あとで
-      </button>
+      {/* アクション */}
+      {isLast ? (
+        <button
+          onClick={finish}
+          className="w-full rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float transition-transform active:scale-95"
+        >
+          さがしにいく
+        </button>
+      ) : (
+        <button
+          onClick={next}
+          className="w-full rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float transition-transform active:scale-95"
+        >
+          つぎへ
+        </button>
+      )}
     </div>
   );
 }
