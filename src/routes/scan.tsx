@@ -324,25 +324,25 @@ function Scan() {
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
           <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
-              <Sparkles className="h-4 w-4" />
-              図鑑に登録しました！
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/8 px-4 py-1.5 text-[0.78rem] font-medium tracking-wide text-primary animate-pop-in">
+              <Sparkles className="h-3.5 w-3.5" />
+              図鑑に加わりました
             </p>
           </div>
 
           <div className="mx-auto w-full max-w-sm">
             <MonomonCard monomon={result} animate />
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
               <button
                 onClick={save}
                 disabled={saving}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-border/50 bg-card/80 py-3.5 text-[0.82rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4 text-primary/80" />
                 )}
                 画像を保存
               </button>
@@ -351,15 +351,15 @@ function Scan() {
                   tap();
                   setSharing(true);
                 }}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-border/50 bg-card/80 py-3.5 text-[0.82rem] font-medium tracking-wide text-foreground shadow-soft active:scale-95"
               >
-                <Share2 className="h-4 w-4 text-primary" />
+                <Share2 className="h-4 w-4 text-primary/80" />
                 シェア
               </button>
               <Link
                 to="/zukan"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3.5 text-[0.82rem] font-medium tracking-wide text-secondary-foreground active:scale-95"
               >
                 <Check className="h-4 w-4" />
                 図鑑を見る
@@ -367,25 +367,24 @@ function Scan() {
               <Link
                 to="/"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-[0.82rem] font-extrabold tracking-wide text-primary-foreground shadow-soft active:scale-95"
               >
                 <Home className="h-4 w-4" />
                 ホーム
               </Link>
             </div>
 
-            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
-            <div className="mt-4 text-center">
+            <div className="mt-5 text-center">
               <SupportButton variant="result" />
             </div>
 
-            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
+            <p className="mt-8 animate-fade-in text-center text-[0.72rem] font-normal tracking-wide text-muted-foreground/70">
               まだ見ぬモノモンが待っているかも
             </p>
           </div>
         </div>
       )}
+
 
       {sharing && result && (
         <ShareModal monomon={result} onClose={() => setSharing(false)} />
