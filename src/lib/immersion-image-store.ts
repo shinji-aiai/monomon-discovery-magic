@@ -95,8 +95,47 @@ export async function saveImmersionImage(record: StoredImmersionImage): Promise<
 }
 
 export async function getImmersionImage(id: string): Promise<StoredImmersionImage | null> {
-  const value = await withStore<StoredImmersionImage>("readonly", (store) => store.get(id));
-  return value ?? null;
+  // Safari/WKWebView can return an IndexedDB-backed Blob whose underlying
+  // storage becomes unreadable ("The object can not be found here.") after
+  // the db connection closes. Materialize the bytes into a detached Blob
+  // BEFORE the transaction / connection ends.
+  const db = await openDb();
+  try {
+    const raw = await new Promise<StoredImmersionImage | null>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readonly");
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(id);
+      let value: StoredImmersionImage | null = null;
+      req.onsuccess = () => {
+        value = (req.result as StoredImmersionImage) ?? null;
+      };
+      req.onerror = () => reject(req.error ?? new Error("IndexedDB get failed"));
+      tx.oncomplete = () => resolve(value);
+      tx.onerror = () => reject(tx.error ?? new Error("IndexedDB transaction failed"));
+      tx.onabort = () => reject(tx.error ?? new Error("IndexedDB transaction aborted"));
+    });
+    if (!raw) return null;
+    if (!(raw.blob instanceof Blob)) {
+      throw new Error("stored record is missing a Blob");
+    }
+    const buf = await raw.blob.arrayBuffer();
+    if (!buf || buf.byteLength === 0) {
+      throw new Error("stored Blob materialized to zero bytes");
+    }
+    const mimeType = raw.mimeType || raw.blob.type || "application/octet-stream";
+    const detached = new Blob([buf], { type: mimeType });
+    return {
+      id: raw.id,
+      blob: detached,
+      mimeType,
+      width: raw.width,
+      height: raw.height,
+      sizeBytes: detached.size,
+      createdAt: raw.createdAt,
+    };
+  } finally {
+    db.close();
+  }
 }
 
 export async function deleteImmersionImage(id: string): Promise<void> {
