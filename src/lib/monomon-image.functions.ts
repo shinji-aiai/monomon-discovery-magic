@@ -42,6 +42,17 @@
 // No per-object prompt or branching is introduced. Endpoint, model,
 // auth, request/response contract, MIME detection, DTOs and error
 // handling remain unchanged.
+//
+// Phase 1C-P (universal hidden-placement priority lock — 2026-07-18):
+// the Phase 1C-R character-identity lock passed. The thin-solid-object
+// boundary test FAILED only because the model selected TOUCHING BESIDE
+// instead of EDGE and left almost the whole character visible. This
+// refinement PRESERVES the four-strategy architecture intact and ONLY
+// strengthens (a) placement-strategy selection priority and (b) minimum
+// hidden-body occlusion (~65%) plus an explicit final placement
+// validation step. No object-specific prompt or per-object branching is
+// introduced. Endpoint, model, auth, request/response contract, MIME
+// detection, DTOs and error handling remain unchanged.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
