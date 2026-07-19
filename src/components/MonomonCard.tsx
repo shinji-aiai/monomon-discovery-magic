@@ -12,10 +12,27 @@ interface MonomonCardProps {
   animate?: boolean;
   /** モノモンをタップ（なでる）したときの処理。渡すとイラストが押せるようになる */
   onPet?: () => void;
+  /**
+   * Phase 1D：写真から生成した没入画像のObject URL。
+   * 与えられたときは手続き的SVGの代わりに実画像をパネルに表示する。
+   * 与えられないときは既存の v1.0 表示のまま。
+   */
+  immersionImageUrl?: string | null;
+  /**
+   * Phase 1D：没入画像を準備中（生成→圧縮→保存の途中）。
+   * URLがまだ無いあいだの、そっとした「あらわれつつある」表現に使う。
+   */
+  immersionPending?: boolean;
 }
 
-/** 保存したくなる、上質なモノモンカード（写真から精霊が飛び出す構図）。 */
-export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardProps) {
+export function MonomonCard({
+  monomon,
+  className,
+  animate,
+  onPet,
+  immersionImageUrl,
+  immersionPending,
+}: MonomonCardProps) {
   const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   const accent = monomon.palette.c3;
