@@ -115,8 +115,14 @@ export function clearAllNew() {
 }
 
 export function removeFromDex(id: string) {
+  const target = dexStore.get().find((m) => m.id === id);
   dexStore.set((prev) => prev.filter((m) => m.id !== id));
   clearNew(id);
+  const imageId = target?.immersionImageId;
+  if (imageId && isImmersionStorageSupported()) {
+    // 削除本体は妨げない。失敗しても静かに諦める。
+    void deleteImmersionImage(imageId).catch(() => {});
+  }
 }
 
 export function toggleFavorite(id: string) {
@@ -131,8 +137,17 @@ export function toggleFavorite(id: string) {
 }
 
 export function clearDex() {
+  const imageIds = dexStore
+    .get()
+    .map((m) => m.immersionImageId)
+    .filter((v): v is string => typeof v === "string" && v.length > 0);
   dexStore.set([]);
   clearAllNew();
+  if (imageIds.length > 0 && isImmersionStorageSupported()) {
+    for (const imageId of imageIds) {
+      void deleteImmersionImage(imageId).catch(() => {});
+    }
+  }
 }
 
 export function getMonomon(id: string): Monomon | undefined {
