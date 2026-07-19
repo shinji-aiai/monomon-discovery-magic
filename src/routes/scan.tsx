@@ -19,8 +19,22 @@ import { GentleError, type GentleErrorKind } from "@/components/GentleError";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
-import { generateMonomon, type Monomon } from "@/lib/monomon";
-import { addToDex, meetMonomon } from "@/lib/dex";
+import { type Monomon } from "@/lib/monomon";
+import {
+  addToDex,
+  meetMonomon,
+  setImmersionImageId,
+  getMonomon,
+} from "@/lib/dex";
+import {
+  beginDiscovery,
+  persistPreparedImmersion,
+  type DiscoverySession,
+} from "@/lib/discovery-pipeline";
+import {
+  getImmersionImage,
+  deleteImmersionImage,
+} from "@/lib/immersion-image-store";
 import { saveCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
 
