@@ -465,7 +465,7 @@ function Scan() {
       {phase === "reveal" && photo && (
         <DiscoveryReveal
           photo={photo}
-          generate={() => generateMonomon(photo)}
+          generate={() => ensureSession(photo)}
           onDone={(m) => {
             setResult(m);
             setPhase("result");
