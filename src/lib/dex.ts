@@ -24,7 +24,7 @@ export function useNewDex() {
   return newDexStore.useValue();
 }
 
-export function addToDex(monomon: Monomon) {
+export function addToDex(monomon: Monomon): boolean {
   let added = true;
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
@@ -53,6 +53,29 @@ export function addToDex(monomon: Monomon) {
       prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
     );
   }
+  return added;
+}
+
+/** 同じ写真から既に登録されたモノモンを探す（Phase 1D：同一写真の重複AI呼び防止）。 */
+export function findMonomonByPhoto(photo: string): Monomon | undefined {
+  if (!photo) return undefined;
+  return dexStore.get().find((m) => m.photo === photo);
+}
+
+/** 没入画像ID（IndexedDB）を該当モノモンに紐づける。存在しないIDなら false。 */
+export function setImmersionImageId(
+  monomonId: string,
+  immersionImageId: string,
+): boolean {
+  let updated = false;
+  dexStore.set((prev) =>
+    prev.map((m) => {
+      if (m.id !== monomonId) return m;
+      updated = true;
+      return { ...m, immersionImageId };
+    }),
+  );
+  return updated;
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */
