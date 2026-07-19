@@ -1,6 +1,10 @@
 import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
 import { withFriendshipGain, reunion, type ReunionResult } from "./friendship";
+import {
+  deleteImmersionImage,
+  isImmersionStorageSupported,
+} from "./immersion-image-store";
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
