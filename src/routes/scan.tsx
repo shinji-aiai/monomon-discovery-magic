@@ -492,7 +492,12 @@ function Scan() {
           </div>
 
           <div className="mx-auto w-full max-w-sm">
-            <MonomonCard monomon={result} animate />
+            <MonomonCard
+              monomon={result}
+              animate
+              immersionImageUrl={immersionUrl}
+              immersionPending={immersionPending}
+            />
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button
