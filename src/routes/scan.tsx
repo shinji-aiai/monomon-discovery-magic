@@ -19,8 +19,22 @@ import { GentleError, type GentleErrorKind } from "@/components/GentleError";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { fileToDataUrl, downscaleDataUrl } from "@/lib/image-utils";
-import { generateMonomon, type Monomon } from "@/lib/monomon";
-import { addToDex, meetMonomon } from "@/lib/dex";
+import { type Monomon } from "@/lib/monomon";
+import {
+  addToDex,
+  meetMonomon,
+  setImmersionImageId,
+  getMonomon,
+} from "@/lib/dex";
+import {
+  beginDiscovery,
+  persistPreparedImmersion,
+  type DiscoverySession,
+} from "@/lib/discovery-pipeline";
+import {
+  getImmersionImage,
+  deleteImmersionImage,
+} from "@/lib/immersion-image-store";
 import { saveCardImage } from "@/lib/card-image";
 import { tap } from "@/lib/sound";
 
@@ -47,9 +61,39 @@ function Scan() {
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errKind, setErrKind] = useState<GentleErrorKind>("unknown");
+  // Phase 1D: 没入画像の表示URL＆準備中フラグ
+  const [immersionUrl, setImmersionUrl] = useState<string | null>(null);
+  const [immersionPending, setImmersionPending] = useState(false);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
+
+  // Phase 1D: 進行中の発見セッション。同じ写真に対する二重の recognition／image 呼び出しを防ぐロック。
+  const sessionRef = useRef<DiscoverySession | null>(null);
+  const sessionPhotoRef = useRef<string | null>(null);
+  const inFlightRef = useRef(false);
+  // 画面から離脱した／リセットしたら、まだ未使用の画像は片付ける。
+  const objectUrlRef = useRef<string | null>(null);
+  const pendingImageIdRef = useRef<string | null>(null);
+
+  const revokeObjectUrl = () => {
+    if (objectUrlRef.current) {
+      try {
+        URL.revokeObjectURL(objectUrlRef.current);
+      } catch {
+        /* noop */
+      }
+      objectUrlRef.current = null;
+    }
+  };
+
+  const clearPendingImage = () => {
+    const id = pendingImageIdRef.current;
+    pendingImageIdRef.current = null;
+    if (id) {
+      void deleteImmersionImage(id).catch(() => {});
+    }
+  };
 
   // カメラ権限を先に把握しておく（クリック時に await しないための準備）
   const camDenied = useRef(false);
@@ -72,6 +116,13 @@ function Scan() {
       });
     return () => {
       if (status) status.onchange = null;
+    };
+  }, []);
+
+  // 画面を去るとき残った Object URL は必ず解放する
+  useEffect(() => {
+    return () => {
+      revokeObjectUrl();
     };
   }, []);
 
@@ -103,8 +154,10 @@ function Scan() {
     if (photo && !needsNewPhoto) {
       setResult(null);
       setRegistered(false);
+      // 同じ写真でリトライするなら既存セッションを使い直す（追加のAI/画像呼び出しはしない）
       setPhase("reveal");
     } else {
+      resetSession();
       setResult(null);
       setPhoto(null);
       setRegistered(false);
@@ -112,12 +165,116 @@ function Scan() {
     }
   };
 
+  const resetSession = () => {
+    sessionRef.current = null;
+    sessionPhotoRef.current = null;
+    inFlightRef.current = false;
+    setImmersionUrl(null);
+    setImmersionPending(false);
+    revokeObjectUrl();
+    clearPendingImage();
+  };
+
+  /**
+   * Phase 1D: recognition と image generation を1回だけ発火するセッションを取得。
+   * DiscoveryReveal の generate は recognition の結果だけを await する。
+   */
+  const ensureSession = (currentPhoto: string): Promise<Monomon> => {
+    if (sessionRef.current && sessionPhotoRef.current === currentPhoto) {
+      return Promise.resolve(sessionRef.current.monomon);
+    }
+    if (inFlightRef.current && sessionPhotoRef.current === currentPhoto) {
+      // 想定外の並行呼び出し保険：既存セッション完了待ち
+      return new Promise<Monomon>((resolve, reject) => {
+        const tick = () => {
+          if (sessionRef.current) resolve(sessionRef.current.monomon);
+          else if (!inFlightRef.current) reject(new Error("session lost"));
+          else setTimeout(tick, 50);
+        };
+        tick();
+      });
+    }
+    inFlightRef.current = true;
+    sessionPhotoRef.current = currentPhoto;
+    return beginDiscovery(currentPhoto).then(
+      (session) => {
+        sessionRef.current = session;
+        inFlightRef.current = false;
+        // recognition と並行で走らせた immersion タスクをバックグラウンドで待つ
+        if (session.immersionTask) {
+          setImmersionPending(true);
+          void session.immersionTask.then((res) => {
+            if (sessionRef.current !== session) return; // 破棄済み
+            if (!res.ok) {
+              setImmersionPending(false);
+              return;
+            }
+            // recognition 結果（＝ session.monomon.id）に紐づけて保存する
+            void persistPreparedImmersion(session.monomon.id, res.compressed)
+              .then(async (imageId) => {
+                if (sessionRef.current !== session) {
+                  void deleteImmersionImage(imageId).catch(() => {});
+                  return;
+                }
+                pendingImageIdRef.current = imageId;
+                // dex に既登録なら紐付け、未登録なら result 登録 effect 側でリンクを再確認
+                const linked = setImmersionImageId(
+                  session.monomon.id,
+                  imageId,
+                );
+                if (linked) {
+                  pendingImageIdRef.current = null;
+                }
+                // 表示用に Object URL を作る
+                try {
+                  const stored = await getImmersionImage(imageId);
+                  if (sessionRef.current !== session) return;
+                  if (stored?.blob) {
+                    revokeObjectUrl();
+                    const url = URL.createObjectURL(stored.blob);
+                    objectUrlRef.current = url;
+                    setImmersionUrl(url);
+                  }
+                } catch {
+                  /* 表示は諦めるが、保存は残す */
+                }
+              })
+              .catch(() => {
+                /* 保存失敗はSVGにフォールバック */
+              })
+              .finally(() => {
+                setImmersionPending(false);
+              });
+          });
+        }
+        return session.monomon;
+      },
+      (err) => {
+        inFlightRef.current = false;
+        sessionPhotoRef.current = null;
+        throw err;
+      },
+    );
+  };
+
   // 結果が出たら自動で図鑑に登録（コレクションが途切れない体験）
   useEffect(() => {
     if (phase === "result" && result && !registered) {
-      addToDex(result);
+      const added = addToDex(result);
       // 発見＝その日はじめての出会い → なかよし度 +5
       meetMonomon(result.id);
+      // 画像が先に保存されていたら（あるいは既登録で addToDex が no-op でも）ここでリンク
+      const pendingId = pendingImageIdRef.current;
+      if (pendingId) {
+        const existing = getMonomon(result.id);
+        if (existing) {
+          const linked = setImmersionImageId(result.id, pendingId);
+          if (linked) pendingImageIdRef.current = null;
+        } else if (!added) {
+          // 記録に載らなかった孤児画像は片付ける
+          clearPendingImage();
+        }
+      }
       setRegistered(true);
     }
   }, [phase, result, registered]);
@@ -128,6 +285,7 @@ function Scan() {
     try {
       const raw = await fileToDataUrl(file);
       const small = await downscaleDataUrl(raw, 720);
+      resetSession();
       setPhoto(small);
       setResult(null);
       setRegistered(false);
@@ -148,11 +306,13 @@ function Scan() {
 
   const reset = () => {
     tap();
+    resetSession();
     setResult(null);
     setPhoto(null);
     setRegistered(false);
     setPhase("choose");
   };
+
 
   const save = async () => {
     if (!result) return;
@@ -305,7 +465,7 @@ function Scan() {
       {phase === "reveal" && photo && (
         <DiscoveryReveal
           photo={photo}
-          generate={() => generateMonomon(photo)}
+          generate={() => ensureSession(photo)}
           onDone={(m) => {
             setResult(m);
             setPhase("result");
@@ -332,7 +492,12 @@ function Scan() {
           </div>
 
           <div className="mx-auto w-full max-w-sm">
-            <MonomonCard monomon={result} animate />
+            <MonomonCard
+              monomon={result}
+              animate
+              immersionImageUrl={immersionUrl}
+              immersionPending={immersionPending}
+            />
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <button

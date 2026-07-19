@@ -1,6 +1,10 @@
 import { createPersistentStore } from "./store";
 import type { Monomon } from "./monomon";
 import { withFriendshipGain, reunion, type ReunionResult } from "./friendship";
+import {
+  deleteImmersionImage,
+  isImmersionStorageSupported,
+} from "./immersion-image-store";
 
 /** 図鑑（発見したモノモン一覧）。新しい順に並びます。 */
 export const dexStore = createPersistentStore<Monomon[]>("monomon.dex.v1", []);
@@ -20,7 +24,7 @@ export function useNewDex() {
   return newDexStore.useValue();
 }
 
-export function addToDex(monomon: Monomon) {
+export function addToDex(monomon: Monomon): boolean {
   let added = true;
   dexStore.set((prev) => {
     // 同じIDはもちろん、まったく同じ写真から生まれた子は「うっかり重複」とみなす
@@ -49,6 +53,29 @@ export function addToDex(monomon: Monomon) {
       prev.includes(monomon.id) ? prev : [monomon.id, ...prev],
     );
   }
+  return added;
+}
+
+/** 同じ写真から既に登録されたモノモンを探す（Phase 1D：同一写真の重複AI呼び防止）。 */
+export function findMonomonByPhoto(photo: string): Monomon | undefined {
+  if (!photo) return undefined;
+  return dexStore.get().find((m) => m.photo === photo);
+}
+
+/** 没入画像ID（IndexedDB）を該当モノモンに紐づける。存在しないIDなら false。 */
+export function setImmersionImageId(
+  monomonId: string,
+  immersionImageId: string,
+): boolean {
+  let updated = false;
+  dexStore.set((prev) =>
+    prev.map((m) => {
+      if (m.id !== monomonId) return m;
+      updated = true;
+      return { ...m, immersionImageId };
+    }),
+  );
+  return updated;
 }
 
 /** モノモンをタップ（なでる）→ なかよし度 +1 */
@@ -88,8 +115,14 @@ export function clearAllNew() {
 }
 
 export function removeFromDex(id: string) {
+  const target = dexStore.get().find((m) => m.id === id);
   dexStore.set((prev) => prev.filter((m) => m.id !== id));
   clearNew(id);
+  const imageId = target?.immersionImageId;
+  if (imageId && isImmersionStorageSupported()) {
+    // 削除本体は妨げない。失敗しても静かに諦める。
+    void deleteImmersionImage(imageId).catch(() => {});
+  }
 }
 
 export function toggleFavorite(id: string) {
@@ -104,8 +137,17 @@ export function toggleFavorite(id: string) {
 }
 
 export function clearDex() {
+  const imageIds = dexStore
+    .get()
+    .map((m) => m.immersionImageId)
+    .filter((v): v is string => typeof v === "string" && v.length > 0);
   dexStore.set([]);
   clearAllNew();
+  if (imageIds.length > 0 && isImmersionStorageSupported()) {
+    for (const imageId of imageIds) {
+      void deleteImmersionImage(imageId).catch(() => {});
+    }
+  }
 }
 
 export function getMonomon(id: string): Monomon | undefined {

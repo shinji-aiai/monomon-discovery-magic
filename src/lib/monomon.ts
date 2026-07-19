@@ -38,6 +38,8 @@ export interface Monomon extends MonomonSpec {
   lastMetAt?: string;
   /** 再会回数（会いに来た日の延べ回数）。詳しくは friendship.ts の reunion */
   reunionCount?: number;
+  /** 写真から生成した没入画像のIDIndexedDB monomon.immersion.v1 に保存 */
+  immersionImageId?: string;
 }
 
 function makeId(seed: number): string {
