@@ -60,6 +60,17 @@
 // object-as-hero rules, endpoint, model, auth, request/response
 // contract, MIME detection, DTOs and error handling all remain
 // byte-identical to the verified baseline.
+//
+// Phase 1C final consistency cleanup (2026-07-19): the final universal
+// placement policy permits controlled full visibility ONLY for a valid
+// TOUCHING BESIDE relationship (tiny, grounded, touching, subordinate);
+// the previous blanket "most of the form stays hidden by the real
+// object" sentence inside the character-identity block conflicted with
+// that policy. Only this single wording inconsistency was corrected;
+// no placement architecture, character-identity lock, or API contract
+// was changed.
+
+
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
