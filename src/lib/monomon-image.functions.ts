@@ -60,6 +60,17 @@
 // object-as-hero rules, endpoint, model, auth, request/response
 // contract, MIME detection, DTOs and error handling all remain
 // byte-identical to the verified baseline.
+//
+// Phase 1C final consistency cleanup (2026-07-19): the final universal
+// placement policy permits controlled full visibility ONLY for a valid
+// TOUCHING BESIDE relationship (tiny, grounded, touching, subordinate);
+// the previous blanket "most of the form stays hidden by the real
+// object" sentence inside the character-identity block conflicted with
+// that policy. Only this single wording inconsistency was corrected;
+// no placement architecture, character-identity lock, or API contract
+// was changed.
+
+
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -191,11 +202,16 @@ const PROMPT_TEXT = [
   "eyelids, no human cheeks, no lips and no teeth. Hands, when naturally",
   "visible, are two tiny rounded nubs or mitten-like forms with no",
   "fingers, no nails and no human anatomy; no long arms, no legs, no",
-  "standing baby-like posture, no full humanoid pose. Most of the form",
-  "stays hidden by the real object. Expression is calm, gentle, slightly",
-  "shy, protective and quietly curious, conveyed ONLY through eye",
-  "direction, eye spacing, the tiny mouth curve, a subtle head-body tilt",
-  "and small hand placement — never through human facial expression.",
+  "standing baby-like posture, no full humanoid pose. The visible amount",
+  "of the Monomon must follow the selected placement relationship: it",
+  "should remain naturally partially hidden for OPENING, EXISTING GAP,",
+  "EDGE and UNDER when the real geometry provides occlusion; for a valid",
+  "TOUCHING BESIDE relationship it may be fully visible only when it",
+  "remains tiny, physically grounded, visibly touching the object and",
+  "clearly subordinate to the real object. Expression is calm, gentle,",
+  "slightly shy, protective and quietly curious, conveyed ONLY through",
+  "eye direction, eye spacing, the tiny mouth curve, a subtle head-body",
+  "tilt and small hand placement — never through human facial expression.",
   "",
   "Color lock: use one dominant soft matte color plus at most one",
   "restrained accent, subtly derived from the photographed object. Prefer",
