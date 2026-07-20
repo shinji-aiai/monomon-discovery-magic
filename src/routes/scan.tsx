@@ -57,7 +57,6 @@ function Scan() {
   const [phase, setPhase] = useState<Phase>("choose");
   const [photo, setPhoto] = useState<string | null>(null);
   const [result, setResult] = useState<Monomon | null>(null);
-  const [registered, setRegistered] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errKind, setErrKind] = useState<GentleErrorKind>("unknown");
@@ -68,13 +67,24 @@ function Scan() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
 
-  // Phase 1D: 進行中の発見セッション。同じ写真に対する二重の recognition／image 呼び出しを防ぐロック。
+  // Phase 1D 修復:
+  // - sessionPromiseRef が「今この写真に対する唯一の in-flight Promise」を保持する。
+  //   同じ写真に対する重複呼び出しは同じ Promise を await し、元のエラーがそのまま伝わる。
+  // - activeSessionIdRef が「今アクティブなセッションのアイデンティティ」を持つ。
+  //   reset / 新しい写真 / unmount で increment し、遅れて完了した非同期処理が
+  //   古いセッションに属していれば副作用を捨てる。
   const sessionRef = useRef<DiscoverySession | null>(null);
   const sessionPhotoRef = useRef<string | null>(null);
-  const inFlightRef = useRef(false);
-  // 画面から離脱した／リセットしたら、まだ未使用の画像は片付ける。
+  const sessionPromiseRef = useRef<Promise<DiscoverySession> | null>(null);
+  const activeSessionIdRef = useRef(0);
+  const mountedRef = useRef(true);
+  // 現在表示中の Object URL を持ち、次のセットや破棄で確実に revoke する。
   const objectUrlRef = useRef<string | null>(null);
+  // まだ Dex の Monomon に紐付いていない一時保存画像のID。
+  // 紐付けが済んだら null にする。破棄時にこれが残っていれば orphan として削除する。
   const pendingImageIdRef = useRef<string | null>(null);
+  // 同じ完了イベントで meetMonomon() を二重に呼ばないためのガード。
+  const completedForResultRef = useRef<string | null>(null);
 
   const revokeObjectUrl = () => {
     if (objectUrlRef.current) {
@@ -91,6 +101,7 @@ function Scan() {
     const id = pendingImageIdRef.current;
     pendingImageIdRef.current = null;
     if (id) {
+      // Dex に紐付いていない孤児画像だけを削除する。
       void deleteImmersionImage(id).catch(() => {});
     }
   };
@@ -119,10 +130,16 @@ function Scan() {
     };
   }, []);
 
-  // 画面を去るとき残った Object URL は必ず解放する
+  // 画面を去るとき：セッションを無効化し、残った Object URL と孤児画像を片付ける
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
+      activeSessionIdRef.current += 1;
+      sessionRef.current = null;
+      sessionPhotoRef.current = null;
+      sessionPromiseRef.current = null;
       revokeObjectUrl();
+      clearPendingImage();
     };
   }, []);
 
@@ -152,132 +169,190 @@ function Scan() {
       errKind === "blurry" ||
       errKind === "unclear";
     if (photo && !needsNewPhoto) {
+      // ユーザーの明示的リトライ：前回の rejected セッションを破棄して新しく試す。
+      invalidateSession();
       setResult(null);
-      setRegistered(false);
-      // 同じ写真でリトライするなら既存セッションを使い直す（追加のAI/画像呼び出しはしない）
+      completedForResultRef.current = null;
       setPhase("reveal");
     } else {
       resetSession();
       setResult(null);
       setPhoto(null);
-      setRegistered(false);
+      completedForResultRef.current = null;
       setPhase("choose");
     }
   };
 
-  const resetSession = () => {
+  /** 現在のセッションを論理的に無効化する（in-flight は続くが結果は捨てる）。 */
+  const invalidateSession = () => {
+    activeSessionIdRef.current += 1;
     sessionRef.current = null;
     sessionPhotoRef.current = null;
-    inFlightRef.current = false;
-    setImmersionUrl(null);
+    sessionPromiseRef.current = null;
     setImmersionPending(false);
+  };
+
+  const resetSession = () => {
+    invalidateSession();
+    setImmersionUrl(null);
     revokeObjectUrl();
     clearPendingImage();
   };
 
   /**
+   * 既に保存されている没入画像を IndexedDB から復元して表示する（AI呼び出しゼロ）。
+   * 見つからない・読めない場合は静かに諦め、SVG にフォールバックする。
+   * Dex のリンクは触らない（IndexedDB 側の一時的な失敗で紐付けを消さない）。
+   */
+  const restoreStoredImmersion = async (
+    imageId: string,
+    sessionId: number,
+  ) => {
+    try {
+      const stored = await getImmersionImage(imageId);
+      if (activeSessionIdRef.current !== sessionId) return;
+      if (!stored?.blob) return;
+      revokeObjectUrl();
+      const url = URL.createObjectURL(stored.blob);
+      objectUrlRef.current = url;
+      if (mountedRef.current) setImmersionUrl(url);
+    } catch {
+      /* 表示は諦めるが Dex のリンクは残す */
+    }
+  };
+
+  /**
    * Phase 1D: recognition と image generation を1回だけ発火するセッションを取得。
-   * DiscoveryReveal の generate は recognition の結果だけを await する。
+   * 同じ写真に対する重複呼び出しは同一 Promise を共有し、元のエラー（DiscoveryError 等）を
+   * そのまま rethrow する。ポーリングや session-lost ラップは行わない。
    */
   const ensureSession = (currentPhoto: string): Promise<Monomon> => {
-    if (sessionRef.current && sessionPhotoRef.current === currentPhoto) {
+    // 同じ写真の既解決セッションはそのまま返す
+    if (
+      sessionRef.current &&
+      sessionPhotoRef.current === currentPhoto
+    ) {
       return Promise.resolve(sessionRef.current.monomon);
     }
-    if (inFlightRef.current && sessionPhotoRef.current === currentPhoto) {
-      // 想定外の並行呼び出し保険：既存セッション完了待ち
-      return new Promise<Monomon>((resolve, reject) => {
-        const tick = () => {
-          if (sessionRef.current) resolve(sessionRef.current.monomon);
-          else if (!inFlightRef.current) reject(new Error("session lost"));
-          else setTimeout(tick, 50);
-        };
-        tick();
-      });
+    // 同じ写真の in-flight があれば、その Promise チェーンを共有する
+    if (sessionPromiseRef.current && sessionPhotoRef.current === currentPhoto) {
+      return sessionPromiseRef.current.then((s) => s.monomon);
     }
-    inFlightRef.current = true;
+
+    // 異なる写真の in-flight があれば古いセッションを論理的に無効化する
+    if (sessionPhotoRef.current && sessionPhotoRef.current !== currentPhoto) {
+      invalidateSession();
+    }
+
+    const sessionId = ++activeSessionIdRef.current;
     sessionPhotoRef.current = currentPhoto;
-    return beginDiscovery(currentPhoto).then(
+    const p = beginDiscovery(currentPhoto);
+    sessionPromiseRef.current = p;
+
+    // このセッション用の副作用（immersion タスクの回収、状態更新）を仕込む。
+    // ただし途中で invalidate されたら状態や保存は一切行わない。
+    p.then(
       (session) => {
+        if (activeSessionIdRef.current !== sessionId) return;
         sessionRef.current = session;
-        inFlightRef.current = false;
-        // recognition と並行で走らせた immersion タスクをバックグラウンドで待つ
+
+        // (A) 既に保存された画像がある（reused 個体を含む）なら復元する
+        const existingImageId = session.monomon.immersionImageId;
+        if (existingImageId) {
+          void restoreStoredImmersion(existingImageId, sessionId);
+        }
+
+        // (B) 新規発見なら image generation の完了を待って保存
         if (session.immersionTask) {
-          setImmersionPending(true);
-          void session.immersionTask.then((res) => {
-            if (sessionRef.current !== session) return; // 破棄済み
-            if (!res.ok) {
-              setImmersionPending(false);
-              return;
-            }
-            // recognition 結果（＝ session.monomon.id）に紐づけて保存する
-            void persistPreparedImmersion(session.monomon.id, res.compressed)
-              .then(async (imageId) => {
-                if (sessionRef.current !== session) {
+          if (mountedRef.current) setImmersionPending(true);
+          void session.immersionTask
+            .then(async (res) => {
+              if (activeSessionIdRef.current !== sessionId) return;
+              if (!res.ok) return;
+              try {
+                const imageId = await persistPreparedImmersion(
+                  session.monomon.id,
+                  res.compressed,
+                );
+                // 保存が終わったあとにセッションが無効化されていたら、
+                // その保存物は誰にも紐付かないので即座に削除する。
+                if (activeSessionIdRef.current !== sessionId) {
                   void deleteImmersionImage(imageId).catch(() => {});
                   return;
                 }
-                pendingImageIdRef.current = imageId;
-                // dex に既登録なら紐付け、未登録なら result 登録 effect 側でリンクを再確認
-                const linked = setImmersionImageId(
-                  session.monomon.id,
-                  imageId,
-                );
-                if (linked) {
-                  pendingImageIdRef.current = null;
-                }
-                // 表示用に Object URL を作る
-                try {
-                  const stored = await getImmersionImage(imageId);
-                  if (sessionRef.current !== session) return;
-                  if (stored?.blob) {
-                    revokeObjectUrl();
-                    const url = URL.createObjectURL(stored.blob);
-                    objectUrlRef.current = url;
-                    setImmersionUrl(url);
+                // 既に Dex 登録済みならその場でリンクする
+                const existing = getMonomon(session.monomon.id);
+                if (existing) {
+                  const linked = setImmersionImageId(
+                    session.monomon.id,
+                    imageId,
+                  );
+                  if (!linked) {
+                    // Dex 登録から消えた等の想定外：孤児として削除
+                    void deleteImmersionImage(imageId).catch(() => {});
+                  } else {
+                    pendingImageIdRef.current = null;
+                    void restoreStoredImmersion(imageId, sessionId);
                   }
-                } catch {
-                  /* 表示は諦めるが、保存は残す */
+                } else {
+                  // 完了関数側で拾えるように pending として保持
+                  pendingImageIdRef.current = imageId;
+                  void restoreStoredImmersion(imageId, sessionId);
                 }
-              })
-              .catch(() => {
+              } catch {
                 /* 保存失敗はSVGにフォールバック */
-              })
-              .finally(() => {
-                setImmersionPending(false);
-              });
-          });
+              }
+            })
+            .finally(() => {
+              if (activeSessionIdRef.current !== sessionId) return;
+              if (mountedRef.current) setImmersionPending(false);
+            });
         }
-        return session.monomon;
       },
-      (err) => {
-        inFlightRef.current = false;
+      () => {
+        // 拒否は呼び出し側が処理する。ここではセッション状態だけ片付ける。
+        if (activeSessionIdRef.current !== sessionId) return;
+        if (sessionPromiseRef.current === p) {
+          sessionPromiseRef.current = null;
+        }
         sessionPhotoRef.current = null;
-        throw err;
       },
     );
+
+    return p.then((s) => s.monomon);
   };
 
-  // 結果が出たら自動で図鑑に登録（コレクションが途切れない体験）
-  useEffect(() => {
-    if (phase === "result" && result && !registered) {
-      const added = addToDex(result);
-      // 発見＝その日はじめての出会い → なかよし度 +5
-      meetMonomon(result.id);
-      // 画像が先に保存されていたら（あるいは既登録で addToDex が no-op でも）ここでリンク
-      const pendingId = pendingImageIdRef.current;
-      if (pendingId) {
-        const existing = getMonomon(result.id);
-        if (existing) {
-          const linked = setImmersionImageId(result.id, pendingId);
-          if (linked) pendingImageIdRef.current = null;
-        } else if (!added) {
-          // 記録に載らなかった孤児画像は片付ける
-          clearPendingImage();
-        }
-      }
-      setRegistered(true);
+  /**
+   * 発見成功の明示的なフィニッシュ手続き。
+   * Dex 登録・meetMonomon・保存済み画像のリンク・状態遷移をこの1関数で決定的に行う。
+   */
+  const completeDiscovery = (monomon: Monomon) => {
+    // 同じ Monomon.id で二重に走らないようガード
+    if (completedForResultRef.current === monomon.id) {
+      setResult(monomon);
+      setPhase("result");
+      return;
     }
-  }, [phase, result, registered]);
+    completedForResultRef.current = monomon.id;
+
+    addToDex(monomon);
+    meetMonomon(monomon.id);
+
+    // 先に保存が終わっていた場合はここでリンクする
+    const pendingId = pendingImageIdRef.current;
+    if (pendingId) {
+      const linked = setImmersionImageId(monomon.id, pendingId);
+      if (linked) {
+        pendingImageIdRef.current = null;
+      }
+    }
+
+    // 既に immersionImageId を持っている（reused）場合の表示復元は
+    // ensureSession() 側で走っている。ここでは何もしない。
+
+    setResult(monomon);
+    setPhase("result");
+  };
 
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
@@ -286,9 +361,9 @@ function Scan() {
       const raw = await fileToDataUrl(file);
       const small = await downscaleDataUrl(raw, 720);
       resetSession();
+      completedForResultRef.current = null;
       setPhoto(small);
       setResult(null);
-      setRegistered(false);
       // Apple標準の確認ではなく、モノモンらしい確認画面でひと呼吸おく
       setPhase("confirm");
     } catch {
@@ -300,7 +375,7 @@ function Scan() {
   const startSearch = () => {
     tap();
     setResult(null);
-    setRegistered(false);
+    completedForResultRef.current = null;
     setPhase("reveal");
   };
 
@@ -309,7 +384,7 @@ function Scan() {
     resetSession();
     setResult(null);
     setPhoto(null);
-    setRegistered(false);
+    completedForResultRef.current = null;
     setPhase("choose");
   };
 
@@ -466,10 +541,7 @@ function Scan() {
         <DiscoveryReveal
           photo={photo}
           generate={() => ensureSession(photo)}
-          onDone={(m) => {
-            setResult(m);
-            setPhase("result");
-          }}
+          onDone={(m) => completeDiscovery(m)}
           onError={(kind) => {
             setErrKind(kind);
             setPhase("error");
