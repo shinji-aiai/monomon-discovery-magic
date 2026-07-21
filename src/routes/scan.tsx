@@ -258,7 +258,14 @@ export function ScanScreen({
       revokeObjectUrl();
       const url = URL.createObjectURL(stored.blob);
       objectUrlRef.current = url;
-      if (mountedRef.current) setImmersionUrl(url);
+      if (mountedRef.current) {
+        setImmersionUrl(url);
+        emit({
+          type: "immersion_image_visible",
+          at: Date.now(),
+          imageId,
+        });
+      }
     } catch {
       /* 表示は諦めるが Dex のリンクは残す */
     }
@@ -289,7 +296,13 @@ export function ScanScreen({
 
     const sessionId = ++activeSessionIdRef.current;
     sessionPhotoRef.current = currentPhoto;
-    const p = beginDiscovery(currentPhoto);
+    // Phase 1D ローカル検証だけが差し替えられる、非常に狭い差し込み口。
+    // production /scan では testConfigRef.current が undefined なので、
+    // 実行時パスは常に本番の beginDiscovery になる。
+    const source =
+      testConfigRef.current?.beginDiscoveryOverride ?? beginDiscovery;
+    emit({ type: "recognition_started", at: Date.now() });
+    const p = source(currentPhoto);
     sessionPromiseRef.current = p;
 
     // このセッション用の副作用（immersion タスクの回収、状態更新）を仕込む。
@@ -298,6 +311,11 @@ export function ScanScreen({
       (session) => {
         if (activeSessionIdRef.current !== sessionId) return;
         sessionRef.current = session;
+        emit({
+          type: "recognition_resolved",
+          at: Date.now(),
+          monomonId: session.monomon.id,
+        });
 
         // (A) 既に保存された画像がある（reused 個体を含む）なら復元する
         const existingImageId = session.monomon.immersionImageId;
@@ -307,7 +325,14 @@ export function ScanScreen({
 
         // (B) 新規発見なら image generation の完了を待って保存
         if (session.immersionTask) {
-          if (mountedRef.current) setImmersionPending(true);
+          if (mountedRef.current) {
+            setImmersionPending(true);
+            emit({
+              type: "immersion_pending_change",
+              at: Date.now(),
+              pending: true,
+            });
+          }
           void session.immersionTask
             .then(async (res) => {
               if (activeSessionIdRef.current !== sessionId) return;
@@ -348,13 +373,21 @@ export function ScanScreen({
             })
             .finally(() => {
               if (activeSessionIdRef.current !== sessionId) return;
-              if (mountedRef.current) setImmersionPending(false);
+              if (mountedRef.current) {
+                setImmersionPending(false);
+                emit({
+                  type: "immersion_pending_change",
+                  at: Date.now(),
+                  pending: false,
+                });
+              }
             });
         }
       },
       () => {
         // 拒否は呼び出し側が処理する。ここではセッション状態だけ片付ける。
         if (activeSessionIdRef.current !== sessionId) return;
+        emit({ type: "recognition_rejected", at: Date.now() });
         if (sessionPromiseRef.current === p) {
           sessionPromiseRef.current = null;
         }
@@ -364,6 +397,7 @@ export function ScanScreen({
 
     return p.then((s) => s.monomon);
   };
+
 
   /**
    * 発見成功の明示的なフィニッシュ手続き。
