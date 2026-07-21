@@ -13,6 +13,7 @@ import { Route as ZukanRouteImport } from './routes/zukan'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as Phase1dLocalTestRouteImport } from './routes/phase1d-local-test'
 import { Route as Phase1bStorageTestRouteImport } from './routes/phase1b-storage-test'
 import { Route as Phase0ImmersionTestRouteImport } from './routes/phase0-immersion-test'
 import { Route as AboutRouteImport } from './routes/about'
@@ -39,6 +40,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ScanRoute = ScanRouteImport.update({
   id: '/scan',
   path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Phase1dLocalTestRoute = Phase1dLocalTestRouteImport.update({
+  id: '/phase1d-local-test',
+  path: '/phase1d-local-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Phase1bStorageTestRoute = Phase1bStorageTestRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/phase0-immersion-test': typeof Phase0ImmersionTestRoute
   '/phase1b-storage-test': typeof Phase1bStorageTestRoute
+  '/phase1d-local-test': typeof Phase1dLocalTestRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/phase0-immersion-test': typeof Phase0ImmersionTestRoute
   '/phase1b-storage-test': typeof Phase1bStorageTestRoute
+  '/phase1d-local-test': typeof Phase1dLocalTestRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/phase0-immersion-test': typeof Phase0ImmersionTestRoute
   '/phase1b-storage-test': typeof Phase1bStorageTestRoute
+  '/phase1d-local-test': typeof Phase1dLocalTestRoute
   '/scan': typeof ScanRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/phase0-immersion-test'
     | '/phase1b-storage-test'
+    | '/phase1d-local-test'
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/phase0-immersion-test'
     | '/phase1b-storage-test'
+    | '/phase1d-local-test'
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/phase0-immersion-test'
     | '/phase1b-storage-test'
+    | '/phase1d-local-test'
     | '/scan'
     | '/settings'
     | '/sitemap.xml'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   Phase0ImmersionTestRoute: typeof Phase0ImmersionTestRoute
   Phase1bStorageTestRoute: typeof Phase1bStorageTestRoute
+  Phase1dLocalTestRoute: typeof Phase1dLocalTestRoute
   ScanRoute: typeof ScanRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phase1d-local-test': {
+      id: '/phase1d-local-test'
+      path: '/phase1d-local-test'
+      fullPath: '/phase1d-local-test'
+      preLoaderRoute: typeof Phase1dLocalTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/phase1b-storage-test': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   Phase0ImmersionTestRoute: Phase0ImmersionTestRoute,
   Phase1bStorageTestRoute: Phase1bStorageTestRoute,
+  Phase1dLocalTestRoute: Phase1dLocalTestRoute,
   ScanRoute: ScanRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
