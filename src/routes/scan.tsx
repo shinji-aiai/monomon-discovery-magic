@@ -412,7 +412,18 @@ export function ScanScreen({
     }
     completedForResultRef.current = monomon.id;
 
+    emit({
+      type: "complete_discovery",
+      at: Date.now(),
+      monomonId: monomon.id,
+    });
+    emit({
+      type: "add_to_dex_attempt",
+      at: Date.now(),
+      monomonId: monomon.id,
+    });
     addToDex(monomon);
+    emit({ type: "meet_monomon", at: Date.now(), monomonId: monomon.id });
     meetMonomon(monomon.id);
 
     // 先に保存が終わっていた場合はここでリンクする
@@ -430,6 +441,15 @@ export function ScanScreen({
     setResult(monomon);
     setPhase("result");
   };
+
+  // Phase 1D ローカル検証: 同一写真の in-flight Promise 共有を検証するため、
+  // テスト側から実 ScanScreen の ensureSession を叩けるようにする。
+  // production では testConfigRef.current が undefined なので何も起きない。
+  useEffect(() => {
+    testConfigRef.current?.onReady?.({ ensureSession });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const handleFile = async (file: File | undefined | null) => {
     if (!file) return;
