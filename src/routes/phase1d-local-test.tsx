@@ -808,6 +808,9 @@ fixtureInDex: ${fixtureExists}`}
         {mounted === "orphan" && orphanConfig && (
           <ScanScreen testConfig={orphanConfig} />
         )}
+        {mounted === "double" && doubleConfig && (
+          <ScanScreen testConfig={doubleConfig} />
+        )}
         {mounted === null && (
           <div className="p-6 text-center text-xs text-muted-foreground">
             未マウント
