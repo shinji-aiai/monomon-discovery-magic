@@ -582,7 +582,37 @@ function Phase1dLocalTest() {
     }),
     onEvent: (e) => handleScanEvent(e, eventsRef.current),
     onReady: (h) => {
+      // Strict Mode の二重実行を親側でブロック
+      if (onReadyConsumedRef.current === "normal") return;
+      onReadyConsumedRef.current = "normal";
       scanHandleRef.current = h;
+    },
+  });
+
+  /** 二重呼び出し専用：initialPhoto を渡さず choose 状態の fresh ScanScreen を使う。 */
+  const makeDoubleConfig = (): ScanScreenTestConfig => ({
+    localTestMode: true,
+    beginDiscoveryOverride: makeBeginDiscoveryOverride({
+      monomonId: FIXTURE_MONOMON_ID,
+      counters: countersRef.current,
+      bumpCounters: bump,
+    }),
+    onEvent: (e) => handleScanEvent(e, eventsRef.current),
+    onReady: (h) => {
+      // 親所有ガード：Strict Mode の再実行では 2 回目の onReady を無視する。
+      if (onReadyConsumedRef.current === "double") return;
+      onReadyConsumedRef.current = "double";
+      scanHandleRef.current = h;
+      // 認識前に同一 tick で ensureSession を 2 回呼ぶ（実 ScanScreen 経路のみ）
+      const p1 = h.ensureSession(FIXTURE_PHOTO);
+      const p2 = h.ensureSession(FIXTURE_PHOTO);
+      void Promise.all([p1, p2])
+        .then(([r1, r2]) => {
+          doubleResultRef.current = { r1, r2 };
+        })
+        .catch(() => {
+          /* 記録は runDoubleCallScenario 側で失敗として判定される */
+        });
     },
   });
 
