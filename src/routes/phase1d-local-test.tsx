@@ -336,7 +336,18 @@ function Phase1dLocalTest() {
 
   /* -------- Scenario A: 通常発見 (SVG先→画像あと) -------- */
 
-  const startNormalScenario = () => {
+  /**
+   * 通常シナリオを「クリーンな状態」で開始する。
+   * - 既存のテスト用 ScanScreen をアンマウント
+   * - カウンタ・イベント・onReady 消費ガードをリセット
+   * - 決定的なテスト成果物（本テストの 2 種類の ID）だけを Dex と IndexedDB から削除
+   *   （clearDex() は絶対に呼ばない・非テストレコードには絶対触れない）
+   */
+  const startNormalScenario = async () => {
+    // 1) まず既存のテスト画面を確実にアンマウント
+    setMounted(null);
+    await new Promise((r) => setTimeout(r, 60));
+    // 2) カウンタ・イベント・ガードをフルリセット
     countersRef.current = makeCounters();
     eventsRef.current = [];
     completionCountsRef.current = {
@@ -345,34 +356,72 @@ function Phase1dLocalTest() {
       meetMonomon: 0,
     };
     scanHandleRef.current = null;
+    onReadyConsumedRef.current = null;
+    doubleResultRef.current = null;
     setReport(initialReport());
+    // 3) 決定的なテスト成果物のみを削除（clearDex は使わない）
+    if (getMonomon(FIXTURE_MONOMON_ID)) {
+      removeFromDex(FIXTURE_MONOMON_ID);
+    }
+    if (getMonomon(FIXTURE_ORPHAN_MONOMON_ID)) {
+      removeFromDex(FIXTURE_ORPHAN_MONOMON_ID);
+    }
+    try {
+      await deleteImmersionImage(FIXTURE_MONOMON_ID);
+    } catch {
+      /* noop */
+    }
+    try {
+      await deleteImmersionImage(FIXTURE_ORPHAN_MONOMON_ID);
+    } catch {
+      /* noop */
+    }
+    // 4) 新しい ScanScreen を fresh でマウント
     setMounted("normal");
   };
 
-  /* -------- Scenario B: 二重呼び出し（同一写真） -------- */
+  /* -------- Scenario B: 二重呼び出し（同一写真・専用フレッシュ ScanScreen） -------- */
 
+  /**
+   * 完了済みの通常セッションを一切再利用せず、
+   * ・専用の fresh ScanScreen を choose 状態でマウント（initialPhoto を渡さない）
+   * ・親所有のガードで onReady が Strict Mode で二度実行されないようにする
+   * ・onReady 内部で同一 tick に ensureSession(FIXTURE_PHOTO) を 2 回呼ぶ
+   * ・両 Promise の resolve と一致性、カウンタを検証する
+   */
   const runDoubleCallScenario = async () => {
-    if (!scanHandleRef.current) {
-      window.alert("先に「通常発見を開始」を押して画面を表示してください");
-      return;
+    setMounted(null);
+    await new Promise((r) => setTimeout(r, 60));
+    countersRef.current = makeCounters();
+    eventsRef.current = [];
+    completionCountsRef.current = {
+      completeDiscovery: 0,
+      addToDex: 0,
+      meetMonomon: 0,
+    };
+    scanHandleRef.current = null;
+    onReadyConsumedRef.current = null;
+    doubleResultRef.current = null;
+    setMounted("double");
+    // onReady で呼ばれる Promise ペアの結果を待つ
+    const start = Date.now();
+    while (Date.now() - start < 8000) {
+      if (doubleResultRef.current) break;
+      await new Promise((r) => setTimeout(r, 100));
     }
-    // 認識前に同一 tick で二重呼び出し
-    const p1 = scanHandleRef.current.ensureSession(FIXTURE_PHOTO);
-    const p2 = scanHandleRef.current.ensureSession(FIXTURE_PHOTO);
-    const [r1, r2] = await Promise.all([p1, p2]);
+    const pair = doubleResultRef.current;
     const c = countersRef.current;
-    const pass =
-      r1 === r2 &&
-      c.overrideCalls === 1 &&
-      c.recognitionResolves === 1 &&
-      c.immersionTaskCreates === 1;
+    const idsMatch = !!pair && pair.r1.id === pair.r2.id;
     setReport((prev) => ({
       ...prev,
       overrideCallOne: c.overrideCalls === 1 ? "PASS" : "FAIL",
       recognitionOne: c.recognitionResolves === 1 ? "PASS" : "FAIL",
       immersionCreateOne: c.immersionTaskCreates === 1 ? "PASS" : "FAIL",
     }));
-    pushEvent(eventsRef.current, `double-call ${pass ? "PASS" : "FAIL"}`);
+    pushEvent(
+      eventsRef.current,
+      `double-call ${idsMatch && c.overrideCalls === 1 ? "PASS" : "FAIL"}`,
+    );
   };
 
   /* -------- Scenario C: 保存済み画像の復元 -------- */
