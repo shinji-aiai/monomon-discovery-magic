@@ -411,7 +411,7 @@ function Phase1dLocalTest() {
     }
     const pair = doubleResultRef.current;
     const c = countersRef.current;
-    const idsMatch = !!pair && pair.r1.id === pair.r2.id;
+    const idsMatch = pair !== null ? pair.r1.id === pair.r2.id : false;
     setReport((prev) => ({
       ...prev,
       overrideCallOne: c.overrideCalls === 1 ? "PASS" : "FAIL",
