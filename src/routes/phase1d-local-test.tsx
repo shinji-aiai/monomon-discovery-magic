@@ -409,9 +409,9 @@ function Phase1dLocalTest() {
       if (doubleResultRef.current) break;
       await new Promise((r) => setTimeout(r, 100));
     }
-    const pair = doubleResultRef.current;
+    const pair: { r1: Monomon; r2: Monomon } | null = doubleResultRef.current;
     const c = countersRef.current;
-    const idsMatch = pair !== null ? pair.r1.id === pair.r2.id : false;
+    const idsMatch = pair !== null && pair.r1.id === pair.r2.id;
     setReport((prev) => ({
       ...prev,
       overrideCallOne: c.overrideCalls === 1 ? "PASS" : "FAIL",
