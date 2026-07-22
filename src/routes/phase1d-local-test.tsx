@@ -315,13 +315,18 @@ function Phase1dLocalTest() {
     meetMonomon: 0,
   });
 
-  const [mounted, setMounted] = useState<null | "normal" | "restore" | "orphan">(
-    null,
-  );
+  const [mounted, setMounted] = useState<
+    null | "normal" | "restore" | "orphan" | "double"
+  >(null);
   const [report, setReport] = useState<Report>(initialReport());
   const scanHandleRef = useRef<
     { ensureSession: (p: string) => Promise<Monomon> } | null
   >(null);
+  // Strict Mode で onReady が同一マウントで二度呼ばれないよう、親側で消費済みキーを保持する。
+  // シナリオごとにキーを変えてリセットする（"normal" / "double" / null）。
+  const onReadyConsumedRef = useRef<string | null>(null);
+  // "double" シナリオの Promise ペア結果を格納するため
+  const doubleResultRef = useRef<{ r1: Monomon; r2: Monomon } | null>(null);
 
   const pushEvent = (target: EventEntry[], label: string) => {
     target.push({ at: Date.now(), label });
