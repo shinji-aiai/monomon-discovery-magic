@@ -680,15 +680,19 @@ function Phase1dLocalTest() {
   const [orphanConfig, setOrphanConfig] = useState<ScanScreenTestConfig | null>(
     null,
   );
+  const [doubleConfig, setDoubleConfig] =
+    useState<ScanScreenTestConfig | null>(null);
 
   useEffect(() => {
     if (mounted === "normal") setNormalConfig(makeNormalConfig());
     if (mounted === "restore") setRestoreConfig(makeRestoreConfig());
     if (mounted === "orphan") setOrphanConfig(makeOrphanConfig());
+    if (mounted === "double") setDoubleConfig(makeDoubleConfig());
     if (mounted === null) {
       setNormalConfig(null);
       setRestoreConfig(null);
       setOrphanConfig(null);
+      setDoubleConfig(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
