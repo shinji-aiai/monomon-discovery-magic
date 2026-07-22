@@ -121,6 +121,15 @@ export function ScanScreen({
   const sessionPromiseRef = useRef<Promise<DiscoverySession> | null>(null);
   const activeSessionIdRef = useRef(0);
   const mountedRef = useRef(true);
+  // Phase 1D 修復（Strict Mode ライフサイクル）:
+  // React 開発 Strict Mode は effect を「setup → cleanup → setup」と即座に二重実行する。
+  // 純粋 unmount と、この模擬 cleanup を見分けるため、
+  //   - lifecycleEpochRef: 現在生きているライフサイクル世代
+  //   - pendingDestructiveCleanupRef: setTimeout(0) で走らせる破棄予定の世代
+  // を保持する。cleanup では破棄を予約するだけで、
+  // 直後の setup（Strict Mode の再マウント）で世代が進んでいれば破棄はキャンセルされる。
+  const lifecycleEpochRef = useRef(0);
+  const pendingDestructiveCleanupRef = useRef<number | null>(null);
   // 現在表示中の Object URL を持ち、次のセットや破棄で確実に revoke する。
   const objectUrlRef = useRef<string | null>(null);
   // まだ Dex の Monomon に紐付いていない一時保存画像のID。
