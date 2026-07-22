@@ -182,16 +182,29 @@ export function ScanScreen({
     };
   }, []);
 
-  // 画面を去るとき：セッションを無効化し、残った Object URL と孤児画像を片付ける
+  // 画面を去るとき（真の unmount のとき）だけ、セッションを無効化し
+  // Object URL・孤児画像を片付ける。Strict Mode の模擬 cleanup では破棄しない。
   useEffect(() => {
+    // setup：直前の cleanup が予約した破棄をキャンセルし、世代を進める。
+    mountedRef.current = true;
+    pendingDestructiveCleanupRef.current = null;
+    const epoch = ++lifecycleEpochRef.current;
     return () => {
       mountedRef.current = false;
-      activeSessionIdRef.current += 1;
-      sessionRef.current = null;
-      sessionPhotoRef.current = null;
-      sessionPromiseRef.current = null;
-      revokeObjectUrl();
-      clearPendingImage();
+      // 破棄は同期で行わず、次のマイクロタスク以降に「本当に unmount のままか」を確かめてから実施する。
+      pendingDestructiveCleanupRef.current = epoch;
+      setTimeout(() => {
+        // Strict Mode の再 setup が走っていれば pending は null になっている or epoch が進んでいる。
+        if (pendingDestructiveCleanupRef.current !== epoch) return;
+        if (lifecycleEpochRef.current !== epoch) return;
+        pendingDestructiveCleanupRef.current = null;
+        activeSessionIdRef.current += 1;
+        sessionRef.current = null;
+        sessionPhotoRef.current = null;
+        sessionPromiseRef.current = null;
+        revokeObjectUrl();
+        clearPendingImage();
+      }, 0);
     };
   }, []);
 
