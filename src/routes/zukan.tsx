@@ -16,6 +16,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { MonomonArt } from "@/components/MonomonArt";
+import { StoredImmersionVisual } from "@/components/StoredImmersionVisual";
+import { useImmersionImageUrl } from "@/hooks/use-immersion-image-url";
 import { AutoFitName } from "@/components/AutoFitName";
 import { MonomonCard } from "@/components/MonomonCard";
 import { ShareModal } from "@/components/ShareModal";
@@ -567,7 +569,16 @@ function DexCell({
         }}
       >
         <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
-          <MonomonArt monomon={monomon} />
+          {monomon.immersionImageId ? (
+            <StoredImmersionVisual
+              monomon={monomon}
+              alt={monomon.name}
+              lazy
+              fallback={<MonomonArt monomon={monomon} />}
+            />
+          ) : (
+            <MonomonArt monomon={monomon} />
+          )}
         </div>
       </div>
       <div className="px-1.5 py-1.5">
@@ -750,7 +761,16 @@ function SpeciesDetailSheet({
                     }}
                   >
                     <div className="h-full w-full drop-shadow-[0_4px_6px_rgba(90,60,40,0.18)]">
-                      <MonomonArt monomon={m} />
+                      {m.immersionImageId ? (
+                        <StoredImmersionVisual
+                          monomon={m}
+                          alt={m.name}
+                          lazy
+                          fallback={<MonomonArt monomon={m} />}
+                        />
+                      ) : (
+                        <MonomonArt monomon={m} />
+                      )}
                     </div>
                   </div>
                   <AutoFitName
@@ -918,7 +938,7 @@ function DetailSheet({
               ))}
             </div>
           )}
-          <MonomonCard monomon={live} onPet={pet} />
+          <DetailMonomonCard monomon={live} onPet={pet} />
         </div>
 
         {/* 4. なかよし度（表情・セリフ・ゲージ） */}
@@ -1005,4 +1025,20 @@ function DetailSheet({
       )}
     </div>
   );
+}
+
+/**
+ * Detail 用の MonomonCard ラッパー。ここでだけ IndexedDB を読み、
+ * MonomonCard には URL を渡す。友達度・お気に入りの再レンダーで
+ * 二重取得や URL 破棄が起きないよう、フックが ref-count で共有する。
+ */
+function DetailMonomonCard({
+  monomon,
+  onPet,
+}: {
+  monomon: Monomon;
+  onPet: () => void;
+}) {
+  const { url } = useImmersionImageUrl(monomon.immersionImageId);
+  return <MonomonCard monomon={monomon} onPet={onPet} immersionImageUrl={url} />;
 }
