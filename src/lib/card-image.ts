@@ -56,6 +56,29 @@ function drawCover(
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+/** 画像全体を切り取らずに、指定枠内へアスペクト比を保って収める（object-contain 相当）。 */
+function drawContain(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const ir = img.width / img.height;
+  const r = w / h;
+  let dw = w;
+  let dh = h;
+  if (ir > r) {
+    dh = w / ir;
+  } else {
+    dw = h * ir;
+  }
+  const dx = x + (w - dw) / 2;
+  const dy = y + (h - dh) / 2;
+  ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+}
+
 /**
  * 保存・シェア用のカード画像（PNG Blob）を生成します。
  * 写真をうっすら背景に敷き、モノモンが飛び出す上質な構図にします。
