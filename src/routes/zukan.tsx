@@ -1026,3 +1026,19 @@ function DetailSheet({
     </div>
   );
 }
+
+/**
+ * Detail 用の MonomonCard ラッパー。ここでだけ IndexedDB を読み、
+ * MonomonCard には URL を渡す。友達度・お気に入りの再レンダーで
+ * 二重取得や URL 破棄が起きないよう、フックが ref-count で共有する。
+ */
+function DetailMonomonCard({
+  monomon,
+  onPet,
+}: {
+  monomon: Monomon;
+  onPet: () => void;
+}) {
+  const { url } = useImmersionImageUrl(monomon.immersionImageId);
+  return <MonomonCard monomon={monomon} onPet={onPet} immersionImageUrl={url} />;
+}
