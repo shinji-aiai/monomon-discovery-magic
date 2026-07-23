@@ -938,7 +938,7 @@ function DetailSheet({
               ))}
             </div>
           )}
-          <MonomonCard monomon={live} onPet={pet} />
+          <DetailMonomonCard monomon={live} onPet={pet} />
         </div>
 
         {/* 4. なかよし度（表情・セリフ・ゲージ） */}
