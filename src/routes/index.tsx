@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Camera, Sparkles, ChevronRight } from "lucide-react";
 import { IntroOverlay } from "@/components/IntroOverlay";
 import { MonomonArt } from "@/components/MonomonArt";
+import { StoredImmersionVisual } from "@/components/StoredImmersionVisual";
 import { BottomNav } from "@/components/BottomNav";
 import { SupportButton } from "@/components/SupportButton";
 import { useSettings, updateSettings } from "@/lib/settings";
@@ -129,7 +130,15 @@ function Home() {
           <span className="absolute inset-5 rounded-full bg-primary/15 animate-pulse-ring" />
           <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_24px_rgba(120,80,50,0.2)]">
             {last ? (
-              <MonomonArt monomon={last} />
+              last.immersionImageId ? (
+                <StoredImmersionVisual
+                  monomon={last}
+                  alt={last.name}
+                  fallback={<MonomonArt monomon={last} />}
+                />
+              ) : (
+                <MonomonArt monomon={last} />
+              )
             ) : (
               <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
             )}
@@ -185,7 +194,16 @@ function Home() {
                     backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[m.family].bg[0]}, ${FAMILY_STYLES[m.family].bg[1]})`,
                   }}
                 >
-                  <MonomonArt monomon={m} />
+                  {m.immersionImageId ? (
+                    <StoredImmersionVisual
+                      monomon={m}
+                      alt={m.name}
+                      lazy
+                      fallback={<MonomonArt monomon={m} />}
+                    />
+                  ) : (
+                    <MonomonArt monomon={m} />
+                  )}
                 </div>
               ))}
             </div>
