@@ -145,83 +145,143 @@ export async function renderCardImage(
     ctx.fillText("モノモンを見つけた！", cx, y);
   }
 
-  // ===== イラストパネル（写真をうっすら背景に）=====
+  // ===== イラストパネル =====
   const panelX = cardX + 44;
   const panelY = y + 36;
   const panelW = cardW - 88;
   const panelH = 560;
 
-  ctx.save();
-  roundRect(ctx, panelX, panelY, panelW, panelH, 40);
-  ctx.clip();
-
-  // 元写真（ぼかして薄く）
+  // Phase 1E — 保存済み没入画像があれば、その 1 枚だけを再利用する
+  // （再生成・再圧縮・IndexedDB の追加保存は絶対にしない）。
+  let storedUrl: string | null = null;
+  let storedImg: HTMLImageElement | null = null;
   try {
-    const photo = await loadImage(monomon.photo);
-    ctx.save();
-    ctx.filter = "blur(10px)";
-    drawCover(ctx, photo, panelX - 20, panelY - 20, panelW + 40, panelH + 40);
-    ctx.restore();
+    if (monomon.immersionImageId) {
+      const rec = await getImmersionImage(monomon.immersionImageId);
+      if (
+        rec &&
+        rec.blob instanceof Blob &&
+        rec.blob.size > 0 &&
+        (rec.mimeType || rec.blob.type || "").startsWith("image/")
+      ) {
+        storedUrl = URL.createObjectURL(rec.blob);
+        storedImg = await loadImage(storedUrl);
+      }
+    }
   } catch {
-    /* 写真がなくても続行 */
+    storedImg = null;
   }
 
-  // 素材グラデのティント
-  const pg = ctx.createLinearGradient(panelX, panelY, panelX, panelY + panelH);
-  pg.addColorStop(0, mat.bg[0] + "ee");
-  pg.addColorStop(1, mat.bg[1] + "ee");
-  ctx.fillStyle = pg;
-  ctx.fillRect(panelX, panelY, panelW, panelH);
+  try {
+    ctx.save();
+    roundRect(ctx, panelX, panelY, panelW, panelH, 40);
+    ctx.clip();
 
-  // 中心グロー
-  const glow = ctx.createRadialGradient(
-    cx,
-    panelY + panelH * 0.46,
-    20,
-    cx,
-    panelY + panelH * 0.46,
-    panelW * 0.5,
-  );
-  glow.addColorStop(0, style.cheek + "44");
-  glow.addColorStop(1, "transparent");
-  ctx.fillStyle = glow;
-  ctx.fillRect(panelX, panelY, panelW, panelH);
+    if (storedImg) {
+      // 背景：同じ 1 枚をぼかしてカバー配置
+      ctx.save();
+      ctx.filter = "blur(14px)";
+      drawCover(
+        ctx,
+        storedImg,
+        panelX - 24,
+        panelY - 24,
+        panelW + 48,
+        panelH + 48,
+      );
+      ctx.restore();
 
-  // 上部の光沢
-  const sheen = ctx.createLinearGradient(0, panelY, 0, panelY + 120);
-  sheen.addColorStop(0, "rgba(255,255,255,0.5)");
-  sheen.addColorStop(1, "transparent");
-  ctx.fillStyle = sheen;
-  ctx.fillRect(panelX, panelY, panelW, 120);
-  ctx.restore();
+      // 読みやすさのための、ごく薄い中性ベール
+      ctx.fillStyle = "rgba(255,253,248,0.18)";
+      ctx.fillRect(panelX, panelY, panelW, panelH);
 
-  // チップ
-  ctx.font = "700 26px 'M PLUS Rounded 1c', sans-serif";
-  const chip = (text: string, dx: number, align: "left" | "right") => {
-    const padX = 22;
-    const tw = ctx.measureText(text).width;
-    const cw = tw + padX * 2;
-    const bx = align === "left" ? panelX + 22 : panelX + panelW - 22 - cw;
-    ctx.fillStyle = "rgba(255,255,255,0.72)";
-    roundRect(ctx, bx, panelY + 22, cw, 46, 23);
-    ctx.fill();
-    ctx.fillStyle = brown;
-    ctx.textAlign = "left";
-    ctx.fillText(text, bx + padX, panelY + 22 + 32);
-    ctx.textAlign = "center";
-  };
-  chip(`${species.emoji} ${species.name}`, 0, "left");
-  chip(`${fam.emoji} ${fam.label}族`, 0, "right");
+      // 上部の光沢
+      const sheen = ctx.createLinearGradient(0, panelY, 0, panelY + 120);
+      sheen.addColorStop(0, "rgba(255,255,255,0.35)");
+      sheen.addColorStop(1, "transparent");
+      ctx.fillStyle = sheen;
+      ctx.fillRect(panelX, panelY, panelW, 120);
 
-  // モノモン本体（飛び出す）
-  const svg = renderMonomonSVG(specOf(monomon));
-  const sizedSvg = svg.replace(
-    /width="100%" height="100%"/,
-    'width="420" height="420"',
-  );
-  const art = await loadImage(svgToDataUrl(sizedSvg));
-  const artSize = 420;
-  ctx.drawImage(art, cx - artSize / 2, panelY + panelH - artSize + 36, artSize, artSize);
+      // 前景：同じ画像を contain 配置（実物もモノモンも切り取らない）
+      drawContain(ctx, storedImg, panelX, panelY, panelW, panelH);
+    } else {
+      // 既存 v1.0 の描画パス（元写真＋素材ティント＋手続きSVG）
+      try {
+        const photo = await loadImage(monomon.photo);
+        ctx.save();
+        ctx.filter = "blur(10px)";
+        drawCover(ctx, photo, panelX - 20, panelY - 20, panelW + 40, panelH + 40);
+        ctx.restore();
+      } catch {
+        /* 写真がなくても続行 */
+      }
+
+      const pg = ctx.createLinearGradient(panelX, panelY, panelX, panelY + panelH);
+      pg.addColorStop(0, mat.bg[0] + "ee");
+      pg.addColorStop(1, mat.bg[1] + "ee");
+      ctx.fillStyle = pg;
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+
+      const glow = ctx.createRadialGradient(
+        cx,
+        panelY + panelH * 0.46,
+        20,
+        cx,
+        panelY + panelH * 0.46,
+        panelW * 0.5,
+      );
+      glow.addColorStop(0, style.cheek + "44");
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+
+      const sheen = ctx.createLinearGradient(0, panelY, 0, panelY + 120);
+      sheen.addColorStop(0, "rgba(255,255,255,0.5)");
+      sheen.addColorStop(1, "transparent");
+      ctx.fillStyle = sheen;
+      ctx.fillRect(panelX, panelY, panelW, 120);
+    }
+
+    ctx.restore();
+
+    // チップ（画像の有無に関わらず表示）
+    ctx.font = "700 26px 'M PLUS Rounded 1c', sans-serif";
+    const chip = (text: string, _dx: number, align: "left" | "right") => {
+      const padX = 22;
+      const tw = ctx.measureText(text).width;
+      const cw = tw + padX * 2;
+      const bx = align === "left" ? panelX + 22 : panelX + panelW - 22 - cw;
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      roundRect(ctx, bx, panelY + 22, cw, 46, 23);
+      ctx.fill();
+      ctx.fillStyle = brown;
+      ctx.textAlign = "left";
+      ctx.fillText(text, bx + padX, panelY + 22 + 32);
+      ctx.textAlign = "center";
+    };
+    chip(`${species.emoji} ${species.name}`, 0, "left");
+    chip(`${fam.emoji} ${fam.label}族`, 0, "right");
+
+    // 手続きSVGは、没入画像が無い時だけ描画する
+    if (!storedImg) {
+      const svg = renderMonomonSVG(specOf(monomon));
+      const sizedSvg = svg.replace(
+        /width="100%" height="100%"/,
+        'width="420" height="420"',
+      );
+      const art = await loadImage(svgToDataUrl(sizedSvg));
+      const artSize = 420;
+      ctx.drawImage(
+        art,
+        cx - artSize / 2,
+        panelY + panelH - artSize + 36,
+        artSize,
+        artSize,
+      );
+    }
+  } finally {
+    if (storedUrl) URL.revokeObjectURL(storedUrl);
+  }
 
   // ===== テキスト =====
   y = panelY + panelH + 78;
