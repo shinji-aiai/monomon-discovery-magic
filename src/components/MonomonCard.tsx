@@ -59,11 +59,26 @@ export function MonomonCard({
               />
               <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/30 to-transparent" />
             </div>
-            <img
-              src={immersionImageUrl}
-              alt={`${monomon.objectLabel ?? species.name}に宿る${monomon.name}`}
-              className="absolute inset-0 h-full w-full animate-pop-in object-contain drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]"
-            />
+            {onPet ? (
+              <button
+                type="button"
+                onClick={onPet}
+                aria-label="なでる"
+                className="absolute inset-0 flex cursor-pointer items-center justify-center transition-transform active:scale-95"
+              >
+                <img
+                  src={immersionImageUrl}
+                  alt={`${monomon.objectLabel ?? species.name}に宿る${monomon.name}`}
+                  className="h-full w-full animate-pop-in object-contain drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]"
+                />
+              </button>
+            ) : (
+              <img
+                src={immersionImageUrl}
+                alt={`${monomon.objectLabel ?? species.name}に宿る${monomon.name}`}
+                className="absolute inset-0 h-full w-full animate-pop-in object-contain drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]"
+              />
+            )}
           </>
         ) : (
           <>
