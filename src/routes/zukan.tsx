@@ -568,18 +568,17 @@ function DexCell({
           backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
         }}
       >
-        <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
-          {monomon.immersionImageId ? (
-            <StoredImmersionVisual
-              monomon={monomon}
-              alt={monomon.name}
-              lazy
-              fallback={<MonomonArt monomon={monomon} />}
-            />
-          ) : (
-            <MonomonArt monomon={monomon} />
-          )}
-        </div>
+          <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
+            {monomon.immersionImageId ? (
+              <StoredImmersionVisual
+                monomon={monomon}
+                alt={monomon.name}
+                fallback={<MonomonArt monomon={monomon} />}
+              />
+            ) : (
+              <MonomonArt monomon={monomon} />
+            )}
+          </div>
       </div>
       <div className="px-1.5 py-1.5">
         <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>

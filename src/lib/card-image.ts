@@ -8,7 +8,10 @@ import { getImmersionImage } from "./immersion-image-store";
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    const isRemoteHttp = /^https?:\/\//i.test(src);
+    if (isRemoteHttp) {
+      img.crossOrigin = "anonymous";
+    }
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
