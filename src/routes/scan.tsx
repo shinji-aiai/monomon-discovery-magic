@@ -57,47 +57,9 @@ function ScanRoute() {
 
 type Phase = "choose" | "confirm" | "reveal" | "result" | "error";
 
-/**
- * Phase 1D ローカル検証専用の狭いテスト差し込み口。
- * production /scan からは絶対に到達しない（本番は <ScanScreen /> を testConfig 無しで描画）。
- * 差し替えられるのは DiscoverySession の取得元だけで、
- * それ以外の永続化・エラー分類・Object URL 管理・Dex 挙動には触らない。
- */
-export type ScanScreenTestEvent =
-  | { type: "recognition_started"; at: number }
-  | { type: "recognition_resolved"; at: number; monomonId: string }
-  | { type: "recognition_rejected"; at: number }
-  | { type: "complete_discovery"; at: number; monomonId: string }
-  | { type: "add_to_dex_attempt"; at: number; monomonId: string }
-  | { type: "meet_monomon"; at: number; monomonId: string }
-  | { type: "immersion_image_visible"; at: number; imageId: string }
-  | { type: "immersion_pending_change"; at: number; pending: boolean };
-
-export interface ScanScreenTestConfig {
-  localTestMode: true;
-  initialPhoto?: string;
-  beginDiscoveryOverride?: (photo: string) => Promise<DiscoverySession>;
-  onEvent?: (event: ScanScreenTestEvent) => void;
-  onReady?: (handle: {
-    ensureSession: (photo: string) => Promise<Monomon>;
-  }) => void;
-}
-
-export function ScanScreen({
-  testConfig,
-}: { testConfig?: ScanScreenTestConfig } = {}) {
-  const testConfigRef = useRef<ScanScreenTestConfig | undefined>(testConfig);
-  testConfigRef.current = testConfig;
-  const emit = (e: ScanScreenTestEvent) => {
-    try {
-      testConfigRef.current?.onEvent?.(e);
-    } catch {
-      /* diagnostics must never break production */
-    }
-  };
-  const initialPhoto = testConfig?.initialPhoto ?? null;
-  const [phase, setPhase] = useState<Phase>(initialPhoto ? "reveal" : "choose");
-  const [photo, setPhoto] = useState<string | null>(initialPhoto);
+export function ScanScreen() {
+  const [phase, setPhase] = useState<Phase>("choose");
+  const [photo, setPhoto] = useState<string | null>(null);
 
   const [result, setResult] = useState<Monomon | null>(null);
   const [sharing, setSharing] = useState(false);
@@ -106,6 +68,7 @@ export function ScanScreen({
   // Phase 1D: 没入画像の表示URL＆準備中フラグ
   const [immersionUrl, setImmersionUrl] = useState<string | null>(null);
   const [immersionPending, setImmersionPending] = useState(false);
+
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
@@ -282,12 +245,8 @@ export function ScanScreen({
       objectUrlRef.current = url;
       if (mountedRef.current) {
         setImmersionUrl(url);
-        emit({
-          type: "immersion_image_visible",
-          at: Date.now(),
-          imageId,
-        });
       }
+
     } catch {
       /* 表示は諦めるが Dex のリンクは残す */
     }
@@ -318,26 +277,15 @@ export function ScanScreen({
 
     const sessionId = ++activeSessionIdRef.current;
     sessionPhotoRef.current = currentPhoto;
-    // Phase 1D ローカル検証だけが差し替えられる、非常に狭い差し込み口。
-    // production /scan では testConfigRef.current が undefined なので、
-    // 実行時パスは常に本番の beginDiscovery になる。
-    const source =
-      testConfigRef.current?.beginDiscoveryOverride ?? beginDiscovery;
-    emit({ type: "recognition_started", at: Date.now() });
-    const p = source(currentPhoto);
+    const p = beginDiscovery(currentPhoto);
     sessionPromiseRef.current = p;
 
     // このセッション用の副作用（immersion タスクの回収、状態更新）を仕込む。
     // ただし途中で invalidate されたら状態や保存は一切行わない。
     p.then(
-      (session) => {
+      (session: DiscoverySession) => {
         if (activeSessionIdRef.current !== sessionId) return;
         sessionRef.current = session;
-        emit({
-          type: "recognition_resolved",
-          at: Date.now(),
-          monomonId: session.monomon.id,
-        });
 
         // (A) 既に保存された画像がある（reused 個体を含む）なら復元する
         const existingImageId = session.monomon.immersionImageId;
@@ -349,11 +297,6 @@ export function ScanScreen({
         if (session.immersionTask) {
           if (mountedRef.current) {
             setImmersionPending(true);
-            emit({
-              type: "immersion_pending_change",
-              at: Date.now(),
-              pending: true,
-            });
           }
           void session.immersionTask
             .then(async (res) => {
@@ -397,11 +340,6 @@ export function ScanScreen({
               if (activeSessionIdRef.current !== sessionId) return;
               if (mountedRef.current) {
                 setImmersionPending(false);
-                emit({
-                  type: "immersion_pending_change",
-                  at: Date.now(),
-                  pending: false,
-                });
               }
             });
         }
@@ -409,7 +347,6 @@ export function ScanScreen({
       () => {
         // 拒否は呼び出し側が処理する。ここではセッション状態だけ片付ける。
         if (activeSessionIdRef.current !== sessionId) return;
-        emit({ type: "recognition_rejected", at: Date.now() });
         if (sessionPromiseRef.current === p) {
           sessionPromiseRef.current = null;
         }
@@ -417,7 +354,7 @@ export function ScanScreen({
       },
     );
 
-    return p.then((s) => s.monomon);
+    return p.then((s: DiscoverySession) => s.monomon);
   };
 
 
@@ -434,18 +371,7 @@ export function ScanScreen({
     }
     completedForResultRef.current = monomon.id;
 
-    emit({
-      type: "complete_discovery",
-      at: Date.now(),
-      monomonId: monomon.id,
-    });
-    emit({
-      type: "add_to_dex_attempt",
-      at: Date.now(),
-      monomonId: monomon.id,
-    });
     addToDex(monomon);
-    emit({ type: "meet_monomon", at: Date.now(), monomonId: monomon.id });
     meetMonomon(monomon.id);
 
     // 先に保存が終わっていた場合はここでリンクする
@@ -464,13 +390,7 @@ export function ScanScreen({
     setPhase("result");
   };
 
-  // Phase 1D ローカル検証: 同一写真の in-flight Promise 共有を検証するため、
-  // テスト側から実 ScanScreen の ensureSession を叩けるようにする。
-  // production では testConfigRef.current が undefined なので何も起きない。
-  useEffect(() => {
-    testConfigRef.current?.onReady?.({ ensureSession });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
 
   const handleFile = async (file: File | undefined | null) => {
