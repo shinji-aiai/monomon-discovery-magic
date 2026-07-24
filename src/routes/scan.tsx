@@ -245,12 +245,8 @@ export function ScanScreen() {
       objectUrlRef.current = url;
       if (mountedRef.current) {
         setImmersionUrl(url);
-        emit({
-          type: "immersion_image_visible",
-          at: Date.now(),
-          imageId,
-        });
       }
+
     } catch {
       /* 表示は諦めるが Dex のリンクは残す */
     }
