@@ -65,6 +65,8 @@ export function ScanScreen() {
   const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errKind, setErrKind] = useState<GentleErrorKind>("unknown");
+  // [DEV DEBUG] 発生した元エラー（temporary）
+  const [errDebug, setErrDebug] = useState<unknown>(null);
   // Phase 1D: 没入画像の表示URL＆準備中フラグ
   const [immersionUrl, setImmersionUrl] = useState<string | null>(null);
   const [immersionPending, setImmersionPending] = useState(false);
@@ -581,8 +583,9 @@ export function ScanScreen() {
           photo={photo}
           generate={() => ensureSession(photo)}
           onDone={(m) => completeDiscovery(m)}
-          onError={(kind) => {
+          onError={(kind, err) => {
             setErrKind(kind);
+            setErrDebug(err ?? null);
             setPhase("error");
           }}
           onCancel={reset}
@@ -590,7 +593,9 @@ export function ScanScreen() {
 
       )}
 
-      {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
+      {phase === "error" && (
+        <GentleError kind={errKind} onRetry={retry} debugError={errDebug} />
+      )}
 
 
       {phase === "result" && result && (
