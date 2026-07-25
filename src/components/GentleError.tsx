@@ -8,6 +8,8 @@ export type GentleErrorKind = "permission" | DiscoveryErrorKind;
 interface GentleErrorProps {
   kind: GentleErrorKind;
   onRetry: () => void;
+  /** [DEV DEBUG] 発生した元エラー（開発時のみ画面下部に生の詳細を表示） */
+  debugError?: unknown;
 }
 
 interface ErrorContent {
