@@ -27,6 +27,15 @@ import {
 /** 写真の写りぐあい（poor のときは撮り直しをやさしく促す）。 */
 export type ImageQuality = "ok" | "too_far" | "too_dark" | "blurry" | "no_object";
 
+/** [DEV DEBUG] AI Gateway 呼び出し時の詳細（本番挙動には影響しない・エラー時のみ添付） */
+export interface AnalyzeErrorDebug {
+  status?: number;
+  gatewayBody?: string;
+  providerBody?: string;
+  fetchError?: string;
+  parseError?: string;
+}
+
 /** AIが返す精霊データ（描画はこの speciesId に対応する手続き的SVG）。 */
 export interface SpiritAnalysis {
   /** 認識した物体（日本語・短く） 例: "コップ" "ハサミ" "傘" */
