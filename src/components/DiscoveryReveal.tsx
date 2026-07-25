@@ -146,7 +146,7 @@ export function DiscoveryReveal({
         clearTimeout(stuckTimer);
         setSearching(false);
         if (!alive) return;
-        onError(e instanceof DiscoveryError ? e.kind : "unknown");
+        onError(e instanceof DiscoveryError ? e.kind : "unknown", e);
         return;
       }
       clearTimeout(slowTimer);
