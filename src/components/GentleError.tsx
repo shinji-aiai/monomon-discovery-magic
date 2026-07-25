@@ -89,9 +89,47 @@ const CONTENT: Record<GentleErrorKind, ErrorContent> = {
 
 
 /** 怖いエラー画面ではなく、Monomonらしいやさしい案内を出す。 */
-export function GentleError({ kind, onRetry }: GentleErrorProps) {
+export function GentleError({ kind, onRetry, debugError }: GentleErrorProps) {
   const { icon: Icon, title, lines, action, actionIcon: ActionIcon } =
     CONTENT[kind];
+
+  // [DEV DEBUG] 開発時のみ生のエラー詳細を表示（本番挙動には影響しない）
+  const debugInfo = (() => {
+    if (!debugError) return null;
+    const e = debugError as {
+      name?: string;
+      message?: string;
+      stack?: string;
+      debug?: {
+        status?: number;
+        gatewayBody?: string;
+        providerBody?: string;
+        fetchError?: string;
+        parseError?: string;
+        upstreamError?: string;
+        analyzeError?: string;
+      };
+      cause?: unknown;
+    };
+    return {
+      name: e.name ?? typeof debugError,
+      message: e.message ?? String(debugError),
+      stack: e.stack,
+      status: e.debug?.status,
+      upstreamError: e.debug?.upstreamError,
+      gatewayBody: e.debug?.gatewayBody,
+      providerBody: e.debug?.providerBody,
+      fetchError: e.debug?.fetchError,
+      parseError: e.debug?.parseError,
+      analyzeError: e.debug?.analyzeError,
+      cause:
+        e.cause instanceof Error
+          ? `${e.cause.name}: ${e.cause.message}\n${e.cause.stack ?? ""}`
+          : e.cause !== undefined
+            ? String(e.cause)
+            : undefined,
+    };
+  })();
 
   return (
     <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
@@ -123,6 +161,23 @@ export function GentleError({ kind, onRetry }: GentleErrorProps) {
             ブロックした時は お使いのブラウザのカメラ許可を見直してね
           </span>
         </p>
+      )}
+
+      {debugInfo && (
+        <details
+          open
+          className="mx-4 mt-8 w-full max-w-md rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-left"
+        >
+          <summary className="cursor-pointer text-xs font-bold text-destructive">
+            [DEV] Debug details (temporary)
+          </summary>
+          <pre className="mt-2 max-h-[50vh] overflow-auto whitespace-pre-wrap break-words text-[10px] leading-snug text-foreground">
+{`kind: ${kind}
+name: ${debugInfo.name}
+message: ${debugInfo.message}
+${debugInfo.status !== undefined ? `status: ${debugInfo.status}\n` : ""}${debugInfo.upstreamError ? `upstreamError: ${debugInfo.upstreamError}\n` : ""}${debugInfo.gatewayBody ? `\n--- gatewayBody ---\n${debugInfo.gatewayBody}\n` : ""}${debugInfo.providerBody ? `\n--- providerBody ---\n${debugInfo.providerBody}\n` : ""}${debugInfo.fetchError ? `\n--- fetchError ---\n${debugInfo.fetchError}\n` : ""}${debugInfo.parseError ? `\n--- parseError ---\n${debugInfo.parseError}\n` : ""}${debugInfo.analyzeError ? `\n--- analyzeError ---\n${debugInfo.analyzeError}\n` : ""}${debugInfo.stack ? `\n--- stack ---\n${debugInfo.stack}\n` : ""}${debugInfo.cause ? `\n--- cause ---\n${debugInfo.cause}\n` : ""}`}
+          </pre>
+        </details>
       )}
     </div>
   );
