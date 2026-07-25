@@ -12,7 +12,7 @@ interface DiscoveryRevealProps {
   generate: () => Promise<Monomon>;
   onDone: (m: Monomon) => void;
   /** うまく出会えなかったとき（通信・混雑・見つからない） */
-  onError: (kind: DiscoveryErrorKind) => void;
+  onError: (kind: DiscoveryErrorKind, error?: unknown) => void;
   /** 演出をやめて前の画面へそっと戻る（長時間の待ちからの退避） */
   onCancel: () => void;
 }
