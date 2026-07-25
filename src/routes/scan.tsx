@@ -583,8 +583,9 @@ export function ScanScreen() {
           photo={photo}
           generate={() => ensureSession(photo)}
           onDone={(m) => completeDiscovery(m)}
-          onError={(kind) => {
+          onError={(kind, err) => {
             setErrKind(kind);
+            setErrDebug(err ?? null);
             setPhase("error");
           }}
           onCancel={reset}
@@ -592,7 +593,9 @@ export function ScanScreen() {
 
       )}
 
-      {phase === "error" && <GentleError kind={errKind} onRetry={retry} />}
+      {phase === "error" && (
+        <GentleError kind={errKind} onRetry={retry} debugError={errDebug} />
+      )}
 
 
       {phase === "result" && result && (
