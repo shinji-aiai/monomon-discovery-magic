@@ -66,6 +66,7 @@ export function DiscoveryReveal({
   onDone,
   onError,
   onCancel,
+  immersionImageUrl,
 }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
