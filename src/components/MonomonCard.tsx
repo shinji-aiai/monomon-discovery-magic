@@ -80,6 +80,14 @@ export function MonomonCard({
               />
             )}
           </>
+        ) : monomon.immersionImageId ? (
+          // AI生成画像が保存済みの個体は、URL 読み込み中でも SVG に戻さない。
+          // 静かなプレースホルダだけを敷いておく。読み込みが完了すれば
+          // 親が immersionImageUrl を渡してくれるので上の分岐に切り替わる。
+          <div
+            aria-hidden
+            className="absolute inset-0 animate-breathe bg-gradient-to-b from-white/40 via-white/10 to-white/5"
+          />
         ) : (
           <>
             {/* 元写真をうっすら背景に */}
