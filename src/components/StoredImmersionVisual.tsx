@@ -55,6 +55,12 @@ export function StoredImmersionVisual({
     enabled: inView,
   });
 
+  // 仕様：immersionImageId が存在する個体は「AI生成画像がその子の唯一の見た目」。
+  // 取得中や取得失敗のときも SVG へは戻さない。取得中は柔らかいプレースホルダを、
+  // 取得失敗（保存済みなのに読めない・極めて稀）は静かな空のパネルを表示する。
+  // fallback（SVG）を出すのは immersionImageId 自体が存在しない旧データのみ。
+  const hasStoredImage = !!monomon.immersionImageId;
+
   return (
     <div ref={ref} className={cn("relative h-full w-full overflow-hidden", className)}>
       {available && url ? (
@@ -71,6 +77,11 @@ export function StoredImmersionVisual({
             className="relative h-full w-full object-contain"
           />
         </>
+      ) : hasStoredImage ? (
+        <div
+          aria-hidden
+          className="absolute inset-0 animate-breathe bg-gradient-to-b from-white/40 via-white/10 to-white/5"
+        />
       ) : (
         fallback
       )}
