@@ -15,6 +15,8 @@ interface DiscoveryRevealProps {
   onError: (kind: DiscoveryErrorKind, error?: unknown) => void;
   /** 演出をやめて前の画面へそっと戻る（長時間の待ちからの退避） */
   onCancel: () => void;
+  /** AI生成の没入画像が使えるようになったURL（無ければSVGのまま） */
+  immersionImageUrl?: string | null;
 }
 
 /**
