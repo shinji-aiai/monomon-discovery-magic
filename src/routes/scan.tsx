@@ -302,48 +302,55 @@ export function ScanScreen() {
           }
           void session.immersionTask
             .then(async (res) => {
-              if (activeSessionIdRef.current !== sessionId) return;
               if (!res.ok) return;
+              let imageId: string;
               try {
-                const imageId = await persistPreparedImmersion(
+                imageId = await persistPreparedImmersion(
                   session.monomon.id,
                   res.compressed,
                 );
-                // 保存が終わったあとにセッションが無効化されていたら、
-                // その保存物は誰にも紐付かないので即座に削除する。
-                if (activeSessionIdRef.current !== sessionId) {
-                  void deleteImmersionImage(imageId).catch(() => {});
-                  return;
-                }
-                // 既に Dex 登録済みならその場でリンクする
-                const existing = getMonomon(session.monomon.id);
-                if (existing) {
-                  const linked = setImmersionImageId(
-                    session.monomon.id,
-                    imageId,
-                  );
-                  if (!linked) {
-                    // Dex 登録から消えた等の想定外：孤児として削除
-                    void deleteImmersionImage(imageId).catch(() => {});
-                  } else {
-                    pendingImageIdRef.current = null;
-                    void restoreStoredImmersion(imageId, sessionId);
-                  }
-                } else {
-                  // 完了関数側で拾えるように pending として保持
-                  pendingImageIdRef.current = imageId;
-                  void restoreStoredImmersion(imageId, sessionId);
-                }
               } catch {
                 /* 保存失敗はSVGにフォールバック */
+                return;
+              }
+              // 所有権判定は Dex を真実源にする（activeSessionId ではなく）。
+              // Scan 画面が unmount 済みでも、Dex に対象 Monomon が既に登録されて
+              // いれば所有者が確定しているので必ずリンクする。
+              const existing = getMonomon(session.monomon.id);
+              if (existing) {
+                const linked = setImmersionImageId(
+                  session.monomon.id,
+                  imageId,
+                );
+                if (!linked) {
+                  // Dex から消えた等の想定外のみ孤児として削除
+                  void deleteImmersionImage(imageId).catch(() => {});
+                } else {
+                  pendingImageIdRef.current = null;
+                  // 表示復元はセッションが生きているときだけ行う
+                  if (activeSessionIdRef.current === sessionId) {
+                    void restoreStoredImmersion(imageId, sessionId);
+                  }
+                }
+              } else if (activeSessionIdRef.current === sessionId) {
+                // まだ Dex 登録前 かつ セッション生存中：
+                // completeDiscovery が拾えるように pending として保持
+                pendingImageIdRef.current = imageId;
+                void restoreStoredImmersion(imageId, sessionId);
+              } else {
+                // Dex 未登録 かつ セッションも失効：
+                // 今後この画像を参照する経路が存在しないので孤児として削除
+                void deleteImmersionImage(imageId).catch(() => {});
               }
             })
             .finally(() => {
+              // pending 表示のクリアは UI 状態のみ。セッション生存時のみ触る。
               if (activeSessionIdRef.current !== sessionId) return;
               if (mountedRef.current) {
                 setImmersionPending(false);
               }
             });
+
         }
       },
       () => {
