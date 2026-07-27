@@ -589,6 +589,7 @@ export function ScanScreen() {
             setPhase("error");
           }}
           onCancel={reset}
+          immersionImageUrl={immersionUrl}
         />
 
       )}

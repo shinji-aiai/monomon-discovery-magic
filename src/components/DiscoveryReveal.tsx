@@ -15,6 +15,8 @@ interface DiscoveryRevealProps {
   onError: (kind: DiscoveryErrorKind, error?: unknown) => void;
   /** 演出をやめて前の画面へそっと戻る（長時間の待ちからの退避） */
   onCancel: () => void;
+  /** AI生成の没入画像が使えるようになったURL（無ければSVGのまま） */
+  immersionImageUrl?: string | null;
 }
 
 /**
@@ -64,6 +66,7 @@ export function DiscoveryReveal({
   onDone,
   onError,
   onCancel,
+  immersionImageUrl,
 }: DiscoveryRevealProps) {
   const [stage, setStage] = useState<number>(STAGE.SCAN);
   const [monomon, setMonomon] = useState<Monomon | null>(null);
@@ -425,7 +428,23 @@ export function DiscoveryReveal({
               <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
                 {/* 生命を感じる、ふわっとした浮遊（ずっと） */}
                 <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
-                  <MonomonArt monomon={monomon} />
+                  {/* SVG は常時（フォールバック）。AI画像が届いたら上に重ねてクロスフェード */}
+                  <div className="relative h-full w-full">
+                    <div
+                      className={`absolute inset-0 transition-opacity duration-700 ${
+                        immersionImageUrl ? "opacity-0" : "opacity-100"
+                      }`}
+                    >
+                      <MonomonArt monomon={monomon} />
+                    </div>
+                    {immersionImageUrl && (
+                      <img
+                        src={immersionImageUrl}
+                        alt=""
+                        className="absolute inset-0 h-full w-full animate-soft-emerge rounded-[26px] object-contain opacity-100 transition-opacity duration-700"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
