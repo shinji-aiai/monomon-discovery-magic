@@ -154,31 +154,53 @@ function Zukan() {
   const remaining = SPECIES_COUNT - kinds;
 
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <header className="mb-4">
-        <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
-        <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+    <div className="relative min-h-[100svh] bg-night-room px-5 pb-32 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      {/* 星屑・微細な粒子 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {Array.from({ length: 22 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute rounded-full bg-white/70 animate-drift"
+            style={{
+              width: (i % 3) + 1.5,
+              height: (i % 3) + 1.5,
+              top: `${(i * 37) % 100}%`,
+              left: `${(i * 53) % 100}%`,
+              opacity: 0.35 + (i % 3) * 0.15,
+              animationDelay: `${(i % 6) * 0.5}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <header className="relative mb-5">
+        <h1 className="text-2xl font-extrabold text-night">図鑑</h1>
+        <p className="mt-1 text-sm font-medium text-night-muted">
           {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
 
-      {/* コレクション率 */}
-      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+      {/* コレクション率（ガラスカード） */}
+      <div className="relative mb-3 rounded-3xl glass-night px-5 py-4 shadow-purple-glow">
         <div className="flex items-end justify-between">
-          <p className="text-sm font-bold text-foreground">コレクション</p>
-          <p className="text-base font-extrabold text-foreground">
-            <span className="text-primary">{kinds}</span>
-            <span className="mx-1 text-muted-foreground">/</span>
+          <p className="text-sm font-extrabold text-night">コレクション</p>
+          <p className="text-base font-extrabold text-night">
+            <span className="text-white">{kinds}</span>
+            <span className="mx-1 text-night-muted">/</span>
             {SPECIES_COUNT}
           </p>
         </div>
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
+        <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full gradient-primary transition-all"
-            style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${(kinds / SPECIES_COUNT) * 100}%`,
+              background:
+                "linear-gradient(90deg, oklch(0.78 0.2 300), oklch(0.7 0.2 275))",
+            }}
           />
         </div>
-        <p className="mt-2 text-xs font-bold text-muted-foreground">
+        <p className="mt-2 text-xs font-bold text-night-muted">
           {remaining > 0
             ? `あと ${remaining} 種族で コンプリート`
             : "🎉 ぜんぶ集めたよ おめでとう"}
@@ -188,24 +210,20 @@ function Zukan() {
       {/* 種族ごとの達成率 */}
       <FamilyProgress stats={familyStats} />
 
-
       {/* 検索バー */}
       <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night-muted" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           inputMode="search"
           placeholder="モノモンや種族をさがす"
-          className="w-full rounded-2xl border border-white/60 bg-card py-3 pl-11 pr-10 text-sm font-medium text-foreground shadow-soft outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
+          className="w-full rounded-2xl glass-night py-3 pl-11 pr-10 text-sm font-medium text-night outline-none placeholder:text-night-dim focus:ring-2 focus:ring-purple-300/40"
         />
         {query && (
           <button
-            onClick={() => {
-              tap();
-              setQuery("");
-            }}
-            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+            onClick={() => { tap(); setQuery(""); }}
+            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-night-muted active:scale-90"
             aria-label="検索をクリア"
           >
             <X className="h-3.5 w-3.5" />
@@ -217,12 +235,9 @@ function Zukan() {
       <div className="mb-5 flex gap-2">
         <ModeBtn
           active={mode === "species"}
-          onClick={() => {
-            setMode("species");
-            setSpeciesFilter(null);
-          }}
+          onClick={() => { setMode("species"); setSpeciesFilter(null); }}
         >
-          種族図鑑
+          図鑑
         </ModeBtn>
         <ModeBtn active={mode === "album"} onClick={() => setMode("album")}>
           発見アルバム
@@ -258,21 +273,15 @@ function Zukan() {
         <Empty />
       ) : (
         <>
-          {/* アルバムのサブ操作 */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <ChipBtn active={!favOnly} onClick={() => setFavOnly(false)}>
-              すべて
-            </ChipBtn>
+            <ChipBtn active={!favOnly} onClick={() => setFavOnly(false)}>すべて</ChipBtn>
             <ChipBtn active={favOnly} onClick={() => setFavOnly(true)}>
               <Star className="h-3.5 w-3.5" /> お気に入り
             </ChipBtn>
             {speciesFilter && (
               <button
-                onClick={() => {
-                  tap();
-                  setSpeciesFilter(null);
-                }}
-                className="ml-auto flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary"
+                onClick={() => { tap(); setSpeciesFilter(null); }}
+                className="ml-auto flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-night"
               >
                 {getSpecies(speciesFilter).emoji} {getSpecies(speciesFilter).name}
                 <X className="h-3.5 w-3.5" />
@@ -282,11 +291,9 @@ function Zukan() {
 
           {album.length === 0 ? (
             <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
-              <Star className="h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-3 text-sm font-bold text-foreground">
-                ここには まだ いません
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <Star className="h-10 w-10 text-white/40" />
+              <p className="mt-3 text-sm font-bold text-night">ここには まだ いません</p>
+              <p className="mt-1 text-xs text-night-muted">
                 カードの♡で お気に入りに追加できる
               </p>
             </div>
@@ -298,20 +305,16 @@ function Zukan() {
                   monomon={m}
                   no={numbered.get(m.id) ?? 0}
                   isNew={newSet.has(m.id)}
-                  onOpen={() => {
-                    tap();
-                    clearNew(m.id);
-                    setSelected(m);
-                  }}
+                  onOpen={() => { tap(); clearNew(m.id); setSelected(m); }}
                 />
               ))}
               <Link
                 to="/scan"
                 onClick={tap}
-                className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-border bg-card/40 text-muted-foreground active:scale-95"
+                className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/25 bg-white/5 text-night-muted active:scale-95"
               >
                 <span className="text-2xl opacity-60">＋</span>
-                <span className="text-[0.7rem] font-bold">つぎを さがす</span>
+                <span className="text-[0.7rem] font-bold">まだ見ぬモノモン</span>
               </Link>
             </div>
           )}
@@ -323,10 +326,7 @@ function Zukan() {
           species={selectedSpecies}
           found={bySpecies.get(selectedSpecies.id) ?? []}
           onClose={() => setSelectedSpecies(null)}
-          onOpenIndividual={(m) => {
-            setSelectedSpecies(null);
-            setSelected(m);
-          }}
+          onOpenIndividual={(m) => { setSelectedSpecies(null); setSelected(m); }}
         />
       )}
 
@@ -338,15 +338,15 @@ function Zukan() {
         />
       )}
 
-      {/* 最下部のひとこと */}
-      <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
+      <p className="mt-8 text-center text-sm font-medium text-night-muted">
         まだ見ぬモノモンが待っているよ
       </p>
 
-      <BottomNav />
+      <BottomNav variant="night" />
     </div>
   );
 }
+
 
 function ModeBtn({
   active,
@@ -365,8 +365,8 @@ function ModeBtn({
       }}
       className={`flex-1 rounded-2xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
         active
-          ? "gradient-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
+          ? "bg-white/15 text-white shadow-purple-glow ring-1 ring-white/25"
+          : "glass-night text-night-muted"
       }`}
     >
       {children}
@@ -391,14 +391,15 @@ function ChipBtn({
       }}
       className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-all active:scale-95 ${
         active
-          ? "bg-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "glass-night text-night-muted"
       }`}
     >
       {children}
     </button>
   );
 }
+
 
 /** 種族（大分類）ごとの達成率。コンプリートした族はやさしくお祝い。 */
 function FamilyProgress({
@@ -407,18 +408,18 @@ function FamilyProgress({
   stats: { family: Family; total: number; found: number }[];
 }) {
   return (
-    <div className="mb-5 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
-      <p className="mb-2.5 text-sm font-bold text-foreground">種族ごとの達成</p>
+    <div className="mb-5 rounded-2xl glass-night px-4 py-3.5">
+      <p className="mb-2.5 text-sm font-extrabold text-night">種族ごとの達成</p>
       <ul className="space-y-2.5">
         {stats.map(({ family, total, found }) => {
           const fam = FAMILY_STYLES[family];
           const complete = found === total;
           return (
             <li key={family} className="flex items-center gap-3">
-              <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-foreground">
+              <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-night">
                 {fam.emoji} {fam.label}族
               </span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -428,11 +429,11 @@ function FamilyProgress({
                 />
               </div>
               {complete ? (
-                <span className="shrink-0 text-xs font-extrabold text-primary">
-                  🎉 コンプリート
+                <span className="shrink-0 text-xs font-extrabold text-purple-200">
+                  🎉
                 </span>
               ) : (
-                <span className="shrink-0 text-xs font-bold text-muted-foreground">
+                <span className="shrink-0 text-xs font-bold text-night-muted">
                   {found} / {total}
                 </span>
               )}
@@ -443,6 +444,7 @@ function FamilyProgress({
     </div>
   );
 }
+
 
 
 /** 新しく登録された子に付く「NEW!」バッジ（大きく・可愛く） */
@@ -472,43 +474,42 @@ function SpeciesCell({
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex flex-col overflow-hidden rounded-2xl glass-night active:scale-95"
     >
       {isNew && <NewBadge />}
-      <div
-        className="relative aspect-square p-2"
-        style={{
-          backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[species.family].bg[0]}, ${FAMILY_STYLES[species.family].bg[1]})`,
-        }}
-      >
+      <div className="relative aspect-square p-2">
+        {/* 紫の台座光 */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-2 rounded-full pedestal-glow animate-pedestal-breathe"
+        />
         {found ? (
           <>
-            <div className="h-full w-full drop-shadow-[0_6px_8px_rgba(90,60,40,0.18)]">
+            <div className="relative h-full w-full drop-shadow-[0_10px_14px_rgba(80,40,110,0.5)]">
               <MonomonArt monomon={sample} />
+              <span className="glass-sheen rounded-[35%]" />
             </div>
             {count > 1 && (
-              <span className="absolute bottom-1 right-1.5 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-foreground/70 backdrop-blur">
+              <span className="absolute bottom-1 right-1.5 rounded-full bg-white/15 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-night backdrop-blur">
                 ×{count}
               </span>
             )}
           </>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <div className="h-full w-full opacity-25 [filter:brightness(0)]">
+            <div className="h-full w-full opacity-30 [filter:brightness(0)_invert(1)]">
               <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
             </div>
-            <Lock className="absolute h-4 w-4 text-foreground/30" />
+            <Lock className="absolute h-4 w-4 text-white/40" />
           </div>
         )}
       </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
+      <div className="px-1.5 pb-2">
+        <AutoFitName className="font-extrabold text-night" maxFontSize={12}>
           {found ? (
-            <>
-              {species.emoji} {species.name}
-            </>
+            <>{species.emoji} {species.name}</>
           ) : (
-            <span className="text-muted-foreground">？？？</span>
+            <span className="text-night-dim">？？？</span>
           )}
         </AutoFitName>
         <div className="mt-0.5 flex justify-center">
@@ -530,7 +531,6 @@ function DexCell({
   isNew?: boolean;
   onOpen: () => void;
 }) {
-  const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   return (
     <div
@@ -543,10 +543,10 @@ function DexCell({
           onOpen();
         }
       }}
-      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl glass-night active:scale-95"
     >
       {isNew && <NewBadge />}
-      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
+      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-white/15 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-night-muted backdrop-blur">
         No.{String(no).padStart(3, "0")}
       </span>
       <button
@@ -555,42 +555,46 @@ function DexCell({
           toggleFavorite(monomon.id);
           haptic(12);
         }}
-        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
+        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/15 backdrop-blur active:scale-90"
         aria-label="お気に入り"
       >
         <Heart
-          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
         />
       </button>
-      <div
-        className="aspect-square p-2"
-        style={{
-          backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-        }}
-      >
-          <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
-            {monomon.immersionImageId ? (
-              <StoredImmersionVisual
-                monomon={monomon}
-                alt={monomon.name}
-                fallback={<MonomonArt monomon={monomon} />}
-              />
-            ) : (
-              <MonomonArt monomon={monomon} />
-            )}
-          </div>
+      <div className="relative aspect-square p-2">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-2 rounded-full pedestal-glow animate-pedestal-breathe"
+        />
+        <div className="relative h-full w-full drop-shadow-[0_10px_16px_rgba(60,30,100,0.55)]">
+          {monomon.immersionImageId ? (
+            <StoredImmersionVisual
+              monomon={monomon}
+              alt={monomon.name}
+              fallback={<MonomonArt monomon={monomon} />}
+            />
+          ) : (
+            <MonomonArt monomon={monomon} />
+          )}
+          <span className="glass-sheen rounded-[35%]" />
+        </div>
       </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
+      <div className="px-1.5 pb-2">
+        <AutoFitName className="font-extrabold text-night" maxFontSize={12}>
           {monomon.name}
         </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={monomon.speciesId} />
         </div>
+        <p className="mt-0.5 text-center text-[9px] font-medium text-night-dim">
+          {new Date(monomon.discoveredAt).toLocaleDateString("ja-JP")}
+        </p>
       </div>
     </div>
   );
 }
+
 
 function NoResult() {
   return (
@@ -641,8 +645,8 @@ function SpeciesDetailSheet({
   const fam = FAMILY_STYLES[species.family];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/60 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-night-room p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -650,12 +654,12 @@ function SpeciesDetailSheet({
                 tap();
                 onClose();
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+              className="flex h-9 w-9 items-center justify-center rounded-full glass-night text-night active:scale-90"
               aria-label="戻る"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="whitespace-nowrap rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
+            <span className="whitespace-nowrap rounded-full glass-night px-3 py-1 text-xs font-extrabold text-night">
               {fam.emoji} {fam.label}族
             </span>
           </div>
@@ -665,41 +669,41 @@ function SpeciesDetailSheet({
                 toggleFavorite(primary.id);
                 haptic(12);
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
+              className="flex h-9 w-9 items-center justify-center rounded-full glass-night active:scale-90"
               aria-label={primary.favorite ? "お気に入りを解除" : "お気に入り"}
             >
               <Heart
-                className={`h-5 w-5 ${primary.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                className={`h-5 w-5 ${primary.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
               />
             </button>
           )}
         </div>
 
 
-        {/* ヒーロー */}
-        <div
-          className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-3xl p-6"
-          style={{
-            backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-          }}
-        >
+        {/* ヒーロー：夜の展示台 */}
+        <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-3xl glass-night p-6">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-6 rounded-full pedestal-glow animate-pedestal-breathe"
+          />
           {isFound ? (
-            <div className="h-full w-full drop-shadow-[0_10px_14px_rgba(90,60,40,0.22)]">
+            <div className="relative h-full w-full drop-shadow-[0_16px_22px_rgba(60,30,100,0.6)]">
               <MonomonArt monomon={found[0]} />
+              <span className="glass-sheen rounded-[35%]" />
             </div>
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <div className="h-full w-full opacity-25 [filter:brightness(0)]">
+              <div className="h-full w-full opacity-30 [filter:brightness(0)_invert(1)]">
                 <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
               </div>
-              <Lock className="absolute h-8 w-8 text-foreground/30" />
+              <Lock className="absolute h-8 w-8 text-white/40" />
             </div>
           )}
         </div>
 
         {/* 見出し */}
         <div className="mt-4">
-          <h2 className="text-2xl font-extrabold text-foreground">
+          <h2 className="text-2xl font-extrabold text-night">
             {isFound ? (
               <>
                 {species.emoji} {species.name}
@@ -710,7 +714,7 @@ function SpeciesDetailSheet({
           </h2>
           <div className="mt-2 flex items-center gap-2">
             <RarityStars speciesId={species.id} dim={!isFound} />
-            <span className="text-xs font-bold text-muted-foreground">
+            <span className="text-xs font-bold text-night-muted">
               {getRarityLabel(species.id)}
             </span>
           </div>
@@ -718,7 +722,7 @@ function SpeciesDetailSheet({
 
         {isFound ? (
           <>
-            <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
+            <p className="mt-3 rounded-2xl glass-night px-4 py-3 text-sm font-medium leading-relaxed text-night">
               この種族のモノモンを {found.length} 匹 見つけたよ　タップするとそれぞれの子の詳しい情報が見られるよ
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2.5">
@@ -738,7 +742,7 @@ function SpeciesDetailSheet({
                       onOpenIndividual(m);
                     }
                   }}
-                  className="relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+                  className="relative flex cursor-pointer flex-col overflow-hidden rounded-2xl glass-night active:scale-95"
                 >
                   <button
                     onClick={(e) => {
@@ -746,20 +750,19 @@ function SpeciesDetailSheet({
                       toggleFavorite(m.id);
                       haptic(12);
                     }}
-                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
+                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/15 backdrop-blur active:scale-90"
                     aria-label={m.favorite ? "お気に入りを解除" : "お気に入り"}
                   >
                     <Heart
-                      className={`h-3.5 w-3.5 ${m.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                      className={`h-3.5 w-3.5 ${m.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
                     />
                   </button>
-                  <div
-                    className="aspect-square p-1.5"
-                    style={{
-                      backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-                    }}
-                  >
-                    <div className="h-full w-full drop-shadow-[0_4px_6px_rgba(90,60,40,0.18)]">
+                  <div className="relative aspect-square p-1.5">
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-2 rounded-full pedestal-glow"
+                    />
+                    <div className="relative h-full w-full drop-shadow-[0_6px_10px_rgba(60,30,100,0.55)]">
                       {m.immersionImageId ? (
                         <StoredImmersionVisual
                           monomon={m}
@@ -770,10 +773,11 @@ function SpeciesDetailSheet({
                       ) : (
                         <MonomonArt monomon={m} />
                       )}
+                      <span className="glass-sheen rounded-[35%]" />
                     </div>
                   </div>
                   <AutoFitName
-                    className="px-1 py-1 font-extrabold text-foreground"
+                    className="px-1 py-1 font-extrabold text-night"
                     maxFontSize={11}
                     minFontSize={7}
                   >
@@ -785,13 +789,13 @@ function SpeciesDetailSheet({
           </>
         ) : (
           <>
-            <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-sm font-medium leading-relaxed text-foreground">
+            <p className="mt-3 rounded-2xl glass-night px-4 py-3 text-sm font-medium leading-relaxed text-night">
               まだ見つかっていない種族だよ　身近なモノを撮影してこの子を探してみよう
             </p>
             <Link
               to="/scan"
               onClick={tap}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl gradient-primary py-3.5 text-base font-bold text-primary-foreground shadow-float active:scale-95"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/20 py-3.5 text-base font-bold text-white ring-1 ring-white/30 active:scale-95"
             >
               <Camera className="h-5 w-5" />
               さがしに行く
@@ -802,6 +806,8 @@ function SpeciesDetailSheet({
     </div>
   );
 }
+
+
 
 function DetailSheet({
   monomon,
@@ -878,11 +884,11 @@ function DetailSheet({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-night-room"
     >
       {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
       <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
-        {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
+        {/* ヘッダー */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -890,15 +896,15 @@ function DetailSheet({
                 tap();
                 onClose();
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+              className="flex h-9 w-9 items-center justify-center rounded-full glass-night text-night active:scale-90"
               aria-label="戻る"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
+            <span className="rounded-full glass-night px-3 py-1 text-xs font-extrabold text-night">
               No.{String(no).padStart(3, "0")}
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-muted px-3 py-1">
+            <span className="flex items-center gap-1 rounded-full glass-night px-3 py-1">
               <RarityStars speciesId={monomon.speciesId} />
             </span>
           </div>
@@ -907,14 +913,15 @@ function DetailSheet({
               toggleFavorite(live.id);
               haptic(12);
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-full glass-night active:scale-90"
             aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
           >
             <Heart
-              className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+              className={`h-5 w-5 ${live.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
             />
           </button>
         </div>
+
 
         {/* 1. イラスト → 2. 名前 → 3. 説明（MonomonCard が縦に並べて表示） */}
         <div className="relative">
