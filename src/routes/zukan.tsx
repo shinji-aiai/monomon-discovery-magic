@@ -365,8 +365,8 @@ function ModeBtn({
       }}
       className={`flex-1 rounded-2xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
         active
-          ? "gradient-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
+          ? "bg-white/15 text-white shadow-purple-glow ring-1 ring-white/25"
+          : "glass-night text-night-muted"
       }`}
     >
       {children}
@@ -391,14 +391,15 @@ function ChipBtn({
       }}
       className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-all active:scale-95 ${
         active
-          ? "bg-primary text-primary-foreground shadow-soft"
-          : "bg-card/80 text-muted-foreground"
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "glass-night text-night-muted"
       }`}
     >
       {children}
     </button>
   );
 }
+
 
 /** 種族（大分類）ごとの達成率。コンプリートした族はやさしくお祝い。 */
 function FamilyProgress({
