@@ -1,36 +1,37 @@
 /**
  * Monomon Version 1 公式デザインアセット。
  *
- * 各種族の「代表イラスト」を CDN 配信の静的画像として管理します。
- * ここに載っているのは "種族の顔"（図鑑・ホーム・プレースホルダー等の
- * 静的表示専用）で、ユーザーが撮影して生まれた個体の見た目には触れません。
- * 個体は従来通り MonomonArt の手続き的 SVG で描かれます。
+ * 各種族の「代表イラスト」を透過PNGとしてCDN配信で管理します。
+ * 背景を持たないため、ホーム・図鑑・オンボーディング・プレースホルダー等
+ * どの画面でも「そこにその子が立っている」ように自然に置けます。
+ * 個体（ユーザーの写真から生まれた子）は従来通り MonomonArt の
+ * 手続き的SVGで描かれます。
  */
 
-import battery from "@/assets/monomon/battery.jpg.asset.json";
-import book from "@/assets/monomon/book.jpg.asset.json";
-import bottle from "@/assets/monomon/bottle.jpg.asset.json";
-import cactus from "@/assets/monomon/cactus.jpg.asset.json";
-import clock from "@/assets/monomon/clock.jpg.asset.json";
-import cup from "@/assets/monomon/cup.jpg.asset.json";
-import cushion from "@/assets/monomon/cushion.jpg.asset.json";
-import eraser from "@/assets/monomon/eraser.jpg.asset.json";
-import flower from "@/assets/monomon/flower.jpg.asset.json";
-import kettle from "@/assets/monomon/kettle.jpg.asset.json";
-import lamp from "@/assets/monomon/lamp.jpg.asset.json";
-import mug from "@/assets/monomon/mug.jpg.asset.json";
-import mushroom from "@/assets/monomon/mushroom.jpg.asset.json";
-import onigiri from "@/assets/monomon/onigiri.jpg.asset.json";
-import pencil from "@/assets/monomon/pencil.jpg.asset.json";
-import plant from "@/assets/monomon/plant.jpg.asset.json";
-import pot from "@/assets/monomon/pot.jpg.asset.json";
-import pudding from "@/assets/monomon/pudding.jpg.asset.json";
-import scissors from "@/assets/monomon/scissors.jpg.asset.json";
-import shoe from "@/assets/monomon/shoe.jpg.asset.json";
-import spoon from "@/assets/monomon/spoon.jpg.asset.json";
-import tissue from "@/assets/monomon/tissue.jpg.asset.json";
+import battery from "@/assets/monomon/battery.png.asset.json";
+import book from "@/assets/monomon/book.png.asset.json";
+import bottle from "@/assets/monomon/bottle.png.asset.json";
+import cactus from "@/assets/monomon/cactus.png.asset.json";
+import clock from "@/assets/monomon/clock.png.asset.json";
+import cup from "@/assets/monomon/cup.png.asset.json";
+import cushion from "@/assets/monomon/cushion.png.asset.json";
+import eraser from "@/assets/monomon/eraser.png.asset.json";
+import flower from "@/assets/monomon/flower.png.asset.json";
+import kettle from "@/assets/monomon/kettle.png.asset.json";
+import lamp from "@/assets/monomon/lamp.png.asset.json";
+import mug from "@/assets/monomon/mug.png.asset.json";
+import mushroom from "@/assets/monomon/mushroom.png.asset.json";
+import onigiri from "@/assets/monomon/onigiri.png.asset.json";
+import pencil from "@/assets/monomon/pencil.png.asset.json";
+import plant from "@/assets/monomon/plant.png.asset.json";
+import pot from "@/assets/monomon/pot.png.asset.json";
+import pudding from "@/assets/monomon/pudding.png.asset.json";
+import scissors from "@/assets/monomon/scissors.png.asset.json";
+import shoe from "@/assets/monomon/shoe.png.asset.json";
+import spoon from "@/assets/monomon/spoon.png.asset.json";
+import tissue from "@/assets/monomon/tissue.png.asset.json";
 
-/** speciesId → 公式イラストのCDN URL */
+/** speciesId → 公式イラストのCDN URL（透過PNG） */
 export const SPECIES_OFFICIAL_ART: Record<string, string> = {
   battery: battery.url,
   book: book.url,
