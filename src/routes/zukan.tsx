@@ -884,11 +884,11 @@ function DetailSheet({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-night-room"
     >
       {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
       <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
-        {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
+        {/* ヘッダー */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -896,15 +896,15 @@ function DetailSheet({
                 tap();
                 onClose();
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+              className="flex h-9 w-9 items-center justify-center rounded-full glass-night text-night active:scale-90"
               aria-label="戻る"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
+            <span className="rounded-full glass-night px-3 py-1 text-xs font-extrabold text-night">
               No.{String(no).padStart(3, "0")}
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-muted px-3 py-1">
+            <span className="flex items-center gap-1 rounded-full glass-night px-3 py-1">
               <RarityStars speciesId={monomon.speciesId} />
             </span>
           </div>
@@ -913,14 +913,15 @@ function DetailSheet({
               toggleFavorite(live.id);
               haptic(12);
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-full glass-night active:scale-90"
             aria-label={live.favorite ? "お気に入りを解除" : "お気に入り"}
           >
             <Heart
-              className={`h-5 w-5 ${live.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+              className={`h-5 w-5 ${live.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
             />
           </button>
         </div>
+
 
         {/* 1. イラスト → 2. 名前 → 3. 説明（MonomonCard が縦に並べて表示） */}
         <div className="relative">
