@@ -45,8 +45,15 @@ export function MonomonCard({
         className,
       )}
     >
-      {/* イラストエリア */}
+      {/* イラストエリア（夜の展示台のような柔らかな光） */}
       <div className="relative h-64">
+        {/* 台座グロー */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 bottom-3 h-16 w-56 -translate-x-1/2 rounded-full blur-3xl"
+          style={{ backgroundColor: `${accent}66` }}
+        />
+
         {immersionImageUrl ? (
           <>
             {/* 没入画像：ぼかしたコピーを背景にして、前面は object-contain で全形を保つ */}
