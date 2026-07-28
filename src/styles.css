@@ -528,6 +528,110 @@
   animation: heart-float 1.1s ease-out forwards;
 }
 
+/* ===================================================================
+ * Scoped enhancements — ホーム画面 & 種族詳細画面 専用
+ * 既存の gradient-sky / :root / body / 共通クラスは変更していない。
+ * これらのクラスは src/routes/index.tsx と
+ * src/routes/zukan.tsx の SpeciesDetailSheet 内でのみ使用する。
+ * ================================================================= */
+
+/* --- ホーム専用：やわらかい室内・自然光 --- */
+@utility gradient-room-home {
+  background-image:
+    radial-gradient(ellipse 80% 55% at 78% 12%, oklch(0.985 0.05 85 / 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 60% at 15% 95%, oklch(0.93 0.035 60 / 0.45) 0%, transparent 65%),
+    linear-gradient(180deg, oklch(0.965 0.028 80) 0%, oklch(0.97 0.02 70) 55%, oklch(0.955 0.03 60) 100%);
+}
+
+@utility room-light-beam {
+  position: absolute;
+  top: -10%;
+  right: -20%;
+  width: 70%;
+  height: 55%;
+  background: linear-gradient(
+    155deg,
+    oklch(1 0.02 85 / 0.32) 0%,
+    oklch(1 0.02 85 / 0.12) 40%,
+    transparent 75%
+  );
+  filter: blur(18px);
+  pointer-events: none;
+  transform: rotate(-8deg);
+  border-radius: 40%;
+}
+
+@utility companion-ground-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 60%;
+  height: 14px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, oklch(0.5 0.05 50 / 0.22) 0%, transparent 70%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+@utility room-table-surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, oklch(0.72 0.04 55 / 0.18) 30%, oklch(0.72 0.04 55 / 0.18) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+/* --- 種族詳細専用：深い紺紫の夜、静かな光 --- */
+@utility species-detail-night {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 20%, oklch(0.42 0.08 280 / 0.55) 0%, transparent 65%),
+    linear-gradient(180deg, oklch(0.28 0.05 285) 0%, oklch(0.24 0.045 285) 60%, oklch(0.22 0.04 280) 100%);
+}
+
+@utility species-detail-glass-card {
+  background: oklch(1 0.008 90 / 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px -12px oklch(0.18 0.04 280 / 0.55);
+}
+
+@utility species-detail-hero-glow {
+  position: absolute;
+  inset: -8%;
+  background: radial-gradient(ellipse at center, oklch(0.88 0.08 85 / 0.28) 0%, transparent 65%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+@utility species-detail-ground-light {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 70%;
+  height: 10%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, oklch(0.95 0.06 85 / 0.4) 0%, transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+@keyframes species-particle-drift {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50%      { opacity: 0.7;  transform: translateY(-6px); }
+}
+@utility species-detail-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: oklch(0.96 0.04 85 / 0.7);
+  filter: blur(0.5px);
+  animation: species-particle-drift 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
 
 
 
