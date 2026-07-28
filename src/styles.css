@@ -99,9 +99,24 @@
   --gradient-magic: linear-gradient(135deg, oklch(0.82 0.09 300) 0%, oklch(0.8 0.1 250) 100%);
   --gradient-card: linear-gradient(160deg, oklch(1 0.006 90) 0%, oklch(0.97 0.02 80) 100%);
 
+  /* 日常世界：暖かな部屋の朝〜昼の光 */
+  --gradient-room:
+    radial-gradient(120% 80% at 85% 0%, oklch(0.96 0.06 75 / 0.9) 0%, transparent 55%),
+    radial-gradient(90% 60% at 10% 100%, oklch(0.92 0.045 55 / 0.75) 0%, transparent 60%),
+    linear-gradient(180deg, oklch(0.97 0.028 72) 0%, oklch(0.94 0.035 60) 55%, oklch(0.9 0.045 50) 100%);
+
+  /* 図鑑世界：夜の標本室 */
+  --gradient-night:
+    radial-gradient(100% 60% at 50% 0%, oklch(0.34 0.12 290 / 0.9) 0%, transparent 65%),
+    radial-gradient(80% 50% at 20% 100%, oklch(0.28 0.13 275 / 0.85) 0%, transparent 60%),
+    radial-gradient(70% 45% at 90% 90%, oklch(0.3 0.14 310 / 0.75) 0%, transparent 60%),
+    linear-gradient(180deg, oklch(0.19 0.06 275) 0%, oklch(0.16 0.07 285) 55%, oklch(0.13 0.08 290) 100%);
+
   --shadow-soft: 0 4px 18px -6px oklch(0.5 0.06 50 / 0.18);
   --shadow-float: 0 18px 40px -16px oklch(0.5 0.08 50 / 0.32);
   --shadow-glow: 0 0 50px -8px oklch(0.78 0.14 55 / 0.45);
+  --shadow-purple-glow: 0 0 60px -6px oklch(0.55 0.22 295 / 0.55);
+  --shadow-pedestal: 0 30px 60px -18px oklch(0.35 0.2 295 / 0.55);
 }
 
 .dark {
