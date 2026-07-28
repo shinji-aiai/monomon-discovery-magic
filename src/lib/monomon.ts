@@ -38,8 +38,6 @@ export interface Monomon extends MonomonSpec {
   lastMetAt?: string;
   /** 再会回数（会いに来た日の延べ回数）。詳しくは friendship.ts の reunion */
   reunionCount?: number;
-  /** 写真から生成した没入画像のIDIndexedDB monomon.immersion.v1 に保存 */
-  immersionImageId?: string;
 }
 
 function makeId(seed: number): string {
@@ -101,28 +99,10 @@ const MIN_CONFIDENCE = 0.35;
 /** モノモンとの出会いに失敗したことを表す（怖い画面ではなくやさしく案内するため）。 */
 export class DiscoveryError extends Error {
   kind: DiscoveryErrorKind;
-  /** [DEV DEBUG] AI Gateway / provider から返ってきた詳細（あれば） */
-  debug?: {
-    status?: number;
-    gatewayBody?: string;
-    providerBody?: string;
-    fetchError?: string;
-    parseError?: string;
-    upstreamError?: string;
-    analyzeError?: string;
-  };
-  /** [DEV DEBUG] 元の例外 */
-  cause?: unknown;
-  constructor(
-    kind: DiscoveryErrorKind,
-    debug?: DiscoveryError["debug"],
-    cause?: unknown,
-  ) {
+  constructor(kind: DiscoveryErrorKind) {
     super(kind);
     this.name = "DiscoveryError";
     this.kind = kind;
-    this.debug = debug;
-    this.cause = cause;
   }
 }
 
@@ -147,27 +127,17 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
     result = await analyzeSpirit({ data: { photo } });
   } catch (e) {
     console.error("analyzeSpirit failed", e);
-    throw new DiscoveryError(
-      "network",
-      {
-        analyzeError:
-          e instanceof Error
-            ? `${e.name}: ${e.message}\n${e.stack ?? ""}`
-            : String(e),
-      },
-      e,
-    );
+    throw new DiscoveryError("network");
   }
 
   if ("error" in result) {
-    const debug = result.debug;
     if (result.error === "rate_limit" || result.error === "credits") {
-      throw new DiscoveryError("busy", { ...debug, upstreamError: result.error });
+      throw new DiscoveryError("busy");
     }
     if (result.error === "AIに接続できませんでした") {
-      throw new DiscoveryError("network", { ...debug, upstreamError: result.error });
+      throw new DiscoveryError("network");
     }
-    throw new DiscoveryError("unknown", { ...debug, upstreamError: result.error });
+    throw new DiscoveryError("unknown");
   }
 
   // 写真がうまく見えないとき：想像で決めず、やさしく撮り直しを促す

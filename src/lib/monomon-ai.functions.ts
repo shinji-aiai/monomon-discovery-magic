@@ -27,15 +27,6 @@ import {
 /** 写真の写りぐあい（poor のときは撮り直しをやさしく促す）。 */
 export type ImageQuality = "ok" | "too_far" | "too_dark" | "blurry" | "no_object";
 
-/** [DEV DEBUG] AI Gateway 呼び出し時の詳細（本番挙動には影響しない・エラー時のみ添付） */
-export interface AnalyzeErrorDebug {
-  status?: number;
-  gatewayBody?: string;
-  providerBody?: string;
-  fetchError?: string;
-  parseError?: string;
-}
-
 /** AIが返す精霊データ（描画はこの speciesId に対応する手続き的SVG）。 */
 export interface SpiritAnalysis {
   /** 認識した物体（日本語・短く） 例: "コップ" "ハサミ" "傘" */
@@ -136,7 +127,7 @@ function extractJson(text: string): unknown {
 
 export const analyzeSpirit = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AnalyzeInput.parse(input))
-  .handler(async ({ data }): Promise<SpiritAnalysis | { error: string; debug?: AnalyzeErrorDebug }> => {
+  .handler(async ({ data }): Promise<SpiritAnalysis | { error: string }> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { error: "AIキーが設定されていません" };
 
@@ -175,55 +166,26 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("AI gateway fetch failed", e);
-      return {
-        error: "AIに接続できませんでした",
-        debug: {
-          fetchError:
-            e instanceof Error
-              ? `${e.name}: ${e.message}\n${e.stack ?? ""}`
-              : String(e),
-        },
-      };
+      return { error: "AIに接続できませんでした" };
     }
 
-    if (res.status === 429) {
-      const body = await res.text().catch(() => "");
-      return { error: "rate_limit", debug: { status: 429, gatewayBody: body } };
-    }
-    if (res.status === 402) {
-      const body = await res.text().catch(() => "");
-      return { error: "credits", debug: { status: 402, gatewayBody: body } };
-    }
+    if (res.status === 429) return { error: "rate_limit" };
+    if (res.status === 402) return { error: "credits" };
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error("AI gateway error", res.status, body);
-      return {
-        error: "AIの解析に失敗しました",
-        debug: { status: res.status, gatewayBody: body },
-      };
+      console.error("AI gateway error", res.status, await res.text().catch(() => ""));
+      return { error: "AIの解析に失敗しました" };
     }
 
     let parsed: Record<string, unknown>;
-    let rawContent = "";
     try {
       const json = (await res.json()) as {
         choices?: { message?: { content?: string } }[];
       };
-      rawContent = json.choices?.[0]?.message?.content ?? "";
-      parsed = extractJson(rawContent) as Record<string, unknown>;
+      const content = json.choices?.[0]?.message?.content ?? "";
+      parsed = extractJson(content) as Record<string, unknown>;
     } catch (e) {
       console.error("AI parse failed", e);
-      return {
-        error: "AIの応答を解釈できませんでした",
-        debug: {
-          status: res.status,
-          providerBody: rawContent,
-          parseError:
-            e instanceof Error
-              ? `${e.name}: ${e.message}\n${e.stack ?? ""}`
-              : String(e),
-        },
-      };
+      return { error: "AIの応答を解釈できませんでした" };
     }
 
     // --- 検証・正規化（許可外の値は安全側に丸める） ---

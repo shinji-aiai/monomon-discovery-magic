@@ -12,27 +12,10 @@ interface MonomonCardProps {
   animate?: boolean;
   /** モノモンをタップ（なでる）したときの処理。渡すとイラストが押せるようになる */
   onPet?: () => void;
-  /**
-   * Phase 1D：写真から生成した没入画像のObject URL。
-   * 与えられたときは手続き的SVGの代わりに実画像をパネルに表示する。
-   * 与えられないときは既存の v1.0 表示のまま。
-   */
-  immersionImageUrl?: string | null;
-  /**
-   * Phase 1D：没入画像を準備中（生成→圧縮→保存の途中）。
-   * URLがまだ無いあいだの、そっとした「あらわれつつある」表現に使う。
-   */
-  immersionPending?: boolean;
 }
 
-export function MonomonCard({
-  monomon,
-  className,
-  animate,
-  onPet,
-  immersionImageUrl,
-  immersionPending,
-}: MonomonCardProps) {
+/** 保存したくなる、上質なモノモンカード（写真から精霊が飛び出す構図）。 */
+export function MonomonCard({ monomon, className, animate, onPet }: MonomonCardProps) {
   const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   const accent = monomon.palette.c3;
@@ -45,111 +28,32 @@ export function MonomonCard({
         className,
       )}
     >
-      {/* イラストエリア（夜の展示台のような柔らかな光） */}
+      {/* イラストエリア */}
       <div className="relative h-64">
-        {/* 台座グロー */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 bottom-3 h-16 w-56 -translate-x-1/2 rounded-full blur-3xl"
-          style={{ backgroundColor: `${accent}66` }}
-        />
-
-        {immersionImageUrl ? (
-          <>
-            {/* 没入画像：ぼかしたコピーを背景にして、前面は object-contain で全形を保つ */}
-            <div className="absolute inset-0 overflow-hidden">
-              <img
-                src={immersionImageUrl}
-                alt=""
-                aria-hidden
-                className="h-full w-full scale-110 object-cover blur-[10px] brightness-95"
-              />
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/30 to-transparent" />
-            </div>
-            {onPet ? (
-              <button
-                type="button"
-                onClick={onPet}
-                aria-label="なでる"
-                className="absolute inset-0 flex cursor-pointer items-center justify-center transition-transform active:scale-95"
-              >
-                <img
-                  src={immersionImageUrl}
-                  alt={`${monomon.objectLabel ?? species.name}に宿る${monomon.name}`}
-                  className="h-full w-full animate-pop-in object-contain drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]"
-                />
-              </button>
-            ) : (
-              <img
-                src={immersionImageUrl}
-                alt={`${monomon.objectLabel ?? species.name}に宿る${monomon.name}`}
-                className="absolute inset-0 h-full w-full animate-pop-in object-contain drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]"
-              />
-            )}
-          </>
-        ) : monomon.immersionImageId ? (
-          // AI生成画像が保存済みの個体は、URL 読み込み中でも SVG に戻さない。
-          // 静かなプレースホルダだけを敷いておく。読み込みが完了すれば
-          // 親が immersionImageUrl を渡してくれるので上の分岐に切り替わる。
-          <div
-            aria-hidden
-            className="absolute inset-0 animate-breathe bg-gradient-to-b from-white/40 via-white/10 to-white/5"
+        {/* 元写真をうっすら背景に */}
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={monomon.photo}
+            alt=""
+            className="h-full w-full scale-110 object-cover blur-[3px]"
           />
-        ) : (
-          <>
-            {/* 元写真をうっすら背景に */}
-            <div className="absolute inset-0 overflow-hidden">
-              <img
-                src={monomon.photo}
-                alt=""
-                className={cn(
-                  "h-full w-full scale-110 object-cover blur-[3px]",
-                  immersionPending && "animate-breathe",
-                )}
-              />
-              <div
-                className="absolute inset-0 opacity-[0.86]"
-                style={{
-                  backgroundImage: `linear-gradient(165deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-                }}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `radial-gradient(120% 90% at 50% 18%, ${fam.tint}22, transparent 60%)`,
-                }}
-              />
-              {/* 上質な光沢 */}
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/55 to-transparent" />
-            </div>
+          <div
+            className="absolute inset-0 opacity-[0.86]"
+            style={{
+              backgroundImage: `linear-gradient(165deg, ${fam.bg[0]}, ${fam.bg[1]})`,
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(120% 90% at 50% 18%, ${fam.tint}22, transparent 60%)`,
+            }}
+          />
+          {/* 上質な光沢 */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/55 to-transparent" />
+        </div>
 
-            {/* モノモン（全身が必ず収まるよう中央に contain 配置） */}
-            <div className="absolute inset-0 flex items-center justify-center p-3">
-              <div className="relative h-full w-full">
-                <span
-                  className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-                  style={{ backgroundColor: `${accent}55` }}
-                />
-                <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
-                  {onPet ? (
-                    <button
-                      type="button"
-                      onClick={onPet}
-                      aria-label="なでる"
-                      className="h-full w-full cursor-pointer transition-transform active:scale-90"
-                    >
-                      <MonomonArt monomon={monomon} />
-                    </button>
-                  ) : (
-                    <MonomonArt monomon={monomon} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* チップ：AIが認識した「モノ」（画像の有無に関わらず表示） */}
+        {/* チップ：AIが認識した「モノ」 */}
         <span className="absolute left-4 top-4 max-w-[60%] truncate rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
           {species.emoji} {monomon.objectLabel ?? species.name}
           {monomon.uncertain && "の仲間かも？"}
@@ -158,13 +62,30 @@ export function MonomonCard({
           {fam.emoji} {fam.label}族
         </span>
 
-        {immersionPending && !immersionImageUrl && (
-          <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/75 px-3 py-1 text-[11px] font-bold text-foreground/70 shadow-soft backdrop-blur-sm">
-            写真の中に姿をあらわしているよ…
-          </span>
-        )}
+        {/* モノモン（全身が必ず収まるよう中央に contain 配置） */}
+        <div className="absolute inset-0 flex items-center justify-center p-3">
+          <div className="relative h-full w-full">
+            <span
+              className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{ backgroundColor: `${accent}55` }}
+            />
+            <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
+              {onPet ? (
+                <button
+                  type="button"
+                  onClick={onPet}
+                  aria-label="なでる"
+                  className="h-full w-full cursor-pointer transition-transform active:scale-90"
+                >
+                  <MonomonArt monomon={monomon} />
+                </button>
+              ) : (
+                <MonomonArt monomon={monomon} />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-
 
 
       {/* 情報エリア（名前 → 性格 → 一言の順で見せる） */}
