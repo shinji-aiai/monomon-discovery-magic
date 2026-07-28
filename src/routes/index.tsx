@@ -92,10 +92,13 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col gradient-sky gradient-room-home px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
+
+      {/* 室内の自然光（斜めに差し込む光の帯） */}
+      <span aria-hidden className="room-light-beam" />
 
       <Sparkles className="absolute left-6 top-20 h-4 w-4 text-accent/60 animate-twinkle" />
       <Sparkles
