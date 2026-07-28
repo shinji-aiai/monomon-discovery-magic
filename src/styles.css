@@ -795,3 +795,14 @@
   pointer-events: none;
 }
 
+
+/* ホーム専用：実写の部屋写真を背景に敷く（他画面には影響しない） */
+@utility home-photo-bg {
+  position: relative;
+  background-image:
+    linear-gradient(180deg, oklch(0.98 0.02 85 / 0.15) 0%, oklch(0.94 0.03 75 / 0.35) 55%, oklch(0.92 0.04 70 / 0.55) 100%),
+    url("/__l5e/assets-v1/6595ced6-b79e-4082-918f-7f794abcd502/home-room.png");
+  background-size: cover;
+  background-position: center 28%;
+  background-repeat: no-repeat;
+}
