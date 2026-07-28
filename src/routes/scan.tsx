@@ -455,14 +455,24 @@ export function ScanScreen() {
   };
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col bg-day-room px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
+      {/* 部屋の窓光 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-70"
+        style={{
+          background:
+            "radial-gradient(90% 60% at 20% 0%, oklch(0.98 0.06 80 / 0.9), transparent 60%)",
+        }}
+      />
+
       {/* ヘッダー */}
       {phase !== "reveal" && (
-        <header className="flex items-center">
+        <header className="relative flex items-center">
           {phase === "result" ? (
             <button
               onClick={reset}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full glass-day text-foreground shadow-soft active:scale-95"
               aria-label="戻る"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -471,7 +481,7 @@ export function ScanScreen() {
             <Link
               to="/"
               onClick={tap}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground shadow-soft active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-full glass-day text-foreground shadow-soft active:scale-95"
               aria-label="ホームへ"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -498,32 +508,60 @@ export function ScanScreen() {
       />
 
       {phase === "choose" && (
-        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-            <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
+        <div className="relative m-auto flex w-full flex-col items-center justify-center py-4 text-center">
+          {/* 中央の巨大な撮影ボタン（視線が自然に集まる） */}
+          <div className="relative mb-8">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 rounded-full warm-glow animate-breathe"
+            />
+            <button
+              onClick={openCamera}
+              className="relative flex h-36 w-36 items-center justify-center rounded-full gradient-primary text-primary-foreground shadow-float active:scale-95"
+              aria-label="写真を撮る"
+            >
+              <Camera className="h-16 w-16" strokeWidth={1.8} />
+            </button>
           </div>
+
           <h1 className="text-2xl font-extrabold text-foreground">
             モノを撮ってみよう
           </h1>
-          <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            身の回りのモノを1枚
+          <p className="mt-2 max-w-xs text-[13px] font-medium leading-relaxed text-muted-foreground">
+            身の回りのモノを1枚撮ると
             <br />
             どんな精霊が出てくるかな？
           </p>
 
-          <div className="mt-10 w-full max-w-sm space-y-1 text-center">
-            <p className="text-sm font-bold text-foreground/90">
-              モノ全体が入るように撮ってね
+          {/* おすすめのモノ（生活空間に溶け込むチップ） */}
+          <div className="mt-8 w-full max-w-sm rounded-[24px] glass-day p-4 shadow-soft">
+            <p className="mb-3 text-left text-xs font-extrabold text-foreground/70">
+              おすすめのモノ
             </p>
-            <p className="text-xs text-muted-foreground">
-              ぬいぐるみ・文房具・植物がおすすめ！
-            </p>
+            <div className="grid grid-cols-5 gap-2">
+              {[
+                { e: "🧸", l: "ぬい" },
+                { e: "✏️", l: "文具" },
+                { e: "🌿", l: "植物" },
+                { e: "🍵", l: "食器" },
+                { e: "···", l: "その他" },
+              ].map((c) => (
+                <div
+                  key={c.l}
+                  className="flex flex-col items-center gap-1 rounded-2xl bg-white/70 py-2 text-foreground shadow-soft"
+                >
+                  <span className="text-xl leading-none">{c.e}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">{c.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-4 w-full max-w-sm space-y-3">
+          {/* 撮る / 選ぶ（役割の違いを明確に） */}
+          <div className="mt-6 w-full max-w-sm space-y-3">
             <button
               onClick={openCamera}
-              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-[15px] font-bold text-primary-foreground shadow-float active:scale-95"
             >
               <Camera className="h-5 w-5" />
               写真を撮る
@@ -533,7 +571,7 @@ export function ScanScreen() {
                 tap();
                 libraryRef.current?.click();
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-card py-4 text-lg font-bold text-foreground shadow-soft active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full glass-day py-4 text-[15px] font-bold text-foreground shadow-soft active:scale-95"
             >
               <ImagePlus className="h-5 w-5 text-primary" />
               写真を選ぶ
@@ -543,47 +581,47 @@ export function ScanScreen() {
       )}
 
       {phase === "confirm" && photo && (
-        <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
+        <div className="relative m-auto flex w-full flex-col items-center justify-center py-6 text-center">
+          {/* 撮った写真を主役にした大きな角丸カード */}
           <div className="animate-pop-in">
-            <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
-              <img
-                src={photo}
-                alt="撮影した写真"
-                className="h-full w-full object-cover"
+            <div className="relative mx-auto aspect-[3/4] w-72 overflow-hidden rounded-[36px] shadow-float">
+              <img src={photo} alt="撮影した写真" className="h-full w-full object-cover" />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-[36px] ring-1 ring-inset ring-white/50"
               />
-              <span className="pointer-events-none absolute inset-0 rounded-[34px] ring-1 ring-inset ring-card/40" />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-20 rounded-t-[36px] bg-gradient-to-b from-white/30 to-transparent"
+              />
             </div>
           </div>
 
-          <div className="mt-8 space-y-1">
-            <h1 className="text-xl font-extrabold text-foreground">
-              この写真でさがす？
-            </h1>
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-8 space-y-1.5">
+            <h1 className="text-2xl font-extrabold text-foreground">この写真でさがす？</h1>
+            <p className="text-[13px] font-medium text-muted-foreground">
               モノモンがかくれているかも
             </p>
           </div>
 
-          <div className="mt-9 grid w-full max-w-sm grid-cols-2 gap-3">
+          <div className="mt-9 flex w-full max-w-sm items-center gap-3">
             <button
-              onClick={() => {
-                tap();
-                openCamera();
-              }}
-              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-card py-4 text-[15px] font-bold text-foreground shadow-soft active:scale-95"
+              onClick={() => { tap(); openCamera(); }}
+              className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full glass-day py-4 text-[14px] font-bold text-foreground shadow-soft active:scale-95"
             >
-              📷 撮り直す
+              <Camera className="h-4 w-4" />
+              撮り直す
             </button>
             <button
               onClick={startSearch}
-              className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full gradient-primary py-4 text-[15px] font-bold text-primary-foreground shadow-float active:scale-95"
+              className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full gradient-primary py-4 text-[14px] font-bold text-primary-foreground shadow-float active:scale-95"
             >
-              🔍 モノモンを探す
+              <Sparkles className="h-4 w-4" />
+              モノモンを探す
             </button>
           </div>
         </div>
       )}
-
 
       {phase === "reveal" && photo && (
         <DiscoveryReveal
@@ -598,8 +636,8 @@ export function ScanScreen() {
           onCancel={reset}
           immersionImageUrl={immersionUrl}
         />
-
       )}
+
 
       {phase === "error" && (
         <GentleError kind={errKind} onRetry={retry} debugError={errDebug} />
