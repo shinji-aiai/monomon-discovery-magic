@@ -12,7 +12,7 @@ import {
   Sparkles,
   Loader2,
 } from "lucide-react";
-import { MonomonCard } from "@/components/MonomonCard";
+import { MonomonArt } from "@/components/MonomonArt";
 import { ShareModal } from "@/components/ShareModal";
 import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { GentleError, type GentleErrorKind } from "@/components/GentleError";
@@ -645,72 +645,120 @@ export function ScanScreen() {
 
 
       {phase === "result" && result && (
-        <div className="flex flex-1 flex-col">
-          <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur px-4 py-1.5 text-sm font-extrabold text-primary shadow-soft animate-pop-in">
-              <Sparkles className="h-4 w-4" /> また 会えたね
-            </p>
+        <div className="relative flex flex-1 flex-col items-center px-2 pb-6">
+          {/* 上部：また会えたね ピル */}
+          <div className="relative z-10 mt-1 flex w-full items-start justify-center">
+            <span className="inline-flex animate-pop-in items-center gap-1.5 rounded-full bg-white/85 px-4 py-1.5 text-sm font-extrabold text-primary shadow-float backdrop-blur">
+              <Sparkles className="h-4 w-4" />
+              また 会えたね
+            </span>
           </div>
 
-
-          <div className="mx-auto w-full max-w-sm">
-            <MonomonCard
-              monomon={result}
-              animate
-              immersionImageUrl={immersionUrl}
-              immersionPending={immersionPending}
-            />
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                onClick={save}
-                disabled={saving}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                画像を保存
-              </button>
-              <button
-                onClick={() => {
-                  tap();
-                  setSharing(true);
-                }}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
-              >
-                <Share2 className="h-4 w-4 text-primary" />
-                シェア
-              </button>
-              <Link
-                to="/zukan"
-                onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
-              >
-                <Check className="h-4 w-4" />
-                図鑑を見る
-              </Link>
-              <Link
-                to="/"
-                onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
-              >
-                <Home className="h-4 w-4" />
-                ホーム
-              </Link>
-            </div>
-
-            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
-            <div className="mt-4 text-center">
-              <SupportButton variant="result" />
-            </div>
-
-            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
-              まだ見ぬモノモンが待っているかも
+          {/* 「〇〇に宿る」＋名前 */}
+          <div className="relative z-10 mt-6 animate-rise-in text-center">
+            <p className="text-xs font-bold text-foreground/60">
+              {result.objectLabel
+                ? result.uncertain
+                  ? `${result.objectLabel}の仲間かも`
+                  : `${result.objectLabel}に宿る`
+                : "小さな精霊"}
             </p>
+            <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
+              {result.name}
+            </h1>
+          </div>
+
+          {/* 中央の大きなキャラ（暖かな台座グロー） */}
+          <div className="relative my-4 flex flex-1 items-center justify-center">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(closest-side, oklch(0.9 0.12 70 / 0.55), transparent 70%)",
+                filter: "blur(6px)",
+              }}
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 bottom-[18%] h-3 w-48 -translate-x-1/2 rounded-full bg-amber-200/60 blur-md"
+            />
+            <div className="relative h-72 w-72 animate-life-float drop-shadow-[0_18px_28px_rgba(120,70,40,0.32)]">
+              {immersionUrl ? (
+                <img
+                  src={immersionUrl}
+                  alt={result.name}
+                  className="h-full w-full animate-pop-in object-contain"
+                />
+              ) : (
+                <MonomonArt monomon={result} />
+              )}
+            </div>
+            {immersionPending && !immersionUrl && (
+              <span className="absolute bottom-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-foreground/70 backdrop-blur">
+                写真の中に姿をあらわしているよ…
+              </span>
+            )}
+          </div>
+
+          {/* 一言（白いカード） */}
+          <div className="relative z-10 mx-4 mb-5 max-w-sm animate-pop-in rounded-3xl bg-white/85 px-5 py-3 text-center text-[15px] font-bold leading-relaxed text-foreground shadow-float backdrop-blur">
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 mr-1.5 text-[11px] font-extrabold text-primary">
+              {result.personality}
+            </span>
+            <span>「{result.description}」</span>
+          </div>
+
+          {/* 下部：ふたつのボタン（くわしく見る／図鑑に入れる） */}
+          <div className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-3 px-2">
+            <Link
+              to="/zukan"
+              onClick={tap}
+              className="flex items-center justify-center gap-2 rounded-full bg-white/85 py-3.5 text-sm font-bold text-foreground shadow-soft backdrop-blur active:scale-95"
+            >
+              くわしく見る
+            </Link>
+            <button
+              onClick={() => {
+                tap();
+                setSharing(true);
+              }}
+              className="flex items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-float active:scale-95"
+            >
+              <Check className="h-4 w-4" />
+              図鑑に入れる
+            </button>
+          </div>
+
+          {/* 補助アクション（保存・シェア・ホーム） */}
+          <div className="relative z-10 mt-3 flex w-full max-w-sm items-center justify-center gap-2 px-2">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white/60 py-2.5 text-xs font-bold text-foreground/80 backdrop-blur active:scale-95 disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              保存
+            </button>
+            <button
+              onClick={() => { tap(); setSharing(true); }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white/60 py-2.5 text-xs font-bold text-foreground/80 backdrop-blur active:scale-95"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              シェア
+            </button>
+            <Link
+              to="/"
+              onClick={tap}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white/60 py-2.5 text-xs font-bold text-foreground/80 backdrop-blur active:scale-95"
+            >
+              <Home className="h-3.5 w-3.5" />
+              ホーム
+            </Link>
+          </div>
+
+          <div className="relative z-10 mt-3">
+            <SupportButton variant="result" />
           </div>
         </div>
       )}
