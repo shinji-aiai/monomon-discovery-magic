@@ -330,8 +330,33 @@ export function DiscoveryReveal({
   return (
     <div
       onClick={advance}
-      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center overflow-hidden px-6 text-center bg-night-room"
     >
+      {/* 夜の展示室：深い空・星のような小さな光 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(60% 45% at 50% 38%, oklch(0.62 0.18 300 / 0.35), transparent 65%), radial-gradient(50% 40% at 80% 12%, oklch(0.75 0.15 260 / 0.28), transparent 70%)",
+        }}
+      />
+      {Array.from({ length: 22 }).map((_, i) => (
+        <span
+          key={`star-${i}`}
+          aria-hidden
+          className="pointer-events-none absolute rounded-full bg-white/70 animate-twinkle"
+          style={{
+            left: `${(i * 47) % 100}%`,
+            top: `${(i * 29) % 90}%`,
+            width: 2 + (i % 3),
+            height: 2 + (i % 3),
+            opacity: 0.4 + ((i % 4) * 0.12),
+            animationDelay: `${(i % 6) * 0.35}s`,
+          }}
+        />
+      ))}
+
       {/* 紙吹雪（少しだけ・発見成功のお祝い） */}
       {showConfetti && (
         <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
