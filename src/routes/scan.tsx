@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { MonomonCard } from "@/components/MonomonCard";
+import { MonomonArt } from "@/components/MonomonArt";
 import { ShareModal } from "@/components/ShareModal";
 import { DiscoveryReveal } from "@/components/DiscoveryReveal";
 import { GentleError, type GentleErrorKind } from "@/components/GentleError";
