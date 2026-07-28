@@ -137,6 +137,8 @@ function Home() {
               <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
             )}
           </div>
+          {/* 足元のやわらかい接地影 */}
+          <span aria-hidden className="companion-ground-shadow" />
         </div>
         {last ? (
           <p className="mt-1 text-sm font-bold text-foreground">
