@@ -152,31 +152,36 @@ function Zukan() {
   const remaining = SPECIES_COUNT - kinds;
 
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <header className="mb-4">
-        <h1 className="text-2xl font-extrabold text-foreground">図鑑</h1>
-        <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+    <div className="relative min-h-[100svh] world-night-archive px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      {/* 夜の粒子（星空にならない最小限） */}
+      <span aria-hidden className="night-subtle-particle" style={{ top: "9%", left: "12%" }} />
+      <span aria-hidden className="night-subtle-particle" style={{ top: "14%", right: "16%", animationDelay: "1.6s" }} />
+      <span aria-hidden className="night-subtle-particle" style={{ top: "36%", left: "72%", animationDelay: "2.8s" }} />
+
+      <header className="relative mb-4">
+        <h1 className="text-2xl font-extrabold night-text">図鑑</h1>
+        <p className="mt-0.5 text-sm font-medium night-text-muted">
           {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
 
       {/* コレクション率 */}
-      <div className="mb-3 rounded-2xl bg-card/80 px-4 py-3.5 shadow-soft">
+      <div className="relative mb-3 rounded-2xl night-glass-card px-4 py-3.5">
         <div className="flex items-end justify-between">
-          <p className="text-sm font-bold text-foreground">コレクション</p>
-          <p className="text-base font-extrabold text-foreground">
+          <p className="text-sm font-bold night-text">コレクション</p>
+          <p className="text-base font-extrabold night-text">
             <span className="text-primary">{kinds}</span>
-            <span className="mx-1 text-muted-foreground">/</span>
+            <span className="mx-1 night-text-muted">/</span>
             {SPECIES_COUNT}
           </p>
         </div>
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
+        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full rounded-full gradient-primary transition-all"
             style={{ width: `${(kinds / SPECIES_COUNT) * 100}%` }}
           />
         </div>
-        <p className="mt-2 text-xs font-bold text-muted-foreground">
+        <p className="mt-2 text-xs font-bold night-text-muted">
           {remaining > 0
             ? `あと ${remaining} 種族で コンプリート`
             : "🎉 ぜんぶ集めたよ おめでとう"}
@@ -189,13 +194,13 @@ function Zukan() {
 
       {/* 検索バー */}
       <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 night-text-muted" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           inputMode="search"
           placeholder="モノモンや種族をさがす"
-          className="w-full rounded-2xl border border-white/60 bg-card py-3 pl-11 pr-10 text-sm font-medium text-foreground shadow-soft outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
+          className="w-full rounded-2xl border border-white/10 night-glass-card py-3 pl-11 pr-10 text-sm font-medium night-text shadow-soft outline-none placeholder:text-white/50 focus:ring-2 focus:ring-primary/40"
         />
         {query && (
           <button
@@ -203,7 +208,7 @@ function Zukan() {
               tap();
               setQuery("");
             }}
-            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-90"
+            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 night-text-muted active:scale-90"
             aria-label="検索をクリア"
           >
             <X className="h-3.5 w-3.5" />
@@ -226,6 +231,7 @@ function Zukan() {
           発見アルバム
         </ModeBtn>
       </div>
+
 
       {mode === "species" ? (
         filteredSpecies.length === 0 ? (
