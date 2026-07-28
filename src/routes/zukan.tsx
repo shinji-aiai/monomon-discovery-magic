@@ -631,8 +631,12 @@ function SpeciesDetailSheet({
   const fam = FAMILY_STYLES[species.family];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-background p-5 pb-8 shadow-float sm:my-6 sm:rounded-3xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 backdrop-blur-sm species-detail-night sm:items-center">
+      {/* ごく控えめな粒子（星空にならない最小限） */}
+      <span aria-hidden className="species-detail-particle" style={{ top: "12%", left: "18%" }} />
+      <span aria-hidden className="species-detail-particle" style={{ top: "22%", right: "22%", animationDelay: "1.4s" }} />
+      <span aria-hidden className="species-detail-particle" style={{ top: "34%", left: "68%", animationDelay: "2.6s" }} />
+      <div className="relative w-full max-w-md animate-rise-in rounded-t-3xl species-detail-glass-card p-5 pb-8 sm:my-6 sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
@@ -673,18 +677,20 @@ function SpeciesDetailSheet({
             backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
           }}
         >
+          <span aria-hidden className="species-detail-hero-glow" />
           {isFound ? (
-            <div className="h-full w-full drop-shadow-[0_10px_14px_rgba(90,60,40,0.22)]">
+            <div className="relative h-full w-full drop-shadow-[0_10px_14px_rgba(90,60,40,0.22)]">
               <MonomonArt monomon={found[0]} />
             </div>
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="relative flex h-full w-full items-center justify-center">
               <div className="h-full w-full opacity-25 [filter:brightness(0)]">
                 <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
               </div>
               <Lock className="absolute h-8 w-8 text-foreground/30" />
             </div>
           )}
+          <span aria-hidden className="species-detail-ground-light" />
         </div>
 
         {/* 見出し */}
