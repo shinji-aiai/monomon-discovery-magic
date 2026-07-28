@@ -145,9 +145,10 @@ function Home() {
               <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
             )}
           </div>
-          {/* 足元のやわらかい接地影 */}
-          <span aria-hidden className="companion-ground-shadow" />
+          {/* 足元のやわらかい接地影（家具の上に立っている感） */}
+          <span aria-hidden className="monomon-contact-shadow" />
         </div>
+
         {last ? (
           <p className="mt-1 text-sm font-bold text-foreground">
             さいきんの相棒「{last.name}」
