@@ -92,19 +92,27 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky gradient-room-home px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col world-day-room px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
 
-      {/* 室内の自然光（斜めに差し込む光の帯） */}
-      <span aria-hidden className="room-light-beam" />
+      {/* 室内の壁面のぬくもり */}
+      <span aria-hidden className="room-wall-warm" />
+      {/* 窓から差し込む自然光 */}
+      <span aria-hidden className="room-window-light" />
+      {/* 相棒が立つ木の卓上（水平面のヒント） */}
+      <span aria-hidden className="room-furniture-surface" />
+      {/* 生活小物（UIを隠さない場所に少しだけ） */}
+      <span aria-hidden className="room-life-prop" style={{ top: "18%", left: "6%" }}>📕</span>
+      <span aria-hidden className="room-life-prop" style={{ top: "13%", right: "8%", fontSize: "18px" }}>🪴</span>
 
       <Sparkles className="absolute left-6 top-20 h-4 w-4 text-accent/60 animate-twinkle" />
       <Sparkles
         className="absolute right-8 top-32 h-5 w-5 text-primary/40 animate-twinkle"
         style={{ animationDelay: "0.8s" }}
       />
+
 
       {/* あいさつ */}
       <div className="flex items-center justify-between">
@@ -137,9 +145,10 @@ function Home() {
               <MonomonArt seed={heroSeed} speciesId={heroSpecies} />
             )}
           </div>
-          {/* 足元のやわらかい接地影 */}
-          <span aria-hidden className="companion-ground-shadow" />
+          {/* 足元のやわらかい接地影（家具の上に立っている感） */}
+          <span aria-hidden className="monomon-contact-shadow" />
         </div>
+
         {last ? (
           <p className="mt-1 text-sm font-bold text-foreground">
             さいきんの相棒「{last.name}」
