@@ -98,33 +98,63 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-card p-6 pb-8 shadow-float sm:rounded-3xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">シェア</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[oklch(0.12_0.05_275_/_0.7)] backdrop-blur-md sm:items-center">
+      <div className="relative w-full max-w-md animate-rise-in overflow-hidden rounded-t-[32px] glass-night p-6 pb-8 shadow-purple-glow sm:rounded-[32px]">
+        {/* 星のような粒 */}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span
+            key={i}
+            aria-hidden
+            className="pointer-events-none absolute rounded-full bg-white/60 animate-twinkle"
+            style={{
+              left: `${(i * 53) % 100}%`,
+              top: `${(i * 37) % 80}%`,
+              width: 2 + (i % 2),
+              height: 2 + (i % 2),
+              opacity: 0.5,
+              animationDelay: `${(i % 5) * 0.4}s`,
+            }}
+          />
+        ))}
+
+        <div className="relative mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold text-white">シェア</h2>
           <button
             onClick={() => {
               tap();
               onClose();
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 active:scale-95"
             aria-label="閉じる"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mx-auto mb-6 w-48 overflow-hidden rounded-2xl shadow-soft">
-          {preview ? (
-            <img src={preview} alt={`${monomon.name}のシェアカード`} className="w-full" />
-          ) : (
-            <div className="flex aspect-[4/5] items-center justify-center bg-muted">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
+        {/* シェアカード：夜の展示台に載せる */}
+        <div className="relative mx-auto mb-7 w-56">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -inset-4 rounded-[28px] bg-purple-300/30 blur-2xl"
+          />
+          <div className="relative overflow-hidden rounded-[22px] border border-white/20 shadow-purple-glow">
+            {preview ? (
+              <img src={preview} alt={`${monomon.name}のシェアカード`} className="w-full" />
+            ) : (
+              <div className="flex aspect-[4/5] items-center justify-center bg-white/5">
+                <Loader2 className="h-6 w-6 animate-spin text-white/60" />
+              </div>
+            )}
+            <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/20 to-transparent" />
+          </div>
+          {/* 台座の反射 */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -bottom-3 left-1/2 h-3 w-[70%] -translate-x-1/2 rounded-full bg-white/25 blur-md"
+          />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="relative grid grid-cols-3 gap-3">
           <ShareBtn label="X" onClick={shareX} color="#000000" textColor="#fff">
             <span className="text-xl font-bold">𝕏</span>
           </ShareBtn>
@@ -141,10 +171,10 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
           </ShareBtn>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="relative mt-4 grid grid-cols-2 gap-3">
           <button
             onClick={saveImage}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-sm font-bold text-secondary-foreground active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-white/12 py-3 text-sm font-bold text-white backdrop-blur active:scale-95"
           >
             <Download className="h-4 w-4" />
             画像を保存
@@ -152,7 +182,7 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
           <button
             onClick={systemShare}
             disabled={busy}
-            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3 text-sm font-bold text-primary-foreground active:scale-95 disabled:opacity-60"
+            className="flex items-center justify-center gap-2 rounded-2xl gradient-primary py-3 text-sm font-bold text-primary-foreground shadow-float active:scale-95 disabled:opacity-60"
           >
             {busy ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -166,6 +196,7 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
     </div>
   );
 }
+
 
 function ShareBtn({
   label,
