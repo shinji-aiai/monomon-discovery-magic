@@ -92,20 +92,10 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col world-day-room px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col home-photo-bg px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
-
-      {/* 室内の壁面のぬくもり */}
-      <span aria-hidden className="room-wall-warm" />
-      {/* 窓から差し込む自然光 */}
-      <span aria-hidden className="room-window-light" />
-      {/* 相棒が立つ木の卓上（水平面のヒント） */}
-      <span aria-hidden className="room-furniture-surface" />
-      {/* 生活小物（UIを隠さない場所に少しだけ） */}
-      <span aria-hidden className="room-life-prop" style={{ top: "18%", left: "6%" }}>📕</span>
-      <span aria-hidden className="room-life-prop" style={{ top: "13%", right: "8%", fontSize: "18px" }}>🪴</span>
 
       <Sparkles className="absolute left-6 top-20 h-4 w-4 text-accent/60 animate-twinkle" />
       <Sparkles
