@@ -474,43 +474,42 @@ function SpeciesCell({
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex flex-col overflow-hidden rounded-2xl glass-night active:scale-95"
     >
       {isNew && <NewBadge />}
-      <div
-        className="relative aspect-square p-2"
-        style={{
-          backgroundImage: `linear-gradient(160deg, ${FAMILY_STYLES[species.family].bg[0]}, ${FAMILY_STYLES[species.family].bg[1]})`,
-        }}
-      >
+      <div className="relative aspect-square p-2">
+        {/* 紫の台座光 */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-2 rounded-full pedestal-glow animate-pedestal-breathe"
+        />
         {found ? (
           <>
-            <div className="h-full w-full drop-shadow-[0_6px_8px_rgba(90,60,40,0.18)]">
+            <div className="relative h-full w-full drop-shadow-[0_10px_14px_rgba(80,40,110,0.5)]">
               <MonomonArt monomon={sample} />
+              <span className="glass-sheen rounded-[35%]" />
             </div>
             {count > 1 && (
-              <span className="absolute bottom-1 right-1.5 rounded-full bg-card/85 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-foreground/70 backdrop-blur">
+              <span className="absolute bottom-1 right-1.5 rounded-full bg-white/15 px-1.5 py-0.5 text-[0.58rem] font-extrabold text-night backdrop-blur">
                 ×{count}
               </span>
             )}
           </>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <div className="h-full w-full opacity-25 [filter:brightness(0)]">
+            <div className="h-full w-full opacity-30 [filter:brightness(0)_invert(1)]">
               <MonomonArt seed={species.id.length * 7919 + 13} speciesId={species.id} />
             </div>
-            <Lock className="absolute h-4 w-4 text-foreground/30" />
+            <Lock className="absolute h-4 w-4 text-white/40" />
           </div>
         )}
       </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
+      <div className="px-1.5 pb-2">
+        <AutoFitName className="font-extrabold text-night" maxFontSize={12}>
           {found ? (
-            <>
-              {species.emoji} {species.name}
-            </>
+            <>{species.emoji} {species.name}</>
           ) : (
-            <span className="text-muted-foreground">？？？</span>
+            <span className="text-night-dim">？？？</span>
           )}
         </AutoFitName>
         <div className="mt-0.5 flex justify-center">
@@ -532,7 +531,6 @@ function DexCell({
   isNew?: boolean;
   onOpen: () => void;
 }) {
-  const fam = FAMILY_STYLES[monomon.family];
   const species = getSpecies(monomon.speciesId);
   return (
     <div
@@ -545,10 +543,10 @@ function DexCell({
           onOpen();
         }
       }}
-      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/60 bg-card shadow-soft active:scale-95"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl glass-night active:scale-95"
     >
       {isNew && <NewBadge />}
-      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-card/80 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-muted-foreground backdrop-blur">
+      <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-white/15 px-1.5 py-0.5 text-[0.56rem] font-extrabold text-night-muted backdrop-blur">
         No.{String(no).padStart(3, "0")}
       </span>
       <button
@@ -557,42 +555,46 @@ function DexCell({
           toggleFavorite(monomon.id);
           haptic(12);
         }}
-        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-card/80 backdrop-blur active:scale-90"
+        className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/15 backdrop-blur active:scale-90"
         aria-label="お気に入り"
       >
         <Heart
-          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-primary text-primary" : "text-muted-foreground"}`}
+          className={`h-3.5 w-3.5 ${monomon.favorite ? "fill-rose-300 text-rose-300" : "text-white/70"}`}
         />
       </button>
-      <div
-        className="aspect-square p-2"
-        style={{
-          backgroundImage: `linear-gradient(160deg, ${fam.bg[0]}, ${fam.bg[1]})`,
-        }}
-      >
-          <div className="h-full w-full drop-shadow-[0_8px_10px_rgba(90,60,40,0.18)]">
-            {monomon.immersionImageId ? (
-              <StoredImmersionVisual
-                monomon={monomon}
-                alt={monomon.name}
-                fallback={<MonomonArt monomon={monomon} />}
-              />
-            ) : (
-              <MonomonArt monomon={monomon} />
-            )}
-          </div>
+      <div className="relative aspect-square p-2">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-2 rounded-full pedestal-glow animate-pedestal-breathe"
+        />
+        <div className="relative h-full w-full drop-shadow-[0_10px_16px_rgba(60,30,100,0.55)]">
+          {monomon.immersionImageId ? (
+            <StoredImmersionVisual
+              monomon={monomon}
+              alt={monomon.name}
+              fallback={<MonomonArt monomon={monomon} />}
+            />
+          ) : (
+            <MonomonArt monomon={monomon} />
+          )}
+          <span className="glass-sheen rounded-[35%]" />
+        </div>
       </div>
-      <div className="px-1.5 py-1.5">
-        <AutoFitName className="font-extrabold text-foreground" maxFontSize={12}>
+      <div className="px-1.5 pb-2">
+        <AutoFitName className="font-extrabold text-night" maxFontSize={12}>
           {monomon.name}
         </AutoFitName>
         <div className="mt-0.5 flex justify-center">
           <RarityStars speciesId={monomon.speciesId} />
         </div>
+        <p className="mt-0.5 text-center text-[9px] font-medium text-night-dim">
+          {new Date(monomon.discoveredAt).toLocaleDateString("ja-JP")}
+        </p>
       </div>
     </div>
   );
 }
+
 
 function NoResult() {
   return (
