@@ -171,7 +171,15 @@ function Scan() {
   };
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col gradient-sky px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col world-day-room px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">
+      {/* 室内のやわらかな光 */}
+      {phase !== "reveal" && (
+        <>
+          <span aria-hidden className="room-wall-warm" />
+          <span aria-hidden className="room-window-light" />
+        </>
+      )}
+
       {/* ヘッダー */}
       {phase !== "reveal" && (
         <header className="flex items-center">
