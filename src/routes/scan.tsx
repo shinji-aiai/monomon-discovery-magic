@@ -647,11 +647,11 @@ export function ScanScreen() {
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
           <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
-              <Sparkles className="h-4 w-4" />
-              図鑑に登録しました！
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur px-4 py-1.5 text-sm font-extrabold text-primary shadow-soft animate-pop-in">
+              <Sparkles className="h-4 w-4" /> また 会えたね
             </p>
           </div>
+
 
           <div className="mx-auto w-full max-w-sm">
             <MonomonCard
