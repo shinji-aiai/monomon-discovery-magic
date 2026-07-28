@@ -870,7 +870,7 @@ function DetailSheet({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain world-night-archive"
     >
       {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
       <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
