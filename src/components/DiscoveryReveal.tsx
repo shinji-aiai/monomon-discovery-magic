@@ -506,18 +506,18 @@ export function DiscoveryReveal({
       )}
 
       {stage >= STAGE.NAME && monomon && (
-        <div key="name" className="mt-4 animate-pop-in text-center">
+        <div key="name" className="relative mt-4 animate-pop-in text-center">
           {objectLabel && (
-            <p className="text-xs font-bold text-muted-foreground">
+            <p className="text-xs font-bold text-white/70">
               {monomon.uncertain
                 ? `${objectLabel}の仲間かもしれない`
                 : `${objectLabel}に宿る`}
             </p>
           )}
-          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-foreground drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]">
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
+          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-white drop-shadow-[0_2px_14px_rgba(180,140,255,0.65)]">
+            <Sparkles className="h-6 w-6 animate-twinkle text-amber-200" />
             {monomon.name}
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
+            <Sparkles className="h-6 w-6 animate-twinkle text-amber-200" />
           </h2>
         </div>
       )}
@@ -526,7 +526,7 @@ export function DiscoveryReveal({
       {stage >= STAGE.QUOTE && monomon && (
         <div
           key="quote"
-          className="mt-4 max-w-xs animate-pop-in rounded-3xl bg-card px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft"
+          className="relative mt-4 max-w-xs animate-pop-in rounded-3xl glass-night px-5 py-3 text-base font-bold leading-relaxed text-white shadow-purple-glow"
         >
           「{greeting}」
         </div>
@@ -535,10 +535,11 @@ export function DiscoveryReveal({
 
       {/* タップ送りのヒント（最後の段までそっと表示） */}
       {stage < STAGE.QUOTE && (
-        <p className="mt-8 animate-fade-in text-xs font-medium text-muted-foreground/70">
+        <p className="relative mt-8 animate-fade-in text-xs font-medium text-white/50">
           タップで進む
         </p>
       )}
     </div>
   );
 }
+
