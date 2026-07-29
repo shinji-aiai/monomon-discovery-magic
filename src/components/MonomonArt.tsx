@@ -29,8 +29,8 @@ interface MonomonArtProps {
  * 種族の公式イラスト（Version 1 デザイン基準）を静的画像として表示します。
  * preferOfficial=true のときは、個体が渡されていても公式静的アセットを優先します。
  */
-export function MonomonArt({ monomon, seed, speciesId, className, preferOfficial }: MonomonArtProps) {
-  // 公式アセットを優先するモード（発見結果画面など）
+export function MonomonArt({ monomon, seed, speciesId, className, preferOfficial = true }: MonomonArtProps) {
+  // Version 1: 公式アセットを常に優先し、全画面で同じキャラクター画像を表示する。
   if (monomon && preferOfficial) {
     const officialUrl = getOfficialArt(monomon.speciesId);
     if (officialUrl) {
