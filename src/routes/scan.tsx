@@ -317,6 +317,11 @@ function Scan() {
               🔍 モノモンを探す
             </button>
           </div>
+
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            見つかるまで数秒です
+          </p>
         </div>
       )}
 
