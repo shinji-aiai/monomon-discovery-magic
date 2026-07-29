@@ -820,15 +820,92 @@
 
 /* --- 発見結果画面：印象的な発見バナー（Monomonらしいシンプルさ・自然にフェードアウト）--- */
 @utility discovery-announce {
-  animation: discovery-announce-fade 3.4s ease-out forwards;
+  animation: discovery-announce-fade 2.8s ease-out forwards;
   will-change: opacity, transform;
   pointer-events: none;
 }
 @keyframes discovery-announce-fade {
-  0% { opacity: 0; transform: translateY(-6px) scale(0.96); }
-  12% { opacity: 1; transform: translateY(0) scale(1); }
-  70% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  0% { opacity: 0; transform: translateY(-10px) scale(0.9); }
+  14% { opacity: 1; transform: translateY(0) scale(1); }
+  55% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.96); }
+}
+
+/* --- オレンジのリボン（発見の喜び）--- */
+@utility discovery-ribbon {
+  position: relative;
+  display: inline-block;
+  padding: 14px 40px;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  font-size: 1.35rem;
+  background: linear-gradient(180deg, #ffb04a 0%, #ff8a2b 55%, #f26f14 100%);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -3px 0 rgba(180, 70, 10, 0.35),
+    0 10px 22px rgba(220, 110, 30, 0.35),
+    0 0 40px rgba(255, 200, 120, 0.55);
+  text-shadow: 0 2px 0 rgba(170, 70, 10, 0.35);
+}
+.discovery-ribbon::before,
+.discovery-ribbon::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 22px;
+  background: linear-gradient(180deg, #e2620d 0%, #b74a09 100%);
+}
+.discovery-ribbon::before {
+  left: -18px;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+}
+.discovery-ribbon::after {
+  right: -18px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+@utility discovery-ribbon-halo {
+  position: absolute;
+  inset: -30px -50px;
+  background: radial-gradient(ellipse at center, rgba(255, 210, 140, 0.7) 0%, rgba(255, 180, 100, 0.3) 45%, transparent 75%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+/* キャラ背後の暖かい太陽光線 */
+@utility character-sun-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background:
+    conic-gradient(from 0deg,
+      rgba(255,220,150,0) 0deg, rgba(255,235,180,0.5) 6deg, rgba(255,220,150,0) 14deg,
+      rgba(255,220,150,0) 26deg, rgba(255,235,180,0.5) 32deg, rgba(255,220,150,0) 40deg,
+      rgba(255,220,150,0) 56deg, rgba(255,235,180,0.5) 62deg, rgba(255,220,150,0) 70deg,
+      rgba(255,220,150,0) 86deg, rgba(255,235,180,0.5) 92deg, rgba(255,220,150,0) 100deg,
+      rgba(255,220,150,0) 116deg, rgba(255,235,180,0.5) 122deg, rgba(255,220,150,0) 130deg,
+      rgba(255,220,150,0) 146deg, rgba(255,235,180,0.5) 152deg, rgba(255,220,150,0) 160deg,
+      rgba(255,220,150,0) 176deg, rgba(255,235,180,0.5) 182deg, rgba(255,220,150,0) 190deg,
+      rgba(255,220,150,0) 206deg, rgba(255,235,180,0.5) 212deg, rgba(255,220,150,0) 220deg,
+      rgba(255,220,150,0) 236deg, rgba(255,235,180,0.5) 242deg, rgba(255,220,150,0) 250deg,
+      rgba(255,220,150,0) 266deg, rgba(255,235,180,0.5) 272deg, rgba(255,220,150,0) 280deg,
+      rgba(255,220,150,0) 296deg, rgba(255,235,180,0.5) 302deg, rgba(255,220,150,0) 310deg,
+      rgba(255,220,150,0) 326deg, rgba(255,235,180,0.5) 332deg, rgba(255,220,150,0) 340deg,
+      rgba(255,220,150,0) 356deg, rgba(255,235,180,0.5) 360deg);
+  -webkit-mask: radial-gradient(circle at center, black 18%, transparent 66%);
+          mask: radial-gradient(circle at center, black 18%, transparent 66%);
+  filter: blur(2px);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: sun-rays-rotate 40s linear infinite;
+}
+@keyframes sun-rays-rotate {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 /* --- キャラクターの背後の暖かなグロー --- */
