@@ -182,16 +182,9 @@ function Scan() {
           ? "world-night-search"
           : isResult
           ? "world-result-room"
-          : "world-day-room"
+          : "home-photo-bg"
       }`}
     >
-      {/* 室内のやわらかな光（日常世界の時だけ） */}
-      {!isReveal && !isResult && (
-        <>
-          <span aria-hidden className="room-wall-warm" />
-          <span aria-hidden className="room-window-light" />
-        </>
-      )}
 
 
 
@@ -239,28 +232,31 @@ function Scan() {
 
       {phase === "choose" && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
-          <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full gradient-magic shadow-glow animate-breathe">
-            <Camera className="h-14 w-14 text-card" strokeWidth={1.6} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-foreground">
-            モノを撮ってみよう
-          </h1>
-          <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            身の回りのモノを1枚
-            <br />
-            どんな精霊が出てくるかな？
-          </p>
-
-          <div className="mt-10 w-full max-w-sm space-y-1 text-center">
-            <p className="text-sm font-bold text-foreground/90">
-              モノ全体が入るように撮ってね
-            </p>
-            <p className="text-xs text-muted-foreground">
-              ぬいぐるみ・文房具・植物がおすすめ！
+          <div className="space-y-1">
+            <h1 className="text-2xl font-extrabold leading-tight text-foreground">
+              モノを
+              <br />
+              撮ってみよう
+            </h1>
+            <p className="mt-3 text-sm font-medium text-muted-foreground">
+              今日もどこかに
+              <br />
+              モノモンが待っているよ
             </p>
           </div>
 
-          <div className="mt-4 w-full max-w-sm space-y-3">
+          {/* オレンジのカメラ・ボール（キラキラ粒子つき） */}
+          <div className="relative my-10 flex h-40 w-40 items-center justify-center">
+            <span aria-hidden className="pointer-events-none absolute -inset-4 rounded-full gradient-primary opacity-30 blur-2xl animate-breathe" />
+            <div className="relative flex h-32 w-32 items-center justify-center rounded-full gradient-primary shadow-float animate-breathe">
+              <Camera className="h-14 w-14 text-primary-foreground" strokeWidth={1.7} />
+            </div>
+            <Sparkles aria-hidden className="absolute -top-1 right-2 h-4 w-4 text-primary/70 animate-twinkle" />
+            <Sparkles aria-hidden className="absolute bottom-1 -left-1 h-3.5 w-3.5 text-accent/70 animate-twinkle" style={{ animationDelay: "0.8s" }} />
+            <Sparkles aria-hidden className="absolute top-6 -right-3 h-3 w-3 text-primary/60 animate-twinkle" style={{ animationDelay: "1.4s" }} />
+          </div>
+
+          <div className="w-full max-w-sm space-y-3">
             <button
               onClick={openCamera}
               className="flex w-full items-center justify-center gap-3 rounded-full gradient-primary py-4 text-lg font-bold text-primary-foreground shadow-float active:scale-95"
@@ -273,7 +269,7 @@ function Scan() {
                 tap();
                 libraryRef.current?.click();
               }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-card py-4 text-lg font-bold text-foreground shadow-soft active:scale-95"
+              className="flex w-full items-center justify-center gap-3 rounded-full bg-card/90 py-4 text-lg font-bold text-foreground shadow-soft backdrop-blur active:scale-95"
             >
               <ImagePlus className="h-5 w-5 text-primary" />
               写真を選ぶ
