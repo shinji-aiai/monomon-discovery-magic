@@ -344,8 +344,22 @@ function Scan() {
 
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
+          {/* 発見バナー：印象的に登場してそっとフェードアウト */}
+          <div
+            aria-hidden
+            className="discovery-announce pointer-events-none absolute inset-x-0 top-[max(3.5rem,env(safe-area-inset-top))] z-20 flex justify-center px-6"
+          >
+            <div className="discovery-glass-capsule flex items-center gap-2 rounded-full px-5 py-2.5">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-extrabold tracking-wide text-foreground">
+                新しいモノモンを発見
+              </span>
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+          </div>
+
           <div className="mb-4 mt-2 text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
+            <p className="discovery-glass-capsule inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
               <Sparkles className="h-4 w-4" />
               図鑑に登録しました！
             </p>
@@ -358,7 +372,7 @@ function Scan() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -372,7 +386,7 @@ function Scan() {
                   tap();
                   setSharing(true);
                 }}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-card py-3.5 text-sm font-bold text-foreground shadow-soft active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
               >
                 <Share2 className="h-4 w-4 text-primary" />
                 シェア
@@ -380,33 +394,34 @@ function Scan() {
               <Link
                 to="/zukan"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-secondary py-3.5 text-sm font-bold text-secondary-foreground active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
               >
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 text-primary" />
                 図鑑を見る
               </Link>
               <Link
                 to="/"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-soft active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-float active:scale-95"
               >
                 <Home className="h-4 w-4" />
                 ホーム
               </Link>
             </div>
 
-            {/* 応援（図鑑登録・画像保存・シェアの下に小さく） */}
-            <div className="mt-4 text-center">
+            {/* 応援（半透明カードで背景から浮かせて読みやすく） */}
+            <div className="discovery-glass-capsule mt-4 rounded-2xl px-4 py-3">
               <SupportButton variant="result" />
             </div>
 
             {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-muted-foreground/70">
+            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-foreground/70">
               まだ見ぬモノモンが待っているかも
             </p>
           </div>
         </div>
       )}
+
 
       {sharing && result && (
         <ShareModal monomon={result} onClose={() => setSharing(false)} />
