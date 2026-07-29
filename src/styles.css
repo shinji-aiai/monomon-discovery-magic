@@ -962,3 +962,132 @@
   border: 1px solid oklch(1 0.01 85 / 0.6);
 }
 
+/* ===================================================================
+ * 探索中／シルエット画面：深いネイビーの神秘的な夜
+ * ================================================================= */
+@utility world-night-search {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 35% at 50% 10%, rgba(255, 190, 120, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 55% at 50% 55%, oklch(0.32 0.09 285 / 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, oklch(0.24 0.05 285) 0%, oklch(0.18 0.045 280) 55%, oklch(0.13 0.04 275) 100%);
+  color: oklch(0.96 0.015 85);
+}
+
+@utility night-stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.night-stars i {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 235, 190, 0.95) 0%, rgba(255, 210, 140, 0.5) 45%, transparent 75%);
+  filter: blur(0.4px) drop-shadow(0 0 4px rgba(255, 220, 150, 0.7));
+  animation: night-star-twinkle 4.5s ease-in-out infinite;
+}
+@keyframes night-star-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+@utility search-gold-ring {
+  position: absolute;
+  inset: -22px;
+  border-radius: 9999px;
+  background:
+    conic-gradient(from 0deg,
+      rgba(255, 200, 120, 0) 0deg,
+      rgba(255, 220, 150, 0.9) 30deg,
+      rgba(255, 190, 100, 0.35) 60deg,
+      rgba(255, 200, 120, 0) 120deg,
+      rgba(255, 220, 150, 0.9) 210deg,
+      rgba(255, 190, 100, 0.35) 240deg,
+      rgba(255, 200, 120, 0) 300deg,
+      rgba(255, 200, 120, 0) 360deg);
+  -webkit-mask: radial-gradient(circle at center, transparent 62%, black 65%, black 72%, transparent 76%);
+          mask: radial-gradient(circle at center, transparent 62%, black 65%, black 72%, transparent 76%);
+  filter: blur(1px) drop-shadow(0 0 18px rgba(255, 200, 120, 0.55));
+  pointer-events: none;
+  animation: search-ring-spin 9s linear infinite;
+}
+@keyframes search-ring-spin {
+  to { transform: rotate(360deg); }
+}
+@utility search-gold-ring-outer {
+  position: absolute;
+  inset: -60px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at center, rgba(255, 200, 120, 0) 55%, rgba(255, 190, 100, 0.25) 62%, rgba(255, 170, 80, 0) 72%);
+  filter: blur(4px);
+  pointer-events: none;
+  animation: search-ring-spin 22s linear infinite reverse;
+}
+
+@utility silhouette-backlight {
+  position: absolute;
+  inset: -14%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at center,
+      rgba(255, 210, 130, 0.85) 0%,
+      rgba(255, 170, 80, 0.35) 30%,
+      rgba(255, 140, 60, 0) 65%);
+  filter: blur(10px);
+  pointer-events: none;
+  animation: silhouette-backlight-breathe 3.6s ease-in-out infinite;
+}
+@keyframes silhouette-backlight-breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+
+@utility search-stepper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 4px;
+}
+@utility search-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 240, 210, 0.4);
+  transition: color 400ms ease, opacity 400ms ease;
+}
+@utility search-step-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 240, 210, 0.08);
+  border: 1px solid rgba(255, 240, 210, 0.18);
+  color: rgba(255, 240, 210, 0.5);
+  flex-shrink: 0;
+  transition: all 400ms ease;
+}
+.search-step[data-state="active"] {
+  color: rgba(255, 245, 220, 1);
+}
+.search-step[data-state="active"] .search-step-dot {
+  background: linear-gradient(135deg, #ffb04a 0%, #ff8a2b 100%);
+  border-color: rgba(255, 220, 150, 0.9);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 180, 90, 0.7);
+}
+.search-step[data-state="done"] {
+  color: rgba(255, 230, 180, 0.75);
+}
+.search-step[data-state="done"] .search-step-dot {
+  background: rgba(255, 220, 160, 0.15);
+  border-color: rgba(255, 220, 160, 0.55);
+  color: rgba(255, 235, 190, 0.9);
+}
+
+
