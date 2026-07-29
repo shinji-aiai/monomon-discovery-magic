@@ -182,16 +182,9 @@ function Scan() {
           ? "world-night-search"
           : isResult
           ? "world-result-room"
-          : "world-day-room"
+          : "home-photo-bg"
       }`}
     >
-      {/* 室内のやわらかな光（日常世界の時だけ） */}
-      {!isReveal && !isResult && (
-        <>
-          <span aria-hidden className="room-wall-warm" />
-          <span aria-hidden className="room-window-light" />
-        </>
-      )}
 
 
 
