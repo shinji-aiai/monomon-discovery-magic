@@ -179,7 +179,7 @@ function Scan() {
         isReveal
           ? "world-discovery-transition"
           : isResult
-          ? "world-night-archive"
+          ? "world-result-room"
           : "world-day-room"
       }`}
     >
