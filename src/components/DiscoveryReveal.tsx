@@ -531,13 +531,13 @@ export function DiscoveryReveal({
         </div>
       )}
 
-      {/* 進行ステップ（縦並び） */}
-      {!showColor && (
+      {/* 進行ステップ（写真フェーズでのみ・デザイン準拠） */}
+      {stage <= STAGE.GATHER && (
         <div className="relative z-10 mx-auto mt-10 w-full max-w-xs text-left">
           <ul className="search-stepper">
             {steps.map((s) => {
               const state =
-                stage > s.key ? "done" : stage === s.key || (s.key === STAGE.EYES && stage === STAGE.PAUSE) ? "active" : "pending";
+                stage > s.key ? "done" : stage === s.key || (s.key === STAGE.SCAN + 0.5 && stage === STAGE.SCAN) ? "active" : "pending";
               const Icon = state === "done" ? Check : s.Icon;
               return (
                 <li key={s.key} className="search-step" data-state={state}>
@@ -549,6 +549,13 @@ export function DiscoveryReveal({
               );
             })}
           </ul>
+        </div>
+      )}
+
+      {/* シルエット以降は「…」だけをそっと表示（画像準拠） */}
+      {stage > STAGE.GATHER && !showColor && (
+        <div className="relative z-10 mx-auto mt-16 text-2xl font-bold tracking-widest" style={{ color: "rgba(255, 235, 200, 0.55)" }}>
+          …
         </div>
       )}
     </div>
