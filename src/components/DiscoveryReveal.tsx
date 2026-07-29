@@ -309,6 +309,7 @@ export function DiscoveryReveal({
   const showSilhouette = stage >= STAGE.SILHOUETTE && stage < STAGE.APPEAR;
   const showEyes = stage >= STAGE.EYES && stage < STAGE.APPEAR;
   const showColor = stage >= STAGE.APPEAR;
+  const showPhoto = stage <= STAGE.GATHER;
 
   const captions: Record<number, string> = {
     [STAGE.SCAN]: "この子をそっと見つめている…",
@@ -324,13 +325,48 @@ export function DiscoveryReveal({
 
   const objectLabel = monomon?.objectLabel?.trim();
 
+  // 進行ステップ（既存の演出段階を可視化）
+  const steps = [
+    { key: STAGE.SCAN, label: "この子をそっと見つめている…", Icon: Camera },
+    { key: STAGE.GATHER, label: "光が集まってきた…", Icon: Sparkle },
+    { key: STAGE.SILHOUETTE, label: "なにかがそこにいる…", Icon: Ear },
+    { key: STAGE.EYES, label: "ふと目が合った", Icon: Eye },
+  ] as const;
+
+  // 星粒（背景の金色パーティクル）
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 22 }, (_, i) => ({
+        left: `${(i * 47) % 100}%`,
+        top: `${(i * 29) % 100}%`,
+        size: 2 + (i % 4),
+        delay: `${(i % 8) * 0.35}s`,
+      })),
+    [],
+  );
 
   return (
     <div
       onClick={advance}
-      className="relative flex flex-1 cursor-pointer select-none flex-col items-center justify-center text-center"
+      className="world-night-search relative flex min-h-[100svh] w-full cursor-pointer select-none flex-col items-center px-6 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))] text-center"
     >
-      {/* 紙吹雪（少しだけ・発見成功のお祝い） */}
+      {/* 背景の星粒 */}
+      <span aria-hidden className="night-stars">
+        {stars.map((s, i) => (
+          <i
+            key={i}
+            style={{
+              left: s.left,
+              top: s.top,
+              width: s.size,
+              height: s.size,
+              animationDelay: s.delay,
+            }}
+          />
+        ))}
+      </span>
+
+      {/* 紙吹雪（発見成功のお祝い） */}
       {showConfetti && (
         <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
           {confetti.map((c, i) => (
@@ -353,102 +389,113 @@ export function DiscoveryReveal({
         </div>
       )}
 
-      {/* 出会いの舞台（写真 → 光 → シルエット → 姿） */}
-      <div className="relative h-64 w-64 overflow-hidden rounded-[34px] shadow-float">
-        {/* 写真（進むほど静かに沈む） */}
-        <img
-          src={photo}
-          alt=""
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ${
-            stage >= STAGE.GATHER ? "scale-110 blur-[3px] brightness-[0.35]" : ""
-          } ${showColor ? "opacity-0" : "opacity-100"}`}
-        />
-
-        {/* 暗がり */}
-        {stage >= STAGE.GATHER && !showColor && (
-          <div className="absolute inset-0 bg-foreground/55 transition-opacity duration-700" />
-        )}
-
-        {/* ① 光が集まる */}
-        {stage === STAGE.GATHER && (
-          <div className="absolute inset-0">
-            {particles.map((p, i) => (
-              <span
-                key={i}
-                className="animate-converge absolute left-1/2 top-1/2 rounded-full bg-amber-100 shadow-glow"
-                style={{
-                  width: p.size,
-                  height: p.size,
-                  marginLeft: -p.size / 2,
-                  marginTop: -p.size / 2,
-                  // @ts-expect-error custom props
-                  "--tx": p.tx,
-                  "--ty": p.ty,
-                  animationDelay: p.delay,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* ②③④ シルエット（目は④で先に光る） */}
-        {showSilhouette && monomon && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className={`relative h-52 w-52 ${
-                stage === STAGE.SILHOUETTE
-                  ? "animate-silhouette"
-                  : stage === STAGE.PAUSE
-                    ? "animate-heartbeat"
-                    : ""
-              }`}
-            >
-              <div className="h-full w-full opacity-90 [filter:brightness(0)_drop-shadow(0_0_18px_rgba(255,245,210,0.55))]">
-                <MonomonArt monomon={monomon} />
-              </div>
-              {showEyes && (
-                <>
-                  <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
-                  <span className="animate-eye-glow absolute right-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ⑤ 姿がゆっくり現れる → 少し嬉しそうに跳ねて、そっと浮き続ける */}
-        {showColor && monomon && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            {/* やわらかい光のにじみ（フラッシュの代わり） */}
-            <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
-            <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.25)]">
-              {/* 出会えた喜びのひと跳ね（一度だけ） */}
-              <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
-                {/* 生命を感じる、ふわっとした浮遊（ずっと） */}
-                <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
-                  <MonomonArt monomon={monomon} />
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* 見出し（現在の進行文言） */}
+      <div className="relative z-10 mt-2 flex flex-col items-center">
+        <h2
+          key={isSearching ? `s${searchIdx % SEARCH_MSGS.length}` : `stage${stage}`}
+          className="animate-rise-in text-xl font-extrabold tracking-wide"
+          style={{ color: "rgba(255, 245, 220, 0.98)" }}
+        >
+          {caption || "\u00A0"}
+        </h2>
+        {stage < STAGE.QUOTE && !showColor && (
+          <p className="mt-2 text-xs font-medium" style={{ color: "rgba(255, 235, 200, 0.55)" }}>
+            タップで進む
+          </p>
         )}
       </div>
 
-      {/* 導入〜出会いのことば */}
-      {caption && (
-        <p
-          key={isSearching ? `s${searchIdx % SEARCH_MSGS.length}` : `stage${stage}`}
-          className="mt-10 min-h-[1.75rem] animate-rise-in text-lg font-bold text-foreground"
-        >
-          {caption}
-        </p>
-      )}
+      {/* 舞台：写真 → シルエット → 姿 */}
+      <div className="relative z-10 mt-8 flex flex-col items-center">
+        <div className="relative flex h-64 w-64 items-center justify-center">
+          {/* 金色のリング（探索中のみ） */}
+          {(showPhoto || showSilhouette) && (
+            <>
+              <span aria-hidden className="search-gold-ring-outer" />
+              <span aria-hidden className="search-gold-ring" />
+            </>
+          )}
 
-      {/* ⑥ 発見の見出し（新規／再会）＋名前（大きく・キラキラ） */}
+          {/* 写真（SCAN / GATHER） */}
+          {showPhoto && (
+            <div className="relative h-56 w-56 overflow-hidden rounded-[28px] shadow-float">
+              <img
+                src={photo}
+                alt=""
+                className={`h-full w-full object-cover transition-all duration-1000 ${
+                  stage >= STAGE.GATHER ? "brightness-[0.85]" : ""
+                }`}
+              />
+              {stage === STAGE.GATHER && (
+                <div className="pointer-events-none absolute inset-0">
+                  {particles.map((p, i) => (
+                    <span
+                      key={i}
+                      className="animate-converge absolute left-1/2 top-1/2 rounded-full bg-amber-100 shadow-glow"
+                      style={{
+                        width: p.size,
+                        height: p.size,
+                        marginLeft: -p.size / 2,
+                        marginTop: -p.size / 2,
+                        // @ts-expect-error custom props
+                        "--tx": p.tx,
+                        "--ty": p.ty,
+                        animationDelay: p.delay,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* シルエット（SILHOUETTE / PAUSE / EYES） */}
+          {showSilhouette && monomon && (
+            <div className="relative flex h-56 w-56 items-center justify-center">
+              <span aria-hidden className="silhouette-backlight" />
+              <div
+                className={`relative h-52 w-52 animate-life-float ${
+                  stage === STAGE.SILHOUETTE
+                    ? "animate-silhouette"
+                    : stage === STAGE.PAUSE
+                      ? "animate-heartbeat"
+                      : ""
+                }`}
+              >
+                <div className="h-full w-full opacity-95 [filter:brightness(0)_drop-shadow(0_0_24px_rgba(255,200,120,0.75))]">
+                  <MonomonArt monomon={monomon} />
+                </div>
+                {showEyes && (
+                  <>
+                    <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
+                    <span className="animate-eye-glow absolute right-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 姿がゆっくり現れる（APPEAR 以降） */}
+          {showColor && monomon && (
+            <div className="relative flex h-56 w-56 items-center justify-center">
+              <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
+              <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.35)]">
+                <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
+                  <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
+                    <MonomonArt monomon={monomon} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 発見の見出し＋名前（APPEAR以降） */}
       {stage >= STAGE.NAME && monomon && presentation && (
         <div
           key="banner"
-          className={`mt-8 animate-pop-in rounded-full px-5 py-2 text-sm font-bold shadow-soft ${
+          className={`relative z-10 mt-8 animate-pop-in rounded-full px-5 py-2 text-sm font-bold shadow-soft ${
             presentation.kind === "reunion"
               ? "bg-amber-100 text-amber-700"
               : "bg-primary/15 text-primary"
@@ -458,39 +505,52 @@ export function DiscoveryReveal({
         </div>
       )}
       {stage >= STAGE.NAME && monomon && (
-        <div key="name" className="mt-4 animate-pop-in text-center">
+        <div key="name" className="relative z-10 mt-4 animate-pop-in text-center">
           {objectLabel && (
-            <p className="text-xs font-bold text-muted-foreground">
+            <p className="text-xs font-bold" style={{ color: "rgba(255, 235, 200, 0.75)" }}>
               {monomon.uncertain
                 ? `${objectLabel}の仲間かもしれない`
                 : `${objectLabel}に宿る`}
             </p>
           )}
-          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold text-foreground drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]">
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
+          <h2 className="mt-1 flex items-center justify-center gap-2 text-4xl font-extrabold drop-shadow-[0_2px_10px_rgba(255,220,140,0.5)]"
+              style={{ color: "rgba(255, 250, 235, 1)" }}>
+            <Sparkles className="h-6 w-6 animate-twinkle text-amber-200" />
             {monomon.name}
-            <Sparkles className="h-6 w-6 animate-twinkle text-primary" />
+            <Sparkles className="h-6 w-6 animate-twinkle text-amber-200" />
           </h2>
         </div>
       )}
-
-      {/* ⑦ 一言（その物の気持ち・ランダム） */}
       {stage >= STAGE.QUOTE && monomon && (
         <div
           key="quote"
-          className="mt-4 max-w-xs animate-pop-in rounded-3xl bg-card px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft"
+          className="relative z-10 mt-4 max-w-xs animate-pop-in rounded-3xl bg-card/90 px-5 py-3 text-base font-bold leading-relaxed text-card-foreground shadow-soft backdrop-blur"
         >
           「{greeting}」
         </div>
       )}
 
-
-      {/* タップ送りのヒント（最後の段までそっと表示） */}
-      {stage < STAGE.QUOTE && (
-        <p className="mt-8 animate-fade-in text-xs font-medium text-muted-foreground/70">
-          タップで進む
-        </p>
+      {/* 進行ステップ（縦並び） */}
+      {!showColor && (
+        <div className="relative z-10 mx-auto mt-10 w-full max-w-xs text-left">
+          <ul className="search-stepper">
+            {steps.map((s) => {
+              const state =
+                stage > s.key ? "done" : stage === s.key || (s.key === STAGE.EYES && stage === STAGE.PAUSE) ? "active" : "pending";
+              const Icon = state === "done" ? Check : s.Icon;
+              return (
+                <li key={s.key} className="search-step" data-state={state}>
+                  <span className="search-step-dot">
+                    <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                  </span>
+                  <span className="truncate">{s.label}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </div>
   );
 }
+
