@@ -54,7 +54,7 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col gradient-sky px-7 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+    <div className="fixed inset-0 z-50 flex flex-col home-photo-bg px-7 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
       {/* スキップ（見つけやすいように枠つきで少し大きく） */}
       <div className="flex justify-end">
         {!isLast && (
