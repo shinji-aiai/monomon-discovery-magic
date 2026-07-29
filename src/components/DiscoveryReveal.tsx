@@ -325,12 +325,13 @@ export function DiscoveryReveal({
 
   const objectLabel = monomon?.objectLabel?.trim();
 
-  // 進行ステップ（既存の演出段階を可視化）
+  // 進行ステップ（デザイン準拠：写真フェーズでのみ表示）
   const steps = [
     { key: STAGE.SCAN, label: "この子をそっと見つめている…", Icon: Camera },
+    { key: STAGE.SCAN + 0.5, label: "この子の声を聞いている…", Icon: Ear },
     { key: STAGE.GATHER, label: "光が集まってきた…", Icon: Sparkle },
-    { key: STAGE.SILHOUETTE, label: "なにかがそこにいる…", Icon: Ear },
-    { key: STAGE.EYES, label: "ふと目が合った", Icon: Eye },
+    { key: STAGE.SILHOUETTE, label: "もうすぐ会えそう…", Icon: Sparkles },
+    { key: 99, label: "…", Icon: Eye },
   ] as const;
 
   // 星粒（背景の金色パーティクル）
@@ -530,13 +531,13 @@ export function DiscoveryReveal({
         </div>
       )}
 
-      {/* 進行ステップ（縦並び） */}
-      {!showColor && (
+      {/* 進行ステップ（写真フェーズでのみ・デザイン準拠） */}
+      {stage <= STAGE.GATHER && (
         <div className="relative z-10 mx-auto mt-10 w-full max-w-xs text-left">
           <ul className="search-stepper">
             {steps.map((s) => {
               const state =
-                stage > s.key ? "done" : stage === s.key || (s.key === STAGE.EYES && stage === STAGE.PAUSE) ? "active" : "pending";
+                stage > s.key ? "done" : stage === s.key || (s.key === STAGE.SCAN + 0.5 && stage === STAGE.SCAN) ? "active" : "pending";
               const Icon = state === "done" ? Check : s.Icon;
               return (
                 <li key={s.key} className="search-step" data-state={state}>
@@ -548,6 +549,13 @@ export function DiscoveryReveal({
               );
             })}
           </ul>
+        </div>
+      )}
+
+      {/* シルエット以降は「…」だけをそっと表示（画像準拠） */}
+      {stage > STAGE.GATHER && !showColor && (
+        <div className="relative z-10 mx-auto mt-16 text-2xl font-bold tracking-widest" style={{ color: "rgba(255, 235, 200, 0.55)" }}>
+          …
         </div>
       )}
     </div>

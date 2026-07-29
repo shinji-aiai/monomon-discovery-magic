@@ -189,8 +189,8 @@ function Scan() {
 
 
 
-      {/* ヘッダー */}
-      {phase !== "reveal" && (
+      {/* ヘッダー（撮影開始画面は入口なので戻る矢印を出さない） */}
+      {phase !== "reveal" && phase !== "choose" && (
         <header className="flex items-center">
           {phase === "result" ? (
             <button
@@ -317,6 +317,11 @@ function Scan() {
               🔍 モノモンを探す
             </button>
           </div>
+
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            見つかるまで数秒です
+          </p>
         </div>
       )}
 
