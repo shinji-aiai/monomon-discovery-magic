@@ -325,12 +325,13 @@ export function DiscoveryReveal({
 
   const objectLabel = monomon?.objectLabel?.trim();
 
-  // 進行ステップ（既存の演出段階を可視化）
+  // 進行ステップ（デザイン準拠：写真フェーズでのみ表示）
   const steps = [
     { key: STAGE.SCAN, label: "この子をそっと見つめている…", Icon: Camera },
+    { key: STAGE.SCAN + 0.5, label: "この子の声を聞いている…", Icon: Ear },
     { key: STAGE.GATHER, label: "光が集まってきた…", Icon: Sparkle },
-    { key: STAGE.SILHOUETTE, label: "なにかがそこにいる…", Icon: Ear },
-    { key: STAGE.EYES, label: "ふと目が合った", Icon: Eye },
+    { key: STAGE.SILHOUETTE, label: "もうすぐ会えそう…", Icon: Sparkles },
+    { key: 99, label: "…", Icon: Eye },
   ] as const;
 
   // 星粒（背景の金色パーティクル）
