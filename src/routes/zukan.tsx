@@ -420,7 +420,7 @@ function FamilyProgress({
           return (
             <li key={family} className="flex items-center gap-3">
               <span className="min-w-[6.5rem] shrink-0 whitespace-nowrap text-sm font-bold text-foreground">
-                {fam.emoji} {fam.label}族
+                {fam.emoji} {fam.label}
               </span>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
@@ -656,7 +656,7 @@ function SpeciesDetailSheet({
               <ArrowLeft className="h-5 w-5" />
             </button>
             <span className="whitespace-nowrap rounded-full bg-muted px-3 py-1 text-xs font-extrabold text-muted-foreground">
-              {fam.emoji} {fam.label}族
+              {species.emoji} {species.name}
             </span>
           </div>
           {primary && (
