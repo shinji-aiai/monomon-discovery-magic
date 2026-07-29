@@ -87,8 +87,12 @@ export function IntroOverlay({ onStart }: IntroOverlayProps) {
         </h2>
         <p
           key={`b-${step}`}
-          className="mt-6 text-base leading-loose text-muted-foreground animate-rise-in"
-          style={{ animationDelay: "0.1s" }}
+          className="mt-6 text-base font-semibold leading-relaxed animate-rise-in"
+          style={{
+            animationDelay: "0.1s",
+            color: "#4a3524",
+            textShadow: "0 1px 0 rgba(255, 246, 232, 0.75), 0 0 10px rgba(255, 246, 232, 0.55)",
+          }}
         >
           {slide.lines.map((line, i) => (
             <span key={i}>
