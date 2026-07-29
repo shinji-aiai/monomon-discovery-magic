@@ -41,7 +41,7 @@ function AboutPage() {
 
 
   return (
-    <div className="min-h-[100svh] gradient-sky">
+    <div className="min-h-[100svh] home-photo-bg">
       <div className="mx-auto flex w-full max-w-md flex-col items-center px-6 pb-20 pt-[max(4rem,env(safe-area-inset-top))] text-center">
         {/* ① ロゴ */}
         <div className="relative h-32 w-32">
