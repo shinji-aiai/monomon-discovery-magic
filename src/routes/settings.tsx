@@ -54,7 +54,7 @@ function SettingsPage() {
 
 
   return (
-    <div className="min-h-[100svh] gradient-sky px-5 pb-28 pt-[max(2rem,env(safe-area-inset-top))]">
+    <div className="min-h-[100svh] home-photo-bg px-5 pb-28 pt-[max(2rem,env(safe-area-inset-top))]">
       <header className="mb-8">
         <h1 className="text-2xl font-extrabold text-foreground">設定</h1>
       </header>
