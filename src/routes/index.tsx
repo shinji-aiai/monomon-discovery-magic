@@ -92,7 +92,7 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative flex min-h-[100svh] flex-col home-photo-bg px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative flex min-h-[100svh] flex-col home-photo-bg px-6 pb-40 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {!settings.onboarded && (
         <IntroOverlay onStart={() => updateSettings({ onboarded: true })} />
       )}
