@@ -189,8 +189,8 @@ function Scan() {
 
 
 
-      {/* ヘッダー */}
-      {phase !== "reveal" && (
+      {/* ヘッダー（撮影開始画面は入口なので戻る矢印を出さない） */}
+      {phase !== "reveal" && phase !== "choose" && (
         <header className="flex items-center">
           {phase === "result" ? (
             <button
