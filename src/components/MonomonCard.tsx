@@ -79,6 +79,17 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
         {/* モノモン（全身が必ず収まるよう中央に contain 配置） */}
         <div className="absolute inset-0 flex items-center justify-center p-3">
           <div className="relative h-full w-full">
+            {isDiscovery && <span aria-hidden className="character-warm-glow" />}
+            {isDiscovery && (
+              <span aria-hidden className="discovery-sparkles">
+                <i style={{ left: "18%", top: "22%", animationDelay: "0s" }} />
+                <i style={{ left: "78%", top: "30%", animationDelay: "0.6s" }} />
+                <i style={{ left: "30%", top: "70%", animationDelay: "1.2s" }} />
+                <i style={{ left: "82%", top: "68%", animationDelay: "1.8s" }} />
+                <i style={{ left: "10%", top: "50%", animationDelay: "2.4s" }} />
+                <i style={{ left: "62%", top: "12%", animationDelay: "3.0s" }} />
+              </span>
+            )}
             {!isDiscovery && (
               <span
                 className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
@@ -99,10 +110,10 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
                 <MonomonArt monomon={monomon} preferOfficial={preferOfficialArt} />
               )}
             </div>
-            {/* 足元の自然な接地影（結果画面のみ：机の上に立って見せる） */}
-            {isDiscovery && <span aria-hidden className="monomon-contact-shadow" />}
+            {/* 発見結果画面ではキャラは浮遊のまま（接地影は付けない） */}
           </div>
         </div>
+
       </div>
 
 

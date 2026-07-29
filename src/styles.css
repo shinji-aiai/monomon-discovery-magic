@@ -817,3 +817,71 @@
   background-position: center 32%;
   background-repeat: no-repeat;
 }
+
+/* --- 発見結果画面：印象的な発見バナー（Monomonらしいシンプルさ・自然にフェードアウト）--- */
+@utility discovery-announce {
+  animation: discovery-announce-fade 3.4s ease-out forwards;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+@keyframes discovery-announce-fade {
+  0% { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  12% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* --- キャラクターの背後の暖かなグロー --- */
+@utility character-warm-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92%;
+  height: 92%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 50% 50%, oklch(0.92 0.12 75 / 0.55) 0%, oklch(0.88 0.14 65 / 0.28) 35%, transparent 68%);
+  filter: blur(14px);
+  pointer-events: none;
+  animation: warm-glow-breathe 5.5s ease-in-out infinite;
+}
+@keyframes warm-glow-breathe {
+  0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* --- キラキラ粒子（控えめ）--- */
+@utility discovery-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.discovery-sparkles i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, oklch(1 0.02 90 / 0.95) 0%, oklch(0.95 0.08 80 / 0.6) 45%, transparent 70%);
+  filter: blur(0.3px) drop-shadow(0 0 4px oklch(0.95 0.1 80 / 0.7));
+  opacity: 0;
+  animation: sparkle-twinkle 4.2s ease-in-out infinite;
+}
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(0.6); }
+  40% { opacity: 0.9; transform: translateY(-6px) scale(1); }
+  60% { opacity: 0.7; transform: translateY(-10px) scale(0.9); }
+}
+
+/* --- 半透明カプセル（登録バッジ・応援カード・ボタンで共有）--- */
+@utility discovery-glass-capsule {
+  background: oklch(1 0.01 85 / 0.82);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.9) inset,
+    0 6px 18px oklch(0.35 0.05 55 / 0.18),
+    0 2px 6px oklch(0.35 0.05 55 / 0.1);
+  border: 1px solid oklch(1 0.01 85 / 0.6);
+}
+
