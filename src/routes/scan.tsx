@@ -344,35 +344,34 @@ function Scan() {
 
       {phase === "result" && result && (
         <div className="flex flex-1 flex-col">
-          {/* 発見バナー：印象的に登場してそっとフェードアウト */}
-          <div
-            aria-hidden
-            className="discovery-announce pointer-events-none absolute inset-x-0 top-[max(3.5rem,env(safe-area-inset-top))] z-20 flex justify-center px-6"
-          >
-            <div className="discovery-glass-capsule flex items-center gap-2 rounded-full px-5 py-2.5">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-extrabold tracking-wide text-foreground">
-                新しいモノモンを発見
-              </span>
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-          </div>
-
-          <div className="mb-4 mt-2 text-center">
-            <p className="discovery-glass-capsule inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
-              <Sparkles className="h-4 w-4" />
-              図鑑に登録しました！
-            </p>
-          </div>
-
           <div className="mx-auto w-full max-w-sm">
-            <MonomonCard monomon={result} animate preferOfficialArt variant="discovery" />
+            {/* 上部：「図鑑に登録しました」小カプセル */}
+            <div className="mt-1 flex justify-center">
+              <p className="discovery-glass-capsule inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold text-primary animate-pop-in">
+                <Sparkles className="h-4 w-4" />
+                図鑑に登録しました！
+              </p>
+            </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            {/* オレンジのリボン：発見の喜び（自然にフェードアウト） */}
+            <div className="discovery-announce pointer-events-none relative mx-auto mt-4 flex justify-center">
+              <span aria-hidden className="discovery-ribbon-halo" />
+              <div className="discovery-ribbon">
+                <Sparkles aria-hidden className="absolute -top-1 left-3 h-3.5 w-3.5 text-white/90" />
+                新しいモノモンを発見！
+                <Sparkles aria-hidden className="absolute -bottom-1 right-4 h-3.5 w-3.5 text-white/90" />
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <MonomonCard monomon={result} animate preferOfficialArt variant="discovery" />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <button
                 onClick={save}
                 disabled={saving}
-                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-full py-4 text-sm font-bold text-foreground active:scale-95"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -386,7 +385,7 @@ function Scan() {
                   tap();
                   setSharing(true);
                 }}
-                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-full py-4 text-sm font-bold text-foreground active:scale-95"
               >
                 <Share2 className="h-4 w-4 text-primary" />
                 シェア
@@ -394,7 +393,7 @@ function Scan() {
               <Link
                 to="/zukan"
                 onClick={tap}
-                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl py-3.5 text-sm font-bold text-foreground active:scale-95"
+                className="discovery-glass-capsule flex items-center justify-center gap-2 whitespace-nowrap rounded-full py-4 text-sm font-bold text-foreground active:scale-95"
               >
                 <Check className="h-4 w-4 text-primary" />
                 図鑑を見る
@@ -402,25 +401,21 @@ function Scan() {
               <Link
                 to="/"
                 onClick={tap}
-                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-float active:scale-95"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-full gradient-primary py-4 text-sm font-bold text-primary-foreground shadow-float active:scale-95"
               >
                 <Home className="h-4 w-4" />
                 ホーム
               </Link>
             </div>
 
-            {/* 応援（半透明カードで背景から浮かせて読みやすく） */}
-            <div className="discovery-glass-capsule mt-4 rounded-2xl px-4 py-3">
+            {/* 応援カード（半透明で背景から浮かせて可読性を確保） */}
+            <div className="discovery-glass-capsule mt-4 rounded-full">
               <SupportButton variant="result" />
             </div>
-
-            {/* 最後の余韻：もう一度探したくなる、そっとした締めくくり */}
-            <p className="mt-8 animate-fade-in text-center text-xs font-medium text-foreground/70">
-              まだ見ぬモノモンが待っているかも
-            </p>
           </div>
         </div>
       )}
+
 
 
       {sharing && result && (
