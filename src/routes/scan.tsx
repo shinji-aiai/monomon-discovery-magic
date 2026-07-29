@@ -175,9 +175,11 @@ function Scan() {
 
   return (
     <div
-      className={`relative flex min-h-[100svh] flex-col px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))] ${
+      className={`relative flex min-h-[100svh] flex-col ${
+        isReveal ? "" : "px-6 pb-28 pt-[max(1rem,env(safe-area-inset-top))]"
+      } ${
         isReveal
-          ? "world-discovery-transition"
+          ? "world-night-search"
           : isResult
           ? "world-result-room"
           : "world-day-room"
@@ -190,7 +192,8 @@ function Scan() {
           <span aria-hidden className="room-window-light" />
         </>
       )}
-      {isReveal && <span aria-hidden className="discovery-dim-overlay" />}
+
+
 
 
       {/* ヘッダー */}
