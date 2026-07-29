@@ -71,7 +71,7 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
               {monomon.uncertain && "の仲間かも？"}
             </span>
             <span className="absolute right-4 top-4 whitespace-nowrap rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-foreground/70 backdrop-blur-sm">
-              {fam.emoji} {fam.label}族
+              {species.emoji} {species.name}
             </span>
           </>
         )}
