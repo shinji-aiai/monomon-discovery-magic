@@ -79,6 +79,7 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
         {/* モノモン（全身が必ず収まるよう中央に contain 配置） */}
         <div className="absolute inset-0 flex items-center justify-center p-3">
           <div className="relative h-full w-full">
+            {isDiscovery && <span aria-hidden className="character-sun-rays" />}
             {isDiscovery && <span aria-hidden className="character-warm-glow" />}
             {isDiscovery && (
               <span aria-hidden className="discovery-sparkles">
@@ -110,7 +111,6 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
                 <MonomonArt monomon={monomon} preferOfficial={preferOfficialArt} />
               )}
             </div>
-            {/* 発見結果画面ではキャラは浮遊のまま（接地影は付けない） */}
           </div>
         </div>
 
@@ -119,24 +119,43 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
 
 
       {/* 情報エリア（名前 → 性格 → 一言の順で見せる） */}
-      <div className="px-6 pb-6 pt-9 text-center">
+      <div className={cn("text-center", isDiscovery ? "px-2 pb-2 pt-6" : "px-6 pb-6 pt-9")}>
         {/* 名前：最優先・常に1行・中央。長い名前は自動で少し縮小 */}
-        <AutoFitName maxFontSize={30} minFontSize={16} className="font-extrabold text-foreground">
+        <AutoFitName
+          maxFontSize={isDiscovery ? 38 : 30}
+          minFontSize={18}
+          className={cn(
+            "font-extrabold text-foreground",
+            isDiscovery && "drop-shadow-[0_2px_10px_rgba(255,255,255,0.7)]",
+          )}
+        >
           {monomon.name}
         </AutoFitName>
 
         {/* 性格（精神）：名前の下に配置 */}
         <div className="mt-3 flex justify-center">
           <span
-            className="rounded-full px-3 py-1 text-xs font-bold text-white"
-            style={{ backgroundColor: accent }}
+            className={cn(
+              "rounded-full text-xs font-bold text-white",
+              isDiscovery ? "px-5 py-1.5 text-sm shadow-[0_4px_12px_rgba(60,120,220,0.35)]" : "px-3 py-1",
+            )}
+            style={{
+              backgroundColor: isDiscovery ? "#4A90E2" : accent,
+            }}
           >
             {monomon.personality}
           </span>
         </div>
 
         {/* 一言：最後に */}
-        <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-left text-[0.95rem] font-medium leading-relaxed text-foreground">
+        <p
+          className={cn(
+            "mt-4 text-left text-[0.95rem] font-medium leading-relaxed text-foreground",
+            isDiscovery
+              ? "discovery-glass-capsule rounded-full px-5 py-3 text-center"
+              : "rounded-2xl bg-muted/70 px-4 py-3",
+          )}
+        >
           「{monomon.description}」
         </p>
 
@@ -146,7 +165,12 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
           </p>
         )}
 
-        <p className="mt-3 text-right text-xs font-medium text-muted-foreground">
+        <p
+          className={cn(
+            "mt-3 text-right text-xs font-medium",
+            isDiscovery ? "text-foreground/70" : "text-muted-foreground",
+          )}
+        >
           発見日　{formatDiscoveredDate(monomon.discoveredAt)}
         </p>
       </div>
