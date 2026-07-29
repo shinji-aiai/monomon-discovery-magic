@@ -47,10 +47,19 @@ export function SupportButton({ variant }: SupportButtonProps) {
       ) : (
         <button
           onClick={handleOpen}
-          className="mt-4 inline-flex items-center justify-center gap-1.5 text-xs font-bold text-muted-foreground active:scale-95"
+          className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-left active:scale-[0.98]"
         >
-          <Heart className="h-3.5 w-3.5 fill-rose-400 text-rose-400" />
-          この子が気に入ったら応援する
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100">
+            <Heart className="h-4.5 w-4.5 fill-rose-400 text-rose-400" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-bold text-foreground">
+              この子が気に入ったら応援する
+            </span>
+            <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+              あなたの応援が　モノモンの力になるよ
+            </span>
+          </span>
         </button>
       )}
 
