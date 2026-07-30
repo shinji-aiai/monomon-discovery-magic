@@ -152,7 +152,7 @@ function Zukan() {
   const remaining = SPECIES_COUNT - kinds;
 
   return (
-    <div className="relative min-h-[100svh] world-night-archive px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative min-h-[100svh] world-night-archive px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {/* 夜の粒子（星空にならない最小限） */}
       <span aria-hidden className="night-subtle-particle" style={{ top: "9%", left: "12%" }} />
       <span aria-hidden className="night-subtle-particle" style={{ top: "14%", right: "16%", animationDelay: "1.6s" }} />
