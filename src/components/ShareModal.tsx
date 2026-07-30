@@ -100,7 +100,7 @@ export function ShareModal({ monomon, onClose }: ShareModalProps) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-md animate-rise-in rounded-t-3xl bg-card p-6 pb-8 shadow-float sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">シェア</h2>
+          <h2 className="text-lg font-extrabold text-foreground">シェア</h2>
           <button
             onClick={() => {
               tap();
