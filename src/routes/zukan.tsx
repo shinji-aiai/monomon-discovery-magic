@@ -873,7 +873,7 @@ function DetailSheet({
       className="fixed inset-0 z-50 overflow-y-auto overscroll-contain world-night-archive"
     >
       {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
-      <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="mx-auto flex w-full max-w-md flex-col px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
         {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
