@@ -158,9 +158,9 @@ function Zukan() {
       <span aria-hidden className="night-subtle-particle" style={{ top: "14%", right: "16%", animationDelay: "1.6s" }} />
       <span aria-hidden className="night-subtle-particle" style={{ top: "36%", left: "72%", animationDelay: "2.8s" }} />
 
-      <header className="relative mb-4">
-        <h1 className="text-2xl font-extrabold night-text">図鑑</h1>
-        <p className="mt-0.5 text-sm font-medium night-text-muted">
+      <header className="relative mb-5">
+        <h1 className="text-2xl font-extrabold tracking-tight night-text">図鑑</h1>
+        <p className="mt-1 text-sm font-medium night-text-muted">
           {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
