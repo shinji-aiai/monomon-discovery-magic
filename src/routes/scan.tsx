@@ -233,7 +233,7 @@ function Scan() {
       {phase === "choose" && (
         <div className="m-auto flex w-full flex-col items-center justify-center py-6 text-center">
           <div className="space-y-1">
-            <h1 className="text-2xl font-extrabold leading-tight text-foreground">
+            <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-foreground">
               モノを
               <br />
               撮ってみよう
