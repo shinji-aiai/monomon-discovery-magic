@@ -159,7 +159,7 @@ function InfoPanel({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
       <div className="max-h-[80svh] w-full max-w-md animate-rise-in overflow-y-auto rounded-t-3xl bg-background p-6 pb-10 shadow-float sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-lg font-extrabold text-foreground">
             {PANEL_TITLE[panel]}
           </h2>
           <button
