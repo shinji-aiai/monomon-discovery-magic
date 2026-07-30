@@ -54,9 +54,9 @@ function SettingsPage() {
 
 
   return (
-    <div className="min-h-[100svh] home-photo-bg px-5 pb-28 pt-[max(2rem,env(safe-area-inset-top))]">
-      <header className="mb-8">
-        <h1 className="text-2xl font-extrabold text-foreground">設定</h1>
+    <div className="min-h-[100svh] home-photo-bg px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      <header className="mb-6">
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">設定</h1>
       </header>
 
       <div className="mx-auto flex w-full max-w-md flex-col gap-4">
@@ -102,7 +102,7 @@ function SettingsPage() {
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
         </button>
 
-        <p className="pt-4 text-center text-xs text-muted-foreground">
+        <p className="pt-4 text-center text-xs font-medium text-muted-foreground">
           モノモン　バージョン {APP_VERSION}
         </p>
       </div>
@@ -159,7 +159,7 @@ function InfoPanel({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center">
       <div className="max-h-[80svh] w-full max-w-md animate-rise-in overflow-y-auto rounded-t-3xl bg-background p-6 pb-10 shadow-float sm:rounded-3xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-lg font-extrabold text-foreground">
             {PANEL_TITLE[panel]}
           </h2>
           <button

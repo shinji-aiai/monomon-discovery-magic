@@ -128,7 +128,7 @@ function AboutPage() {
             <Mail className="h-5 w-5" />
             メールで問い合わせる
           </a>
-          <p className="mt-3 text-xs text-muted-foreground">{CONTACT_EMAIL}</p>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">{CONTACT_EMAIL}</p>
         </div>
 
         {/* ⑥⑦ プライバシー・利用規約 */}

@@ -93,7 +93,7 @@ export function SupportModal({ onClose }: SupportModalProps) {
 
         {paying ? (
           <div className="mt-2">
-            <p className="mb-4 text-center text-sm text-muted-foreground">
+            <p className="mb-4 text-center text-sm font-medium text-muted-foreground">
               ¥{option.amount} の応援
             </p>
             {loading || !clientSecret ? (
@@ -171,7 +171,7 @@ export function SupportModal({ onClose }: SupportModalProps) {
             </button>
 
 
-            <p className="mt-3 text-center text-xs text-muted-foreground">
+            <p className="mt-3 text-center text-xs font-medium text-muted-foreground">
               決済は Stripe の安全な画面で行われるよ
             </p>
           </>

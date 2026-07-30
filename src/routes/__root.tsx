@@ -20,9 +20,9 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="max-w-xs text-center">
         <div className="text-6xl">🫧</div>
-        <h1 className="mt-4 text-2xl font-bold text-foreground">みつかりません</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          このページは どこかへ お出かけ中のようです。
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">みつかりません</h1>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+          このページは どこかへ お出かけ中のようです
         </p>
         <div className="mt-6">
           <Link
@@ -48,9 +48,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="max-w-xs text-center">
         <div className="text-6xl">😴</div>
-        <h1 className="mt-4 text-xl font-bold text-foreground">うまく開けませんでした</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          少し時間をおいて、もう一度おためしください。
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">うまく開けませんでした</h1>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+          少し時間をおいて もう一度おためしください
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button

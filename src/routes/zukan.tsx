@@ -152,15 +152,15 @@ function Zukan() {
   const remaining = SPECIES_COUNT - kinds;
 
   return (
-    <div className="relative min-h-[100svh] world-night-archive px-5 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div className="relative min-h-[100svh] world-night-archive px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))]">
       {/* 夜の粒子（星空にならない最小限） */}
       <span aria-hidden className="night-subtle-particle" style={{ top: "9%", left: "12%" }} />
       <span aria-hidden className="night-subtle-particle" style={{ top: "14%", right: "16%", animationDelay: "1.6s" }} />
       <span aria-hidden className="night-subtle-particle" style={{ top: "36%", left: "72%", animationDelay: "2.8s" }} />
 
-      <header className="relative mb-4">
-        <h1 className="text-2xl font-extrabold night-text">図鑑</h1>
-        <p className="mt-0.5 text-sm font-medium night-text-muted">
+      <header className="relative mb-5">
+        <h1 className="text-2xl font-extrabold tracking-tight night-text">図鑑</h1>
+        <p className="mt-1 text-sm font-medium night-text-muted">
           {dex.length} 匹のモノモンと出会えたよ
         </p>
       </header>
@@ -290,7 +290,7 @@ function Zukan() {
               <p className="mt-3 text-sm font-bold text-foreground">
                 ここには まだ いません
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs font-medium text-muted-foreground">
                 カードの♡で お気に入りに追加できる
               </p>
             </div>
@@ -593,7 +593,7 @@ function NoResult() {
     <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
       <Search className="h-10 w-10 text-muted-foreground/50" />
       <p className="mt-3 text-sm font-bold text-foreground">見つからなかった</p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="mt-1 text-xs font-medium text-muted-foreground">
         ちがう言葉でさがしてみてね
       </p>
     </div>
@@ -605,7 +605,7 @@ function Empty() {
     <div className="flex min-h-[45svh] flex-col items-center justify-center text-center">
       <div className="mb-6 text-6xl opacity-80">🔍</div>
       <p className="text-lg font-bold text-foreground">まだ だれも いません</p>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm font-medium text-muted-foreground">
         モノを撮って最初の精霊を見つけよう
       </p>
       <Link
@@ -873,7 +873,7 @@ function DetailSheet({
       className="fixed inset-0 z-50 overflow-y-auto overscroll-contain world-night-archive"
     >
       {/* 単一の縦スクロール：上から下まで自然に流れる（入れ子スクロール・固定ブロックなし） */}
-      <div className="mx-auto flex w-full max-w-md flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="mx-auto flex w-full max-w-md flex-col px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
         {/* ヘッダー（戻る・No.・レア度・お気に入り）— スクロールと一緒に流れる */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
