@@ -290,7 +290,7 @@ function Zukan() {
               <p className="mt-3 text-sm font-bold text-foreground">
                 ここには まだ いません
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs font-medium text-muted-foreground">
                 カードの♡で お気に入りに追加できる
               </p>
             </div>
@@ -593,7 +593,7 @@ function NoResult() {
     <div className="flex min-h-[36svh] flex-col items-center justify-center text-center">
       <Search className="h-10 w-10 text-muted-foreground/50" />
       <p className="mt-3 text-sm font-bold text-foreground">見つからなかった</p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="mt-1 text-xs font-medium text-muted-foreground">
         ちがう言葉でさがしてみてね
       </p>
     </div>
@@ -605,7 +605,7 @@ function Empty() {
     <div className="flex min-h-[45svh] flex-col items-center justify-center text-center">
       <div className="mb-6 text-6xl opacity-80">🔍</div>
       <p className="text-lg font-bold text-foreground">まだ だれも いません</p>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm font-medium text-muted-foreground">
         モノを撮って最初の精霊を見つけよう
       </p>
       <Link

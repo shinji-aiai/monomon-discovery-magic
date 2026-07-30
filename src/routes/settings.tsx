@@ -102,7 +102,7 @@ function SettingsPage() {
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
         </button>
 
-        <p className="pt-4 text-center text-xs text-muted-foreground">
+        <p className="pt-4 text-center text-xs font-medium text-muted-foreground">
           モノモン　バージョン {APP_VERSION}
         </p>
       </div>
