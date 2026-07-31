@@ -457,17 +457,30 @@ export function DiscoveryReveal({
       {/* 舞台：写真 → シルエット → 姿 */}
       <div className="relative z-10 mt-8 flex flex-col items-center">
         <div className="relative flex h-64 w-64 items-center justify-center">
-          {/* 金色のリング（探索中のみ） */}
+          {/* 金色のリング（探索中のみ・進むほど少し強く） */}
           {(showPhoto || showSilhouette) && (
             <>
-              <span aria-hidden className="search-gold-ring-outer" />
-              <span aria-hidden className="search-gold-ring" />
+              <span
+                aria-hidden
+                className="search-gold-ring-outer reveal-soft-fade"
+                style={{ opacity: 0.35 + intensity * 0.65, transform: `scale(${0.94 + intensity * 0.08})` }}
+              />
+              <span
+                aria-hidden
+                className="search-gold-ring reveal-soft-fade"
+                style={{ opacity: 0.45 + intensity * 0.55 }}
+              />
             </>
           )}
 
           {/* 写真（SCAN / GATHER） */}
           {showPhoto && (
-            <div className="relative h-56 w-56 overflow-hidden rounded-[28px] shadow-float">
+            <div
+              className="reveal-soft-fade relative h-56 w-56 overflow-hidden rounded-[28px] shadow-float animate-soft-fade-in"
+              style={{
+                boxShadow: `0 0 ${18 + intensity * 46}px ${4 + intensity * 12}px rgba(255, 200, 120, ${0.12 + intensity * 0.3})`,
+              }}
+            >
               <img
                 src={photo}
                 alt=""
@@ -486,6 +499,7 @@ export function DiscoveryReveal({
                         height: p.size,
                         marginLeft: -p.size / 2,
                         marginTop: -p.size / 2,
+                        opacity: 0.5 + heat * 0.5,
                         // @ts-expect-error custom props
                         "--tx": p.tx,
                         "--ty": p.ty,
@@ -500,8 +514,12 @@ export function DiscoveryReveal({
 
           {/* シルエット（SILHOUETTE / PAUSE / EYES） */}
           {showSilhouette && monomon && (
-            <div className="relative flex h-56 w-56 items-center justify-center">
-              <span aria-hidden className="silhouette-backlight" />
+            <div className="relative flex h-56 w-56 items-center justify-center animate-soft-fade-in">
+              <span
+                aria-hidden
+                className="silhouette-backlight reveal-soft-fade"
+                style={{ opacity: 0.55 + intensity * 0.45 }}
+              />
               <div
                 className={`relative h-52 w-52 animate-life-float ${
                   stage === STAGE.SILHOUETTE
@@ -511,9 +529,15 @@ export function DiscoveryReveal({
                       : ""
                 }`}
               >
-                <div className="h-full w-full opacity-95 [filter:brightness(0)_drop-shadow(0_0_24px_rgba(255,200,120,0.75))]">
+                <div
+                  className="reveal-soft-fade h-full w-full opacity-95"
+                  style={{
+                    filter: `brightness(0) drop-shadow(0 0 ${20 + intensity * 18}px rgba(255, 200, 120, ${0.6 + intensity * 0.35}))`,
+                  }}
+                >
                   <MonomonArt monomon={monomon} />
                 </div>
+
                 {showEyes && (
                   <>
                     <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
