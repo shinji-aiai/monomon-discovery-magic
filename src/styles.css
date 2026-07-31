@@ -820,16 +820,17 @@
 
 /* --- 発見結果画面：印象的な発見バナー（Monomonらしいシンプルさ・自然にフェードアウト）--- */
 @utility discovery-announce {
-  animation: discovery-announce-fade 2.8s ease-out forwards;
+  animation: discovery-announce-fade 4.4s ease-out forwards;
   will-change: opacity, transform;
   pointer-events: none;
 }
 @keyframes discovery-announce-fade {
   0% { opacity: 0; transform: translateY(-10px) scale(0.9); }
-  14% { opacity: 1; transform: translateY(0) scale(1); }
-  55% { opacity: 1; transform: translateY(0) scale(1); }
+  9% { opacity: 1; transform: translateY(0) scale(1); }
+  72% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-6px) scale(0.96); }
 }
+
 
 /* --- オレンジのリボン（発見の喜び）--- */
 @utility discovery-ribbon {
