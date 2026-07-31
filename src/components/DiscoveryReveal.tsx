@@ -320,9 +320,10 @@ export function DiscoveryReveal({
     );
   }
 
-  // 収束する光の粒
-  const particles = Array.from({ length: 12 }, (_, i) => {
-    const ang = (i / 12) * Math.PI * 2;
+  // 収束する光の粒（期待が高まるほど少しずつ増える）
+  const particleCount = 10 + Math.round(heat * 10);
+  const particles = Array.from({ length: particleCount }, (_, i) => {
+    const ang = (i / particleCount) * Math.PI * 2;
     const dist = 120 + (i % 3) * 26;
     return {
       tx: `${Math.cos(ang) * dist}px`,
@@ -336,6 +337,19 @@ export function DiscoveryReveal({
   const showEyes = stage >= STAGE.EYES && stage < STAGE.APPEAR;
   const showColor = stage >= STAGE.APPEAR;
   const showPhoto = stage <= STAGE.GATHER;
+
+  // 段階が進むほど静かに強まる光の強度（0〜1）
+  const intensity =
+    stage <= STAGE.SCAN
+      ? 0.18
+      : stage === STAGE.GATHER
+        ? 0.28 + 0.45 * heat
+        : stage === STAGE.SILHOUETTE
+          ? 0.8
+          : stage === STAGE.PAUSE
+            ? 0.9
+            : 1;
+
 
   const captions: Record<number, string> = {
     [STAGE.SCAN]: "この子をそっと見つめている…",
