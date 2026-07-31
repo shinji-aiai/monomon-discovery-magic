@@ -166,20 +166,20 @@ export function DiscoveryReveal({
       // ② シルエットが現れる
       setStage(STAGE.SILHOUETTE);
       haptic(12);
-      await waitOrSkip(650);
+      await waitOrSkip(950);
       if (!alive) return;
 
-      // ③ 静かに間を置く（0.5〜1秒）「なにかいる…」小さな鼓動
+      // ③「もうすぐ会える」静かな間（約1秒）小さな鼓動
       setStage(STAGE.PAUSE);
       playSound("heartbeat");
       haptic([0, 14, 90, 14]);
-      await waitOrSkip(750);
+      await waitOrSkip(1050);
       if (!alive) return;
 
       // ④ 目だけ先に光る
       setStage(STAGE.EYES);
       haptic(10);
-      await waitOrSkip(650);
+      await waitOrSkip(800);
       if (!alive) return;
 
       // ⑤ 姿がゆっくり現れる → 紙吹雪とキラキラでお祝い
@@ -187,19 +187,21 @@ export function DiscoveryReveal({
       playSound("discover");
       setShowConfetti(true);
       haptic([0, 16, 40, 24]);
-      await waitOrSkip(1200);
+      await waitOrSkip(1350);
       if (!alive) return;
 
       // ⑥ 名前（大きく・キラキラ）
       setStage(STAGE.NAME);
       playSound("sparkle");
       playSound("fanfare");
-      await waitOrSkip(950);
+      await waitOrSkip(1150);
       if (!alive) return;
 
-      // ⑦ 一言
+      // ⑦ 一言（発見リボンを少し長めに見せる）
       setStage(STAGE.QUOTE);
-      await waitOrSkip(1400);
+      await waitOrSkip(1900);
+      if (!alive) return;
+
       if (!alive) return;
 
       onDone(found);
