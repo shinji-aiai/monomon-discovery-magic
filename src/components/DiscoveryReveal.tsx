@@ -355,7 +355,7 @@ export function DiscoveryReveal({
     [STAGE.SCAN]: "この子をそっと見つめている…",
     [STAGE.GATHER]: "光が集まってきた…",
     [STAGE.SILHOUETTE]: "なにかがそこにいる…",
-    [STAGE.PAUSE]: "…",
+    [STAGE.PAUSE]: "もうすぐ会える…",
     [STAGE.EYES]: "ふと目が合った",
   };
   const isSearching = searching && stage === STAGE.GATHER;
