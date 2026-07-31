@@ -116,6 +116,7 @@ export function DiscoveryReveal({
     setSearching(false);
     setTimedOut(false);
     setShowConfetti(false);
+    setHeat(0);
 
     const genPromise = generate();
     let slowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -124,13 +125,14 @@ export function DiscoveryReveal({
     (async () => {
       // 導入：そっと見つめる
       playSound("scan");
-      await waitOrSkip(900);
+      await waitOrSkip(1200);
       if (!alive) return;
 
-      // ① 光が集まる
+      // ① 光が集まる（ここから少しずつ期待が高まる）
       setStage(STAGE.GATHER);
-      await waitOrSkip(900);
+      await waitOrSkip(1500);
       if (!alive) return;
+
 
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
       // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
