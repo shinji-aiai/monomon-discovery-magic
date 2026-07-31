@@ -78,9 +78,12 @@ export function DiscoveryReveal({
   const [attempt, setAttempt] = useState(0);
   /** 発見成功の紙吹雪（少しだけ舞う） */
   const [showConfetti, setShowConfetti] = useState(false);
+  /** 期待感の高まり（0→1）。光・粒・リングの強さにゆっくり反映する */
+  const [heat, setHeat] = useState(0);
   /** タップ送り用：現在の待機を即座に切り上げるフラグ */
   const skipRef = useRef(false);
   const skipResolve = useRef<(() => void) | null>(null);
+
 
   /** タップで次の段へ。待機中ならその待機を即終了する。 */
   const advance = () => {
@@ -113,6 +116,7 @@ export function DiscoveryReveal({
     setSearching(false);
     setTimedOut(false);
     setShowConfetti(false);
+    setHeat(0);
 
     const genPromise = generate();
     let slowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -121,13 +125,14 @@ export function DiscoveryReveal({
     (async () => {
       // 導入：そっと見つめる
       playSound("scan");
-      await waitOrSkip(900);
+      await waitOrSkip(1200);
       if (!alive) return;
 
-      // ① 光が集まる
+      // ① 光が集まる（ここから少しずつ期待が高まる）
       setStage(STAGE.GATHER);
-      await waitOrSkip(900);
+      await waitOrSkip(1500);
       if (!alive) return;
+
 
       // 生成完了を待ってから「本人の姿」でシルエットを見せる（姿の一貫性）
       // AIが長引くときは「いま探しているよ…」を出し、無反応に見せない。
@@ -161,20 +166,20 @@ export function DiscoveryReveal({
       // ② シルエットが現れる
       setStage(STAGE.SILHOUETTE);
       haptic(12);
-      await waitOrSkip(650);
+      await waitOrSkip(950);
       if (!alive) return;
 
-      // ③ 静かに間を置く（0.5〜1秒）「なにかいる…」小さな鼓動
+      // ③「もうすぐ会える」静かな間（約1秒）小さな鼓動
       setStage(STAGE.PAUSE);
       playSound("heartbeat");
       haptic([0, 14, 90, 14]);
-      await waitOrSkip(750);
+      await waitOrSkip(1050);
       if (!alive) return;
 
       // ④ 目だけ先に光る
       setStage(STAGE.EYES);
       haptic(10);
-      await waitOrSkip(650);
+      await waitOrSkip(800);
       if (!alive) return;
 
       // ⑤ 姿がゆっくり現れる → 紙吹雪とキラキラでお祝い
@@ -182,19 +187,21 @@ export function DiscoveryReveal({
       playSound("discover");
       setShowConfetti(true);
       haptic([0, 16, 40, 24]);
-      await waitOrSkip(1200);
+      await waitOrSkip(1350);
       if (!alive) return;
 
       // ⑥ 名前（大きく・キラキラ）
       setStage(STAGE.NAME);
       playSound("sparkle");
       playSound("fanfare");
-      await waitOrSkip(950);
+      await waitOrSkip(1150);
       if (!alive) return;
 
-      // ⑦ 一言
+      // ⑦ 一言（発見リボンを少し長めに見せる）
       setStage(STAGE.QUOTE);
-      await waitOrSkip(1400);
+      await waitOrSkip(1900);
+      if (!alive) return;
+
       if (!alive) return;
 
       onDone(found);
@@ -218,6 +225,25 @@ export function DiscoveryReveal({
     const t = setInterval(() => setSearchIdx(randomMsgIdx()), 2400);
     return () => clearInterval(t);
   }, [searching]);
+
+  // 光が集まる段階のあいだ、期待感をゆっくり高めていく（0→1）
+  useEffect(() => {
+    if (stage < STAGE.GATHER) {
+      setHeat(0);
+      return;
+    }
+    if (stage > STAGE.GATHER) {
+      setHeat(1);
+      return;
+    }
+    const start = Date.now();
+    const t = setInterval(() => {
+      const p = Math.min(1, (Date.now() - start) / 2600);
+      setHeat(p);
+      if (p >= 1) clearInterval(t);
+    }, 120);
+    return () => clearInterval(t);
+  }, [stage]);
 
 
 
@@ -294,9 +320,10 @@ export function DiscoveryReveal({
     );
   }
 
-  // 収束する光の粒
-  const particles = Array.from({ length: 12 }, (_, i) => {
-    const ang = (i / 12) * Math.PI * 2;
+  // 収束する光の粒（期待が高まるほど少しずつ増える）
+  const particleCount = 10 + Math.round(heat * 10);
+  const particles = Array.from({ length: particleCount }, (_, i) => {
+    const ang = (i / particleCount) * Math.PI * 2;
     const dist = 120 + (i % 3) * 26;
     return {
       tx: `${Math.cos(ang) * dist}px`,
@@ -311,11 +338,24 @@ export function DiscoveryReveal({
   const showColor = stage >= STAGE.APPEAR;
   const showPhoto = stage <= STAGE.GATHER;
 
+  // 段階が進むほど静かに強まる光の強度（0〜1）
+  const intensity =
+    stage <= STAGE.SCAN
+      ? 0.18
+      : stage === STAGE.GATHER
+        ? 0.28 + 0.45 * heat
+        : stage === STAGE.SILHOUETTE
+          ? 0.8
+          : stage === STAGE.PAUSE
+            ? 0.9
+            : 1;
+
+
   const captions: Record<number, string> = {
     [STAGE.SCAN]: "この子をそっと見つめている…",
     [STAGE.GATHER]: "光が集まってきた…",
     [STAGE.SILHOUETTE]: "なにかがそこにいる…",
-    [STAGE.PAUSE]: "…",
+    [STAGE.PAUSE]: "もうすぐ会える…",
     [STAGE.EYES]: "ふと目が合った",
   };
   const isSearching = searching && stage === STAGE.GATHER;
@@ -351,7 +391,15 @@ export function DiscoveryReveal({
       onClick={advance}
       className="world-night-search relative flex min-h-[100svh] w-full cursor-pointer select-none flex-col items-center px-6 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))] text-center"
     >
+      {/* 少しずつ明るくなる背景の光（静かに盛り上がる） */}
+      <span
+        aria-hidden
+        className="reveal-ambient-glow"
+        style={{ opacity: 0.25 + intensity * 0.75 }}
+      />
+
       {/* 背景の星粒 */}
+
       <span aria-hidden className="night-stars">
         {stars.map((s, i) => (
           <i
@@ -409,17 +457,30 @@ export function DiscoveryReveal({
       {/* 舞台：写真 → シルエット → 姿 */}
       <div className="relative z-10 mt-8 flex flex-col items-center">
         <div className="relative flex h-64 w-64 items-center justify-center">
-          {/* 金色のリング（探索中のみ） */}
+          {/* 金色のリング（探索中のみ・進むほど少し強く） */}
           {(showPhoto || showSilhouette) && (
             <>
-              <span aria-hidden className="search-gold-ring-outer" />
-              <span aria-hidden className="search-gold-ring" />
+              <span
+                aria-hidden
+                className="search-gold-ring-outer reveal-soft-fade"
+                style={{ opacity: 0.35 + intensity * 0.65, transform: `scale(${0.94 + intensity * 0.08})` }}
+              />
+              <span
+                aria-hidden
+                className="search-gold-ring reveal-soft-fade"
+                style={{ opacity: 0.45 + intensity * 0.55 }}
+              />
             </>
           )}
 
           {/* 写真（SCAN / GATHER） */}
           {showPhoto && (
-            <div className="relative h-56 w-56 overflow-hidden rounded-[28px] shadow-float">
+            <div
+              className="reveal-soft-fade relative h-56 w-56 overflow-hidden rounded-[28px] shadow-float animate-soft-fade-in"
+              style={{
+                boxShadow: `0 0 ${18 + intensity * 46}px ${4 + intensity * 12}px rgba(255, 200, 120, ${0.12 + intensity * 0.3})`,
+              }}
+            >
               <img
                 src={photo}
                 alt=""
@@ -438,6 +499,7 @@ export function DiscoveryReveal({
                         height: p.size,
                         marginLeft: -p.size / 2,
                         marginTop: -p.size / 2,
+                        opacity: 0.5 + heat * 0.5,
                         // @ts-expect-error custom props
                         "--tx": p.tx,
                         "--ty": p.ty,
@@ -452,8 +514,12 @@ export function DiscoveryReveal({
 
           {/* シルエット（SILHOUETTE / PAUSE / EYES） */}
           {showSilhouette && monomon && (
-            <div className="relative flex h-56 w-56 items-center justify-center">
-              <span aria-hidden className="silhouette-backlight" />
+            <div className="relative flex h-56 w-56 items-center justify-center animate-soft-fade-in">
+              <span
+                aria-hidden
+                className="silhouette-backlight reveal-soft-fade"
+                style={{ opacity: 0.55 + intensity * 0.45 }}
+              />
               <div
                 className={`relative h-52 w-52 animate-life-float ${
                   stage === STAGE.SILHOUETTE
@@ -463,9 +529,15 @@ export function DiscoveryReveal({
                       : ""
                 }`}
               >
-                <div className="h-full w-full opacity-95 [filter:brightness(0)_drop-shadow(0_0_24px_rgba(255,200,120,0.75))]">
+                <div
+                  className="reveal-soft-fade h-full w-full opacity-95"
+                  style={{
+                    filter: `brightness(0) drop-shadow(0 0 ${20 + intensity * 18}px rgba(255, 200, 120, ${0.6 + intensity * 0.35}))`,
+                  }}
+                >
                   <MonomonArt monomon={monomon} />
                 </div>
+
                 {showEyes && (
                   <>
                     <span className="animate-eye-glow absolute left-[40%] top-[44%] h-3 w-3 rounded-full bg-amber-100 shadow-[0_0_12px_4px_rgba(255,245,200,0.9)]" />
