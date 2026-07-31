@@ -226,6 +226,25 @@ export function DiscoveryReveal({
     return () => clearInterval(t);
   }, [searching]);
 
+  // 光が集まる段階のあいだ、期待感をゆっくり高めていく（0→1）
+  useEffect(() => {
+    if (stage < STAGE.GATHER) {
+      setHeat(0);
+      return;
+    }
+    if (stage > STAGE.GATHER) {
+      setHeat(1);
+      return;
+    }
+    const start = Date.now();
+    const t = setInterval(() => {
+      const p = Math.min(1, (Date.now() - start) / 2600);
+      setHeat(p);
+      if (p >= 1) clearInterval(t);
+    }, 120);
+    return () => clearInterval(t);
+  }, [stage]);
+
 
 
   // 出会えた子の「一言」（その子ごとに決まるランダムな気持ち）
