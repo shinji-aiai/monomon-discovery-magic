@@ -78,9 +78,12 @@ export function DiscoveryReveal({
   const [attempt, setAttempt] = useState(0);
   /** 発見成功の紙吹雪（少しだけ舞う） */
   const [showConfetti, setShowConfetti] = useState(false);
+  /** 期待感の高まり（0→1）。光・粒・リングの強さにゆっくり反映する */
+  const [heat, setHeat] = useState(0);
   /** タップ送り用：現在の待機を即座に切り上げるフラグ */
   const skipRef = useRef(false);
   const skipResolve = useRef<(() => void) | null>(null);
+
 
   /** タップで次の段へ。待機中ならその待機を即終了する。 */
   const advance = () => {
