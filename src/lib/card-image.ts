@@ -3,6 +3,9 @@ import { FAMILY_STYLES } from "./monomon-data";
 import { getSpecies } from "./species";
 import { renderMonomonSVG, svgToDataUrl } from "./monomon-art";
 import { formatDiscoveredDate, specOf, type Monomon } from "./monomon";
+import { getOfficialArt } from "./species-assets";
+import { bodyTint } from "./tint";
+
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
