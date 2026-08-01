@@ -389,6 +389,7 @@ export function DiscoveryReveal({
   return (
     <div
       onClick={advance}
+      style={monomon ? auraVars(monomon) : undefined}
       className="world-night-search relative flex min-h-[100svh] w-full cursor-pointer select-none flex-col items-center px-6 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))] text-center"
     >
       {/* 少しずつ明るくなる背景の光（静かに盛り上がる） */}
@@ -397,6 +398,15 @@ export function DiscoveryReveal({
         className="reveal-ambient-glow"
         style={{ opacity: 0.25 + intensity * 0.75 }}
       />
+
+      {/* 撮ったモノの色の空気（姿が分かってから静かに広がる） */}
+      {monomon && (
+        <span
+          aria-hidden
+          className="monomon-object-ambient transition-opacity duration-1000"
+          style={{ opacity: 0.4 + intensity * 0.6 }}
+        />
+      )}
 
       {/* 背景の星粒 */}
 
