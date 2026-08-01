@@ -274,6 +274,9 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       confident,
       quality,
       hue,
+      colorSaturation,
+      colorLightness,
+
       eyes,
       mouth,
       accessory,
