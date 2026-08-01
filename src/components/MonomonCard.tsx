@@ -24,9 +24,12 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
   const species = getSpecies(monomon.speciesId);
   const accent = monomon.palette.c3;
   const isDiscovery = variant === "discovery";
+  // 撮ったモノの色の雰囲気（本体は変えず、まわりの空気だけ寄せる）
+  const aura = auraVars(monomon);
 
   return (
     <div
+      style={aura}
       className={cn(
         "relative overflow-hidden rounded-[30px]",
         isDiscovery
@@ -36,6 +39,8 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
         className,
       )}
     >
+      {/* カード全体にうっすら、撮ったモノの色の空気 */}
+      <span aria-hidden className="monomon-object-ambient" />
       {/* イラストエリア */}
       <div className="relative h-64">
         {/* 元写真をうっすら背景に（結果画面では背景に溶け込ませたいので非表示） */}
