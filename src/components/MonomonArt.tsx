@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { renderMonomonSVG } from "@/lib/monomon-art";
 import { specOf, specFromSeed, type Monomon } from "@/lib/monomon";
 import { getOfficialArt } from "@/lib/species-assets";
+import { bodyTint } from "@/lib/tint";
 import { cn } from "@/lib/utils";
+
 
 interface MonomonArtProps {
   /** 完全なモノモン個体（撮影から生まれた「その子」を表示） */
