@@ -563,6 +563,9 @@ export function DiscoveryReveal({
           {showColor && monomon && (
             <div className="relative flex h-56 w-56 items-center justify-center">
               <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
+              {/* 撮ったモノの色のオーラと足元の光 */}
+              <span aria-hidden className="monomon-object-aura" />
+              <span aria-hidden className="monomon-object-ground-glow" />
               <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.35)]">
                 <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
                   <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>
