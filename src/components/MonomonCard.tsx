@@ -3,6 +3,7 @@ import { AutoFitName } from "./AutoFitName";
 import { FAMILY_STYLES } from "@/lib/monomon-data";
 import { getSpecies } from "@/lib/species";
 import { formatDiscoveredDate, type Monomon } from "@/lib/monomon";
+import { auraVars } from "@/lib/aura";
 import { cn } from "@/lib/utils";
 
 interface MonomonCardProps {
