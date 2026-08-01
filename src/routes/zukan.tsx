@@ -811,10 +811,17 @@ function DetailSheet({
 
   // なかよし度アップの小さなお祝い（ハートがふわっと舞う）演出のトリガー
   const [burst, setBurst] = useState(0);
-  const celebrate = (big = false) => {
+  // 100%に到達した瞬間だけの特別演出（約1秒）
+  const [maxBurst, setMaxBurst] = useState(false);
+  const celebrate = (big = false, max = false) => {
     setBurst((n) => n + 1);
-    haptic(big ? [12, 40, 12] : 10);
+    if (max) {
+      setMaxBurst(true);
+      setTimeout(() => setMaxBurst(false), 1000);
+    }
+    haptic(max ? [14, 40, 14, 40, 18] : big ? [12, 40, 12] : 10);
   };
+
 
   // 詳細を開いたら必ず先頭（キャラのイラスト）から見えるようにする
   useEffect(() => {
