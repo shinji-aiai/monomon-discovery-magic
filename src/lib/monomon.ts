@@ -13,6 +13,8 @@ import {
 import { SPECIES_MAP, getSpecies } from "./species";
 import { resolveSpecies } from "./classification";
 import { analyzeSpirit } from "./monomon-ai.functions";
+// [DEBUG] 色の出どころ確認用（後で削除する）
+import { analyzePhoto } from "./image-utils";
 
 export interface Monomon extends MonomonSpec {
   id: string;
