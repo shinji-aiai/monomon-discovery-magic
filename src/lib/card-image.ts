@@ -190,14 +190,56 @@ export async function renderCardImage(
   chip(`${fam.emoji} ${fam.label}`, 0, "right");
 
   // モノモン本体（飛び出す）
-  const svg = renderMonomonSVG(specOf(monomon));
-  const sizedSvg = svg.replace(
-    /width="100%" height="100%"/,
-    'width="420" height="420"',
-  );
-  const art = await loadImage(svgToDataUrl(sizedSvg));
   const artSize = 420;
+  const officialUrl = getOfficialArt(monomon.speciesId);
+  let art: HTMLImageElement | HTMLCanvasElement | null = null;
+  if (officialUrl) {
+    try {
+      const src = await loadImage(officialUrl);
+      // 画面表示と同じく、撮ったモノの色みだけをそっと重ねる
+      const off = document.createElement("canvas");
+      off.width = artSize;
+      off.height = artSize;
+      const octx = off.getContext("2d")!;
+      const scale = Math.min(artSize / src.width, artSize / src.height);
+      const dw = src.width * scale;
+      const dh = src.height * scale;
+      octx.drawImage(src, (artSize - dw) / 2, (artSize - dh) / 2, dw, dh);
+      const tint = bodyTint(monomon);
+      if (tint) {
+        if (tint.toneOpacity > 0) {
+          octx.globalCompositeOperation = tint.toneMode;
+          octx.globalAlpha = tint.toneOpacity;
+          octx.fillStyle = tint.toneColor;
+          octx.fillRect(0, 0, artSize, artSize);
+        }
+        if (tint.colorOpacity > 0) {
+          octx.globalCompositeOperation = "color";
+          octx.globalAlpha = tint.colorOpacity;
+          octx.fillStyle = tint.color;
+          octx.fillRect(0, 0, artSize, artSize);
+        }
+        // 透過部分を元の形に戻す
+        octx.globalCompositeOperation = "destination-in";
+        octx.globalAlpha = 1;
+        octx.drawImage(src, (artSize - dw) / 2, (artSize - dh) / 2, dw, dh);
+        octx.globalCompositeOperation = "source-over";
+      }
+      art = off;
+    } catch {
+      art = null;
+    }
+  }
+  if (!art) {
+    const svg = renderMonomonSVG(specOf(monomon));
+    const sizedSvg = svg.replace(
+      /width="100%" height="100%"/,
+      'width="420" height="420"',
+    );
+    art = await loadImage(svgToDataUrl(sizedSvg));
+  }
   ctx.drawImage(art, cx - artSize / 2, panelY + panelH - artSize + 36, artSize, artSize);
+
 
   // ===== テキスト =====
   y = panelY + panelH + 78;
