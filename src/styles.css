@@ -1026,6 +1026,7 @@
   height: 92%;
   transform: translate(-50%, -50%);
   background:
+    radial-gradient(circle at 50% 50%, var(--aura-mid, transparent) 0%, var(--aura-soft, transparent) 46%, transparent 74%),
     radial-gradient(circle at 50% 50%, oklch(0.92 0.12 75 / 0.55) 0%, oklch(0.88 0.14 65 / 0.28) 35%, transparent 68%);
   filter: blur(14px);
   pointer-events: none;
