@@ -266,6 +266,23 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     // 「自信あり＝推定表示にしない」条件：種族が既知で、写りが良く、自信が高い
     const confident = speciesKnown && quality === "ok" && confidence >= 0.6;
 
+    // --- [DEBUG] 色情報がAIに正しく渡り、返ってきているかの確認（後で削除する） ---
+    console.log("[MONOMON DEBUG][server] AI認識", {
+      model: "google/gemini-3-flash-preview（テキスト認識のみ・画像生成モデルは未使用）",
+      photoPreview: data.photo.slice(0, 48) + "...",
+      photoBytes: data.photo.length,
+      colorRulesInPrompt: system.includes("Dominant Color"),
+      systemPromptLength: system.length,
+      raw: {
+        object: parsed.object,
+        hue: parsed.hue,
+        colorSaturation: parsed.colorSaturation,
+        colorLightness: parsed.colorLightness,
+      },
+      normalized: { hue, colorSaturation, colorLightness },
+    });
+
+
     return {
       object,
       category,

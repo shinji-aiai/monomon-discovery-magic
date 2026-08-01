@@ -13,6 +13,8 @@ import {
 import { SPECIES_MAP, getSpecies } from "./species";
 import { resolveSpecies } from "./classification";
 import { analyzeSpirit } from "./monomon-ai.functions";
+// [DEBUG] 色の出どころ確認用（後で削除する）
+import { analyzePhoto } from "./image-utils";
 
 export interface Monomon extends MonomonSpec {
   id: string;
@@ -180,6 +182,29 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
   spec.eyes = result.eyes;
   spec.mouth = result.mouth;
   spec.accessory = result.accessory;
+
+  // --- [DEBUG] 色情報がどこで失われるかの確認用（後で削除する） ---
+  try {
+    const local = await analyzePhoto(photo).catch(() => null);
+    console.log("[MONOMON DEBUG] 色パイプライン", {
+      "1_写真から直接測った主色(ローカル計測)": local
+        ? { H: Math.round(local.hue), S: local.saturation, L: local.lightness }
+        : "計測できず",
+      "2_AIが返した主色": {
+        H: result.hue,
+        S: result.colorSaturation,
+        L: result.colorLightness,
+        object: result.object,
+        speciesId: result.speciesId,
+      },
+      "3_描画に渡す最終パレット(実際の値)": spec.palette,
+      "4_描画方式": "手続き的SVG(monomon-art.ts) — 画像生成モデルは未使用",
+      "5_公式アセット優先表示か": "MonomonArt preferOfficial=true（種族固定PNGが出ている可能性あり）",
+      species: species.id,
+    });
+  } catch (e) {
+    console.warn("[MONOMON DEBUG] ログ出力に失敗", e);
+  }
 
   return {
     ...spec,
