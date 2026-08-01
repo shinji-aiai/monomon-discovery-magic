@@ -5,6 +5,7 @@ import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/mon
 import { playSound, haptic } from "@/lib/sound";
 import { greetingFor } from "@/lib/greetings";
 import { discoveryPresentation } from "@/lib/discovery";
+import { auraVars } from "@/lib/aura";
 
 
 interface DiscoveryRevealProps {
