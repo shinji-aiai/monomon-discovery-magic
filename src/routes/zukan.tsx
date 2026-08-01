@@ -854,9 +854,12 @@ function DetailSheet({
 
   // モノモンをなでる → なかよし度 +1（小さなお祝い）
   const pet = () => {
+    // 演出のみ：この一撫でで 100% に到達する瞬間かどうかを見る
+    const before = getFriendship(live);
     petMonomon(live.id);
-    celebrate();
+    celebrate(false, before < MAX_FRIENDSHIP && before + FRIENDSHIP_GAINS.pet >= MAX_FRIENDSHIP);
   };
+
 
   const save = async () => {
     tap();
