@@ -5,6 +5,7 @@ import { DiscoveryError, type DiscoveryErrorKind, type Monomon } from "@/lib/mon
 import { playSound, haptic } from "@/lib/sound";
 import { greetingFor } from "@/lib/greetings";
 import { discoveryPresentation } from "@/lib/discovery";
+import { auraVars } from "@/lib/aura";
 
 
 interface DiscoveryRevealProps {
@@ -389,6 +390,7 @@ export function DiscoveryReveal({
   return (
     <div
       onClick={advance}
+      style={monomon ? auraVars(monomon) : undefined}
       className="world-night-search relative flex min-h-[100svh] w-full cursor-pointer select-none flex-col items-center px-6 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))] text-center"
     >
       {/* 少しずつ明るくなる背景の光（静かに盛り上がる） */}
@@ -397,6 +399,15 @@ export function DiscoveryReveal({
         className="reveal-ambient-glow"
         style={{ opacity: 0.25 + intensity * 0.75 }}
       />
+
+      {/* 撮ったモノの色の空気（姿が分かってから静かに広がる） */}
+      {monomon && (
+        <span
+          aria-hidden
+          className="monomon-object-ambient transition-opacity duration-1000"
+          style={{ opacity: 0.4 + intensity * 0.6 }}
+        />
+      )}
 
       {/* 背景の星粒 */}
 
@@ -552,6 +563,9 @@ export function DiscoveryReveal({
           {showColor && monomon && (
             <div className="relative flex h-56 w-56 items-center justify-center">
               <span className="absolute inset-0 m-auto h-48 w-48 animate-soft-bloom rounded-full gradient-magic" />
+              {/* 撮ったモノの色のオーラと足元の光 */}
+              <span aria-hidden className="monomon-object-aura" />
+              <span aria-hidden className="monomon-object-ground-glow" />
               <div className="relative h-52 w-52 animate-soft-emerge drop-shadow-[0_10px_30px_rgba(120,90,60,0.35)]">
                 <div className={stage >= STAGE.NAME ? "h-full w-full animate-greet-hop" : "h-full w-full"}>
                   <div className={stage >= STAGE.NAME ? "h-full w-full animate-life-float" : "h-full w-full"}>

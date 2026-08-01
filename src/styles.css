@@ -762,10 +762,58 @@
   width: 62%;
   height: 14px;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, oklch(0.4 0.05 50 / 0.28) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse at center, var(--aura-shadow, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse at center, oklch(0.4 0.05 50 / 0.28) 0%, transparent 70%);
   filter: blur(3px);
   pointer-events: none;
 }
+
+/* 撮ったモノの色の雰囲気をまとうオーラ（本体の色は変えない） */
+@utility monomon-object-aura {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 118%;
+  height: 118%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--aura-strong, transparent) 0%,
+    var(--aura-soft, transparent) 42%,
+    transparent 70%
+  );
+  filter: blur(22px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: warm-glow-breathe 6.5s ease-in-out infinite;
+}
+
+/* 画面全体にうっすら広がる、モノの色の空気 */
+@utility monomon-object-ambient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 60% at 50% 45%,
+    var(--aura-soft, transparent) 0%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+/* 足元に広がる、モノの色のやわらかい光 */
+@utility monomon-object-ground-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 74%;
+  height: 14%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, var(--aura-mid, transparent) 0%, transparent 72%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
 
 /* --- B. 発見遷移世界（暖色 → 藍への橋渡し）--- */
 @utility world-discovery-transition {
@@ -978,6 +1026,7 @@
   height: 92%;
   transform: translate(-50%, -50%);
   background:
+    radial-gradient(circle at 50% 50%, var(--aura-mid, transparent) 0%, var(--aura-soft, transparent) 46%, transparent 74%),
     radial-gradient(circle at 50% 50%, oklch(0.92 0.12 75 / 0.55) 0%, oklch(0.88 0.14 65 / 0.28) 35%, transparent 68%);
   filter: blur(14px);
   pointer-events: none;
