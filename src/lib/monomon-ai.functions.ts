@@ -228,6 +228,14 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!Number.isFinite(hue)) hue = 210;
     hue = ((Math.round(hue) % 360) + 360) % 360;
 
+    const clamp01 = (v: unknown, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : fallback;
+    };
+    const colorSaturation = clamp01(parsed.colorSaturation, 0.55);
+    const colorLightness = clamp01(parsed.colorLightness, 0.6);
+
+
     const object = String(parsed.object ?? "").slice(0, 24) || "なにか";
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
