@@ -914,23 +914,73 @@ function DetailSheet({
           {burst > 0 && (
             <div
               key={burst}
-              className="pointer-events-none absolute inset-x-0 top-20 z-10 flex justify-center"
+              className="pointer-events-none absolute inset-0 z-10"
               aria-hidden
             >
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Heart
-                  key={i}
-                  className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
+              {/* 100%到達の瞬間だけ：暖色グローがふわっと広がる */}
+              {maxBurst && (
+                <div
+                  className="absolute left-1/2 top-28 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full animate-max-friend-glow"
                   style={{
-                    left: `${44 + (i - 2) * 7}%`,
-                    animationDelay: `${i * 80}ms`,
+                    background:
+                      "radial-gradient(circle, hsl(var(--primary) / 0.5) 0%, hsl(32 90% 62% / 0.28) 45%, transparent 72%)",
                   }}
                 />
-              ))}
+              )}
+              {Array.from({ length: maxBurst ? 14 : 8 }).map((_, i) => {
+                const r = (n: number) =>
+                  ((Math.sin(burst * 12.9898 + i * 78.233 + n * 3.77) + 1) / 2);
+                const scale = 0.7 + r(1) * 0.8;
+                return (
+                  <Heart
+                    key={i}
+                    className="absolute h-5 w-5 fill-primary text-primary animate-heart-float"
+                    style={{
+                      left: `${28 + r(2) * 44}%`,
+                      top: `${88 + r(3) * 40}px`,
+                      animationDelay: `${i * (maxBurst ? 45 : 70)}ms`,
+                      ["--heart-dx" as string]: `${(r(4) - 0.5) * 56}px`,
+                      ["--heart-rise" as string]: `${56 + r(5) * 46}px`,
+                      ["--heart-scale" as string]: `${scale}`,
+                      ["--heart-rot" as string]: `${(r(6) - 0.5) * 40}deg`,
+                      ["--heart-dur" as string]: `${1 + r(7) * 0.5}s`,
+                      transform: `scale(${scale})`,
+                    }}
+                  />
+                );
+              })}
+              {/* 小さなキラキラ */}
+              {Array.from({ length: maxBurst ? 12 : 7 }).map((_, i) => {
+                const r = (n: number) =>
+                  ((Math.sin(burst * 4.271 + i * 41.19 + n * 9.13) + 1) / 2);
+                return (
+                  <span
+                    key={`s${i}`}
+                    className="absolute block rounded-full bg-amber-200 animate-tiny-sparkle"
+                    style={{
+                      left: `${24 + r(1) * 52}%`,
+                      top: `${76 + r(2) * 64}px`,
+                      width: `${3 + r(3) * 4}px`,
+                      height: `${3 + r(3) * 4}px`,
+                      boxShadow: "0 0 6px hsl(42 95% 70% / 0.9)",
+                      animationDelay: `${i * 60}ms`,
+                      ["--sp-dx" as string]: `${(r(4) - 0.5) * 48}px`,
+                      ["--sp-rise" as string]: `${28 + r(5) * 40}px`,
+                      ["--sp-dur" as string]: `${0.8 + r(6) * 0.4}s`,
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
-          <MonomonCard monomon={live} onPet={pet} />
+          <div
+            key={maxBurst ? `bounce-${burst}` : "still"}
+            className={maxBurst ? "animate-max-friend-bounce" : undefined}
+          >
+            <MonomonCard monomon={live} onPet={pet} />
+          </div>
         </div>
+
 
         {/* 4. なかよし度（表情・セリフ・ゲージ） */}
         <FriendshipMeter monomon={live} className="mt-4" />
