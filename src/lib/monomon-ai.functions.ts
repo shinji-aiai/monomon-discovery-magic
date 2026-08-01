@@ -41,8 +41,13 @@ export interface SpiritAnalysis {
   confident: boolean;
   /** 写真の写りぐあい */
   quality: ImageQuality;
-  /** 物の色をふまえた色相 0-360 */
+  /** 物の主色（Dominant Color）の色相 0-360 */
   hue: number;
+  /** 主色の鮮やかさ 0-1（黒・白・グレーは 0 に近い） */
+  colorSaturation: number;
+  /** 主色の明るさ 0-1（黒は暗く 白は明るく） */
+  colorLightness: number;
+
   eyes: EyeStyle;
   mouth: MouthStyle;
   accessory: Accessory;
