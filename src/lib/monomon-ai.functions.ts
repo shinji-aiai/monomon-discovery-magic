@@ -41,8 +41,13 @@ export interface SpiritAnalysis {
   confident: boolean;
   /** 写真の写りぐあい */
   quality: ImageQuality;
-  /** 物の色をふまえた色相 0-360 */
+  /** 物の主色（Dominant Color）の色相 0-360 */
   hue: number;
+  /** 主色の鮮やかさ 0-1（黒・白・グレーは 0 に近い） */
+  colorSaturation: number;
+  /** 主色の明るさ 0-1（黒は暗く 白は明るく） */
+  colorLightness: number;
+
   eyes: EyeStyle;
   mouth: MouthStyle;
   accessory: Accessory;
@@ -102,6 +107,15 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
 - 「！」は本当に感情を伝えたい場面だけ。「？」は問いかけだけ。
   例) 温かい飲み物で心に安らぎを運んでくれる / いつもそばで時間を見守っている
 
+色のルール（最重要）：
+- 精霊の体の主色は、写真に写った物の主色（Dominant Color）とほぼ同じにする。
+- 主色を無関係な色に置き換えない。ピンクや水色などへ勝手に寄せない。
+- 黒い水筒なら黒〜ダークグレー、青いコップなら青、赤いマグなら赤が主色。
+- hue はその主色の色相、colorSaturation は鮮やかさ（黒・白・グレーなど無彩色は 0 に近い値）、
+  colorLightness は明るさ（黒は 0.1 前後、白は 0.9 前後）を正直に返す。
+- 暖かみのある光やほっぺなど、補助的な色味は少しだけ残してよい。
+- 形・顔・可愛さ・世界観は変えない。ロゴや傷や細かな模様は反映しない。
+
 必ず次のJSONだけを返す（前後に文章を付けない）:
 {
   "object": "認識した物（日本語・短く）",
@@ -110,6 +124,8 @@ const SYSTEM_PROMPT = `あなたは「身近な物に宿る精霊」を見抜く
   "confidence": 0〜1の小数,
   "quality": "ok / too_far / too_dark / blurry / no_object のいずれか",
   "hue": 0〜360の整数,
+  "colorSaturation": 0〜1の小数,
+  "colorLightness": 0〜1の小数,
   "eyes": "...", "mouth": "...", "accessory": "...",
   "name": "物にちなんだ呼び名（カタカナ中心・短く）",
   "personality": "物の役割からくる性格（短く・8文字程度）",
@@ -212,6 +228,14 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
     if (!Number.isFinite(hue)) hue = 210;
     hue = ((Math.round(hue) % 360) + 360) % 360;
 
+    const clamp01 = (v: unknown, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : fallback;
+    };
+    const colorSaturation = clamp01(parsed.colorSaturation, 0.55);
+    const colorLightness = clamp01(parsed.colorLightness, 0.6);
+
+
     const object = String(parsed.object ?? "").slice(0, 24) || "なにか";
     const name = String(parsed.name ?? "").slice(0, 16) || object;
     const personality = String(parsed.personality ?? "").slice(0, 16) || "マイペース";
@@ -250,6 +274,9 @@ export const analyzeSpirit = createServerFn({ method: "POST" })
       confident,
       quality,
       hue,
+      colorSaturation,
+      colorLightness,
+
       eyes,
       mouth,
       accessory,

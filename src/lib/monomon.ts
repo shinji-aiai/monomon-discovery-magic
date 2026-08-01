@@ -63,18 +63,27 @@ export function buildSpec(
   seed: number,
   speciesId: string,
   hueBias?: number,
+  objectSaturation?: number,
+  objectLightness?: number,
 ): MonomonSpec {
   const rng = mulberry32(seed ^ 0x85ebca6b);
   const species = getSpecies(speciesId);
-  // 色相：写真の色を尊重しつつ、種族の寄せ先があれば少し混ぜる
+  const hasObjectColor =
+    typeof objectSaturation === "number" && typeof objectLightness === "number";
+
+  // 色相：撮った物の主色が分かるときは、その色をそのまま主色にする
   let hue = hueBias ?? rng() * 360;
-  if (species.hueHint != null) hue = (hue + species.hueHint * 2) / 3;
-  hue = (hue + (rng() - 0.5) * 30 + 360) % 360;
+  if (!hasObjectColor) {
+    if (species.hueHint != null) hue = (hue + species.hueHint * 2) / 3;
+    hue = (hue + (rng() - 0.5) * 30 + 360) % 360;
+  } else {
+    hue = ((hue % 360) + 360) % 360;
+  }
 
   return {
     speciesId,
     seed,
-    palette: genPalette(rng, hue),
+    palette: genPalette(rng, hue, objectSaturation, objectLightness),
     eyes: pick(rng, EYE_POOL),
     mouth: pick(rng, MOUTH_POOL),
     pattern: pick(rng, PATTERN_POOL),
@@ -160,7 +169,13 @@ export async function generateMonomon(photo: string): Promise<Monomon> {
 
   // 認識パイプライン：カテゴリ → 家族/種族（明らかに違う家族を防ぐ）
   const species = resolveSpecies(result.category, result.speciesId, result.confident);
-  const spec = buildSpec(seed, species.id, result.hue);
+  const spec = buildSpec(
+    seed,
+    species.id,
+    result.hue,
+    result.colorSaturation,
+    result.colorLightness,
+  );
   // 見た目はAIの判断に合わせる（ランダム要素を上書き）
   spec.eyes = result.eyes;
   spec.mouth = result.mouth;

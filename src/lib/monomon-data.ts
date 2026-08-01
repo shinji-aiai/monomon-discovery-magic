@@ -78,18 +78,40 @@ function hsl(h: number, s: number, l: number): string {
   return `hsl(${Math.round(((h % 360) + 360) % 360)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
 }
 
-/** 色相をもとに、やさしいパステル配色を作ります。 */
-export function genPalette(rng: () => number, hue: number): Palette {
-  const s = 58 + rng() * 18; // 彩度（落ち着いたパステル域）
+/**
+ * 色相をもとに、やさしい配色を作ります。
+ * 撮った物の主色（鮮やかさ・明るさ）が分かるときは、それを主色として尊重します。
+ * 黒い水筒なら黒〜ダークグレー、青いコップなら青が主色になります。
+ */
+export function genPalette(
+  rng: () => number,
+  hue: number,
+  objectSaturation?: number,
+  objectLightness?: number,
+): Palette {
+  const hasObjectColor =
+    typeof objectSaturation === "number" && typeof objectLightness === "number";
+
+  // 彩度：物の鮮やかさを尊重しつつ、少しだけやわらげる
+  const s = hasObjectColor
+    ? Math.max(4, Math.min(84, objectSaturation! * 100 * 0.9 + 6))
+    : 58 + rng() * 18;
+
+  // 明度：物の明るさを中心に、体の上下で自然な立体感をつける
+  const baseL = hasObjectColor
+    ? Math.max(14, Math.min(88, objectLightness! * 100))
+    : 71;
+
   return {
-    c1: hsl(hue, s, 85),
-    c2: hsl(hue, s, 71),
-    c3: hsl(hue, s * 0.92, 57),
-    line: hsl(hue, 32, 37),
+    c1: hsl(hue, s, Math.min(94, baseL + 14)),
+    c2: hsl(hue, s, baseL),
+    c3: hsl(hue, s * 0.92, Math.max(10, baseL - 14)),
+    line: hsl(hue, Math.min(s, 32), Math.max(12, baseL - 34)),
     cheek: hsl(350, 78, 80),
     hue,
   };
 }
+
 
 /* =========================================================================
  * 個体のバリエーション語彙
