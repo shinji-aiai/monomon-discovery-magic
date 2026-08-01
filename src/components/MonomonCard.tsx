@@ -97,10 +97,14 @@ export function MonomonCard({ monomon, className, animate, onPet, preferOfficial
                 <i style={{ left: "62%", top: "12%", animationDelay: "3.0s" }} />
               </span>
             )}
+            {/* 撮ったモノの色をまとうオーラ */}
+            <span aria-hidden className="monomon-object-aura" />
+            {/* 足元のやわらかい光 */}
+            <span aria-hidden className="monomon-object-ground-glow" />
             {!isDiscovery && (
               <span
                 className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-                style={{ backgroundColor: `${accent}55` }}
+                style={{ backgroundColor: `${accent}33` }}
               />
             )}
             <div className="relative h-full w-full animate-float-soft drop-shadow-[0_16px_22px_rgba(90,60,40,0.28)]">
