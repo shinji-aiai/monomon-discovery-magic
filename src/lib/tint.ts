@@ -46,24 +46,24 @@ export function bodyTint(monomon?: Monomon | null): BodyTint | null {
   const s = base.s;
   const l = base.l;
 
-  // 色み：やさしいパステルの範囲に収める
-  const tintS = clamp(s, 12, 62);
-  const tintL = clamp(l, 34, 76);
+  // 色み：撮ったモノの色をしっかり出しつつ 柔らかさは保つ
+  const tintS = clamp(s * 1.15, 18, 78);
+  const tintL = clamp(l, 30, 78);
   // 彩度がほとんど無いモノ（白・黒・灰）は色みを乗せない
-  const colorOpacity = s < 8 ? 0 : clamp(0.2 + (s / 100) * 0.12, 0.2, 0.3);
+  const colorOpacity = s < 6 ? 0 : clamp(0.5 + (s / 100) * 0.35, 0.5, 0.82);
 
   let toneColor = `hsl(${h}, ${Math.round(tintS * 0.3)}%, 50%)`;
   let toneMode: "multiply" | "screen" = "multiply";
   let toneOpacity = 0;
 
-  if (l < 42) {
+  if (l < 52) {
     toneMode = "multiply";
-    toneColor = `hsl(${h}, ${Math.round(clamp(s * 0.35, 0, 30))}%, ${Math.round(clamp(l + 18, 26, 58))}%)`;
-    toneOpacity = clamp(((42 - l) / 42) * 0.5, 0, 0.34);
-  } else if (l > 70) {
+    toneColor = `hsl(${h}, ${Math.round(clamp(s * 0.5, 0, 42))}%, ${Math.round(clamp(l + 14, 22, 60))}%)`;
+    toneOpacity = clamp(((52 - l) / 52) * 0.95, 0, 0.62);
+  } else if (l > 64) {
     toneMode = "screen";
-    toneColor = `hsl(${h}, ${Math.round(clamp(s * 0.3, 0, 26))}%, ${Math.round(clamp(l, 70, 94))}%)`;
-    toneOpacity = clamp(((l - 70) / 30) * 0.4, 0, 0.28);
+    toneColor = `hsl(${h}, ${Math.round(clamp(s * 0.4, 0, 34))}%, ${Math.round(clamp(l, 64, 96))}%)`;
+    toneOpacity = clamp(((l - 64) / 36) * 0.7, 0, 0.5);
   }
 
   if (colorOpacity === 0 && toneOpacity === 0) return null;
